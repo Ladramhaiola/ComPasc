@@ -36,14 +36,14 @@ tokens = [
     #'COUTPUT',                                         # '>>' probably this and the upper symbol are not to tbe used in pascal
     #'LRANGLE',                                         # '<>' again probably not used in our grammar
     'ASSIGNTO',                                         # ':=' (used in assignment statements)
-    'LESSTHANEQUAL',                                    # '<='
-    'GREATERTHANEQUAL',                                 # '>='
-    'PLUSEQUAL',                                        # '+='
-    'MINUSEQUAL',                                       # '-='
-    'MULTIPLYEQUAL',                                    # '*='
-    'DIVIDEEQUAL',                                      # '/='
-    'COMMENTSTART',                                     # '(*'
-    'COMMENTEND',                                       # '*)'
+    'LEQ',                                    # '<='
+    'GEQ',                                 # '>='
+    'PLUSEQ',                                        # '+='
+    'MINUSEQ',                                       # '-='
+    'MULEQ',                                    # '*='
+    'DIVEQ',                                      # '/='
+    'COMSTART',                                     # '(*'
+    'COMEND',                                       # '*)'
     'DOUBLESLASH',                                      # '//'  
     #Identifiers and constants
     'NUMBER',
