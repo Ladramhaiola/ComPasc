@@ -1,7 +1,11 @@
 #List of tokens used by Lexer, for tokenization
 #taken from https://www.freepascal.org/docs-html/ref/refch1.html
 
-tokens = {
+# One thing I fail to understand is the use of literals as given in doc of PLY vs token. Eg: +
+
+from reserved_tokens import *
+
+tokens = [
     #Symbols and operators
     'PLUS',
     'MINUS',
@@ -51,4 +55,4 @@ tokens = {
     #'HEX',
     #'BINARY',
     #'DECIMAL'
-}
+] + list(reserved.values())
