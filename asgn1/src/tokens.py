@@ -12,6 +12,7 @@ tokens = [
     'MULTIPLY',
     'DIVIDE',
     'EQUALS',
+    'NOTEQUALS',
     'LANGLE',                                           #LEFT ANGLE BRACKET '<'
     'RANGLE',
     'LSQUARE',                                          #LEFT SQUARE BRACKET '['
@@ -23,6 +24,7 @@ tokens = [
     'LPAREN',                                           #LEFT PARENTHESES '('
     'RPAREN',
     'COLON',
+    'SEMICOLON',                                        # ';'
     'POWER',                                            # '^'
     'ATRATE',                                           # '@'
     'LCURLY',                                           # '{'
@@ -38,19 +40,14 @@ tokens = [
     'ASSIGNTO',                                         # ':=' (used in assignment statements)
     'LEQ',                                    # '<='
     'GEQ',                                 # '>='
-    'PLUSEQ',                                        # '+='
-    'MINUSEQ',                                       # '-='
-    'MULEQ',                                    # '*='
-    'DIVEQ',                                      # '/='
-    'COMSTART',                                     # '(*'
-    'COMEND',                                       # '*)'
     'DOUBLESLASH',                                      # '//'  
     #Identifiers and constants
     'NUMBER',
-    'CHAR',
-    #'STRING'                                           # MAYBE NEEDED
+    'CHARACTER',                                      
     'UNDERSCORE',
     'ID',
+    'STRING',
+    'COMMENT',
     #Bases of numbers
     #'HEX',
     #'BINARY',

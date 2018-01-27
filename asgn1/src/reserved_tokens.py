@@ -2,7 +2,7 @@
 # List of reserved tokens to be used by Lexer, for Tokenization
 # Taken from http://wiki.freepascal.org/Reserved_words#Reserved_words_in_Object_Pascal
 
-# Mappings are from soure language to the rep that we want in the compiler
+# Mappings are from source language to the rep that we want in the compiler
 
 reserved = {
     'and':'AND',
@@ -15,6 +15,7 @@ reserved = {
     'continue':'CONTINUE',
     'div':'DIV',
     'do':'DO',
+    'for':'FOR',
     'else':'ELSE',
     'end':'END',
     'function':'FUNCTION',
@@ -30,7 +31,6 @@ reserved = {
     'repeat':'REPEAT',
     'shl':'SHL',
     'shr':'SHR',
-    'string':'STRING',
     'then':'THEN',
     'to':'TO',
     'type':'TYPE',
@@ -43,12 +43,13 @@ reserved = {
     'inherited':'INHERITED',
     'self':'SELF',
     #adding absent tokens
-    'int':'INT',
-    'real':'REAL',
-    'char':'CHAR',
+    'integer':'INT_TYPE',
+    'string':'STRING_TYPE',
+    'real':'REAL_TYPE',
+    'char':'CHAR_TYPE',
     'double':'DOUBLE',
     'lambda':'LAMBDA',
-    'public':'PUBLIC',
+    'public':'PUBLIC', # why is this required?
     'readln':'READLN',
     'writeln':'WRITELN',
     'read':'READ',
