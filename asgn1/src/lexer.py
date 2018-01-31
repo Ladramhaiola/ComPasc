@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
+
 # The core lexer program. Uses PLY
 
-from ply import lex
+import lex
 from tokens import *
 import sys
 from reserved_tokens import *

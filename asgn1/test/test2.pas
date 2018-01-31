@@ -25,7 +25,7 @@ begin
  
   Rectangle.x:= 50;  //  the fields specific to the variable "Rectangle"
   Rectangle.y:= 100;
-  Rectangle.width:= 60;
+  Rectangle.width:= 40;
   Rectangle.height:= 40;
  
   writeln('x = ', Rectangle.x);
