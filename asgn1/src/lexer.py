@@ -49,6 +49,10 @@ def build (debug=True):
 
 
     # define identifier
+    def t_RANGE(t):
+        r'[0-9]*\.\.[0-9]*'
+        return t
+
     def t_ID(t):
         r'[A-Za-z](_?[A-Za-z0-9])*'
         t.type = reserved.get(t.value.lower(), 'ID')

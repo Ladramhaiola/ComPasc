@@ -42,6 +42,7 @@ tokens = [
     'GEQ',                                 # '>='
     'DOUBLESLASH',                                      # '//'  
     #Identifiers and constants
+    'RANGE',
     'NUMBER',
     'CHARACTER',                                      
     'UNDERSCORE',
