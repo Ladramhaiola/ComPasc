@@ -1,4 +1,4 @@
-PROGRAM progf;
+PROGRAM for_;
 
 VAR 
 	i : integer;
