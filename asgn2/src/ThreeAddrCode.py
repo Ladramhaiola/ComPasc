@@ -9,14 +9,18 @@ class ThreeAddrCode:
 
     def __init__(self,symbol_table):
         '''
-
+            Currrently houses a 3 AC list as list of lists
+            Each list has the quadruple we require
         '''
         self.code = []
 
+    def addTo3AC (self, listCode):
+        self.code = listCode
 
     def display_code(self):
         '''
-
+            For pretty printing the 3AC code stored here
+            WARNING: Still not complete yet
         '''
 
         print ("=========================================")
@@ -51,5 +55,3 @@ class ThreeAddrCode:
                 print (lineno, '\t', op, lhs)
         print ("=========================================")
 
-    def addTo3AC (self, listCode):
-        self.code = listCode
