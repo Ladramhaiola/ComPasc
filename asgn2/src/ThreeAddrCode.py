@@ -1,26 +1,59 @@
 import os
 import sys
-import SymTable as SymTab
+# import SymTable as SymTab # Is it required ?
 
 class ThreeAddrCode:
     '''
         Class holding the three address code, links with symbol table
     '''
 
-    def __init__(self,symbol_table):
+    def __init__(self,symTable):
         '''
             Currrently houses a 3 AC list as list of lists
             Each list has the quadruple we require
         '''
         self.code = []
+        self.symTable = symTable
+        self.operator_list = ["unary","+","-","*","/","MOD","OR","AND","SHL","SHR","<",">","<=",">=","jmp","jtrue","jfalse","loadref","storeref","label","param","call","return","returnval"]
+
 
     def addTo3AC (self, listCode):
-        self.code = listCode
+        '''
+            This is shit. 
+            Don't do this.
+            We need to refer to the symbol table objects, which holds variable objects for scope resolutions
+            Args:
+                listcode element: Format: LineNumber, Operation, Left Hand Side, Operand 1, Operand 2
+                LineNumber, Operation are never NULL/None
+        '''
+
+        for codeLine in listCode:
+
+            temp = [None] * 5 # 3 AC rep
+            lineno, operator, lhs, op1, op2 = codeLine
+
+            temp.append(lineno) # Storing line number
+            temp.append(operator) # Store the kind of instruction, or operator. Look at README
+
+            if operator not in self.operator_list:
+                raise Exception('Operator Not Defined')
+
+            if lhs != '':
+                temp[2] = self.symTable.lookup(lhs)
+
+            if op1 != '':
+                temp[3] = self.symTable.lookup(op1)
+
+            if op2 != '':
+                temp[4] = self.symTable.lookup(op2)
+            
+            self.code.append(temp) # Storing it to the global code store
+
 
     def display_code(self):
         '''
             For pretty printing the 3AC code stored here
-            WARNING: Still not complete yet
+            WARNING: Still not complete yet. self.code won't work. has objects refering to symbol table
         '''
 
         print ("=========================================")
