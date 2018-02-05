@@ -42,3 +42,31 @@ Linenumber, jtrue, *EMPTY*, TARGET, VAR
 ```
 Linenumber, jfalse, *EMPTY*, TARGET, VAR
 ```
+
+## Memory reference
+- Load from mem
+for cases like: x = a[i]
+```
+Linenumber,"loadref", LHS, Array_start, Index_to_access
+```
+
+- Store to mem
+for cases like a[i] = x
+```
+Linenumber,"storeref", Array_start, Index_to_access, To_store_from
+```
+
+## Labels
+```
+Linenumber,"label",*EMPTY*,Label_Name,*EMPTY*
+```
+
+
+## Functions
+```
+Linenumber, "Param", *EMPTY* , ARG1, *EMPTY*
+Linenumber, "Param", *EMPTY* , ARG2, *EMPTY*
+Linenumber, "call", *EMPTY*, Function_name, *EMPTY*
+Linenumber, "return", *EMPTY*, *EMPTY*, *EMPTY*
+Linenumber, "returnval", *EMPTY*, VALUE, **EMPTY**
+```
