@@ -11,7 +11,7 @@ class ThreeAddrCode:
         '''
 
         '''
-        self.code_list = []
+        self.code = []
 
 
     def display_code(self):
@@ -23,7 +23,7 @@ class ThreeAddrCode:
         print ('      Displaying three-address-code      ')
         print ("=========================================")
 
-        for code in self.code_list:
+        for code in self.code:
             lineno, op, lhs, op1, op2 = code
 
             if op == '=':
@@ -50,3 +50,6 @@ class ThreeAddrCode:
                 # LHS is function name
                 print (lineno, '\t', op, lhs)
         print ("=========================================")
+
+    def addTo3AC (self, listCode):
+        self.code = listCode
