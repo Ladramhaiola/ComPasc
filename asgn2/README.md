@@ -36,6 +36,7 @@ Maybe this shit helps in Basic Block Identifying
     - [Meeting] Good to separate it
 
 - If statement:
+    - our IR won't have if statement. We will simply have conditional jump and jump
     - lineno, op = , lhs = , op1 = , op2 = 
 
 - Goto Statement:
@@ -79,3 +80,8 @@ Maybe this shit helps in Basic Block Identifying
 ## classes and objects
 - Ask Sir about inheritance
 - [Meeting] Classes boiled down to IR and details already exisiting in SymTable
+
+# CODE Generation
+
+What we need:
+Register and Address descriptors
