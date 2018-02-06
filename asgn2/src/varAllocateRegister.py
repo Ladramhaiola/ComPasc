@@ -14,6 +14,7 @@ class varAllocateRegister:
         self.symbolToRegister = []                                       # symbol to register mapping in every basic block
         self.SymTable = SymTable
         self.basicBlocks = []
+        self.leaders = []                                                # This will determine the basic blocks 
         self.ThreeAddrCode
 
     def getBasicBlocks(self):
@@ -21,13 +22,18 @@ class varAllocateRegister:
         Stores the basic blocks as [startline,endline] pairs in the list self.basicBlocks
         '''
         code = self.ThreeAddrCode.code
+        self.leaders.append(1)                         # first statement is a leader
         for i in range(len(code)):
             codeLine = code[i]
-            if codeLine[1] in ["jmp","jtrue","jfalse"]:
-                if codeLine[3] < codeLine[0]:
-                    self.basicBlocks.append([codeLine[3],codeLine[0]])
-                else:
-                    self.basicBlocks.append([codeLine[0],codeLine[3]])
+            if codeLine[1] in ["jmp","je","jne","jz","jg","jl","jge","jle"]:
+                self.leaders.append(codeLine[3])       # target of a jump is a leader
+            self.leaders.append(code[i+1][3])          # statement next to a jump statement is a leader
+
+        self.leaders = list(set(self.leaders))         # removes duplicates
+        self.leaders.sort()
+
+        for i in range(len(self.leaders)):
+            self.basicBlocks.append([self.leaders[i],self.leaders[i+1]])
 
     def blockAssignNextUse(blockIndex,code):
         '''
