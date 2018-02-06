@@ -10,18 +10,20 @@ class varAllocateRegister:
 
         # nextUse maps every basic block to a list of  dictionaries containing next use info for every symbol in the block
         self.nextUse = []
-        self.registerToSymbol = []                                       # stores register to symbol mapping in every basic block
-        self.symbolToRegister = []                                       # symbol to register mapping in every basic block
+        self.registerToSymbol = {}                                       # stores register to symbol mapping
+        self.symbolToRegister = {}                                       # symbol to register mapping
+        self.unusedRegisters = ["eax","ebx","ecx","edx"]
+        self.usedRegisters = []
         self.SymTable = SymTable
         self.basicBlocks = []
         self.leaders = []                                                # This will determine the basic blocks 
-        self.ThreeAddrCode
+        self.code = ThreeAddrCode.code
 
     def getBasicBlocks(self):
         '''
         Stores the basic blocks as [startline,endline] pairs in the list self.basicBlocks
         '''
-        code = self.ThreeAddrCode.code
+        code = self.code
         self.leaders.append(1)                         # first statement is a leader
         for i in range(len(code)):
             codeLine = code[i]
@@ -35,11 +37,15 @@ class varAllocateRegister:
         for i in range(len(self.leaders)):
             self.basicBlocks.append([self.leaders[i],self.leaders[i+1]])
 
-    def blockAssignNextUse(blockIndex,code):
+    def blockAssignNextUse(self,blockIndex):
         '''
         Reading the code from last line to first line in the given block and updating the next use information.
         '''
-        self.nextUse[blockIndex] = [];              # This is a list of dictionaries. Each dictionary corresponds to a line 
+        self.nextUse[blockIndex] = [];              # This is a list of dictionaries. Each dictionary corresponds to a line
+        block = self.basicBlocks[blockindex]
+        start = block[0]
+        end = block[1]
+        code = self.code[start-1,end]               # Line numbers start from 1 but code list index starts from 0
 
         for i in range(len(code),-1,-1):
 
@@ -69,10 +75,10 @@ class varAllocateRegister:
         '''
         This is being used to calculate next use line numbers for variables in a basic block
         '''
-        code = self.ThreeAddrCode.code
+        code = self.code
 
         for i,block in enumerate(self.basicBlocks):
-            self.blockAssignNextUse(i,code[block[0],block[1]+1])
+            self.blockAssignNextUse(i)
     
     def getBlockMaxUse(self,blockIndex):
         '''
@@ -90,8 +96,33 @@ class varAllocateRegister:
 
         return blockMaxSymbol
 
-    def getReg(self,blockIndex,symbol):
+    def getReg(self,blockIndex,line):
         '''
-        Returns the register corresponding to a symbol (object or name)???
+        Refer to slide 29, CodeGen.pdf for the cases
         '''
+        reg = ""
+        codeLine = self.code[line]
         
+        lhs = self.SymTable.lookup(codeLine[2])
+        op1 = self.SymTable.lookup(codeLine[3])
+        op2 = self.SymTable.lookup(codeLine[4])
+
+        nextUseInBlock = self.nextUse[blockIndex][line-self.basicBlocks[blockIndex][0]]                   
+
+        # Optimal case #
+        if op1.varfunc == "var" and self.symbolToRegister[op1.name] != "" and nextUseInBlock[op1.name] == float("inf"):
+            reg = self.symbolToRegister[op1.name]
+            self.symbolToRegister[op1.name] = ""
+        elif op2.varfunc == "var" and self.symbolToRegister[op2.name] != "" and nextUseInBlock[op2.name] == float("inf"):
+            reg = self.symbolToRegister[op2.name]
+            self.symbolToRegister[op2.name] = ""
+        elif len(self.unusedRegisters) > 0:
+            reg = self.unusedRegisters[0]
+            self.unusedRegisters.remove(reg)
+            self.usedRegister.append(reg)
+        '''
+        Still have to add the last 2 cases.
+        '''
+
+        self.symbolToRegister[lhs.name] = reg
+        self.registerToSymbol[reg] = lhs.name
