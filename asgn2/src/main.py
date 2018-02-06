@@ -13,6 +13,7 @@ def main():
 	content = reader(file)
 	ac3 = Three(None)
 	ac3.addTo3AC(content)	
+	print (ac3.code)
 
 if __name__ == '__main__':
 	main()
