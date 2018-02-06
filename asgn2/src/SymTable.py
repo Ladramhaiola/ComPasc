@@ -15,7 +15,10 @@ class SymTable (object):
                 symbol: an object of class SymTable entry
         '''
         print('Define: %s' % symbol.name)
-        self._symbols[symbol.name] = symbol
+        if (symbol.name not in self._symbols)
+            self._symbols[symbol.name] = symbol
+        else
+            print ('Symbol already exists!')
 
     def lookup(self, name):
         '''
@@ -26,16 +29,20 @@ class SymTable (object):
                 SymTableEntry object
         '''
         print('Lookup: %s' % name)
-        symbol = self._symbols.get(name)
+        if (symbol.name in self._symbols)
+            symbol = self._symbols.get(name)
+        else
+            print ('Symbol does not exist !')
         return symbol
 
 class SymTableEntry(object):
     '''
 
     '''
-        def __init__(self,name,varfunc = "var",typ,size):
+        def __init__(self,name,varfunc = "var",typ,size,scope):
             self.name = name
-            self.varfunc = varfunc # either var or function
+            self.varfunc = varfunc # either var, function, class or object
             self.typ = typ # for var: int, char, double | for function: typ is return type
             self.size = size
+            self.scope = scopename
 
