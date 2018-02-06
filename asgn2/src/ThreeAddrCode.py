@@ -7,15 +7,31 @@ class ThreeAddrCode:
         Class holding the three address code, links with symbol table
     '''
 
-    def __init__(self,symTable):
+    def __init__(self, symTable):
         '''
             args:
                 symTable: symbol table constructed after parsing
         '''
         self.code = []
         self.symTable = symTable
-        self.operator_list = ["unary","+","-","*","/","MOD","OR","AND","SHL","SHR","<",">","<=",">=","jmp","jtrue","jfalse","loadref","storeref","label","param","call","return","returnval"]
+        self.operator_list = ["unary","=","+","-","*","/","MOD","OR","AND","LEQ","SHL","SHR","<",">","<=",">=","JUMP","JTRUE","JFALSE","LOADREF","STOREREF","CALL","LABEL","param","RETURN","RETRUNVAL","PRINT"]
 
+    def RepresentsInt(self,s):
+        try: 
+            int(s)
+            return True
+        except ValueError:
+            return False
+
+    def symTabOp (self, x):
+        xEntry = None
+        if (self.RepresentsInt(x) == True):
+            return None
+        if (x != ''):
+            xEntry = self.symTable.Lookup(x)
+        if (xEntry == None):
+            xEntry = self.symTable.Define(x, 'int', 'var')
+        return xEntry
 
     def addTo3AC (self, listCode):
         '''
@@ -34,16 +50,13 @@ class ThreeAddrCode:
             temp.append(operator) # Store the kind of instruction, or operator. Look at README
 
             if operator not in self.operator_list:
+                print (codeLine)
                 raise Exception('Operator Not Defined')
 
-            if lhs != '':
-                temp[2] = self.symTable.lookup(lhs)
-
-            if op1 != '':
-                temp[3] = self.symTable.lookup(op1)
-
-            if op2 != '':
-                temp[4] = self.symTable.lookup(op2)
+            
+            temp[2] = self.symTabOp (lhs) 
+            temp[3] = self.symTabOp (op1)
+            temp[4] = self.symTabOp (op2)
             
             self.code.append(temp) # Storing it to the global code store
 
@@ -59,6 +72,7 @@ class ThreeAddrCode:
         print ("=========================================")
 
         for code in self.code:
+            print (code)
             lineno, op, op3, op1, op2 = code
 
             if op == '=':
