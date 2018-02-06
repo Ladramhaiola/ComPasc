@@ -1,5 +1,5 @@
-import SymTable as SymTab
-from ThreeAddrCode import ThreeAddrCode as Three
+from SymTable import SymTable
+from ThreeAddrCode import ThreeAddrCode
 import sys
 
 def reader (tacf): # 3-addr code file
@@ -15,9 +15,10 @@ def reader (tacf): # 3-addr code file
 def main():
 	file = sys.argv[1]
 	content = reader(file)
-	ac3 = Three(None)
-	ac3.addTo3AC(content)	
-	print (ac3.code)
+	SymTab = SymTable()
+	ac3 = ThreeAddrCode(SymTab)
+	ac3.addTo3AC(content)
+	SymTab.PrintSymTable()
 
 if __name__ == '__main__':
 	main()

@@ -1,10 +1,10 @@
 1, =, a, 2
 2, =, b, 7
 3, +, a, a, b
-4, leq, a, 50
-5, jtrue, 2
-6, call, foo
-7, return
-8, label, foo
-9, print, a
-10, return
+4, LEQ, a, 50
+5, JTRUE, 2
+6, CALL, foo
+7, RETURN
+8, LABEL, foo
+9, PRINT, a
+10, RETURN

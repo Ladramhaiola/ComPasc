@@ -1,3 +1,6 @@
+import pprint
+
+
 class SymTable (object):
     '''
     SymbolTable built after parsing
@@ -14,20 +17,23 @@ class SymTable (object):
                         'Func' : {},
                         'Ident' : {}
                         }
-        self.scopelist = [self.mainsymbtbl] 
+        self.scopelist = [self.table] 
         # add itself, at least! Index 0 has highest, 1 is inside 0, 2 is inside 1 ...
         # Current scope is always at index [-1]
+
+    def PrintSymTable(self):
+        pprint.pprint(self.scopelist)
 
     def GetCurrentScopeName(self):
         return self.scopelist[-1]['ScopeName'] # even if it contains only one scope, this command helps
 
     def Check_identifier(self, identifier, index):
         if index == -1 :
-            print ('Not found !')
             return None # exhausted everything
         t_scope = self.scopelist[index]
-        if t_scope['Ident'].has_key(identifier):
-            return temp_scope['Ident'][identifier]
+        # if t_scope['Ident'].has_key(identifier):
+        if identifier in t_scope['Ident']:
+            return t_scope['Ident'][identifier]
         else:
             return self.Check_identifier(identifier, index-1) # go one level up
 
@@ -43,14 +49,14 @@ class SymTable (object):
         }
         self.scopelist.append(temp_scope)
 
-    def Define(self, symbol):
+    def Define(self, identifier, typ, varfunc):
         '''
             args:
                 symbol: an object of class SymTable entry
         '''
         curr_scope = self.scopelist[-1]
-        if (symbol.name not in curr_scope['Ident']):
-            curr_scope['Ident'][symbol.name] = symbol
+        if (identifier not in curr_scope['Ident']):
+            curr_scope['Ident'][identifier] = SymTableEntry (identifier, 'int', 'var')
         else:
             print ('Symbol already exists!')
 
@@ -60,6 +66,8 @@ class SymTable (object):
         '''
         return self.Check_identifier(identifier, len(self.scopelist) - 1);
 
+    def Del_scope(self, scopeName):
+        del self.scopelist[-1]
 
 class SymTableEntry(object):
     '''
