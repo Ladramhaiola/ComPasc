@@ -82,7 +82,7 @@ class varAllocateRegister:
     
     def getBlockMaxUse(self,blockIndex):
         '''
-       This returns the symbol with the maximum value of next use in the given basic block
+            This returns the symbol with the maximum value of next use in the given basic block
         '''
         blockMaxNext = 0
         blockMaxSymbol = ""
@@ -98,7 +98,8 @@ class varAllocateRegister:
 
     def getReg(self,blockIndex,line):
         '''
-        Refer to slide 29, CodeGen.pdf for the cases
+            Refer to slide 29, CodeGen.pdf for the cases
+            WARNING: Still not returning anything ?
         '''
         reg = ""
         codeLine = self.code[line]
@@ -107,7 +108,7 @@ class varAllocateRegister:
         op1 = self.SymTable.lookup(codeLine[3])
         op2 = self.SymTable.lookup(codeLine[4])
 
-        nextUseInBlock = self.nextUse[blockIndex][line-self.basicBlocks[blockIndex][0]]                   
+        nextUseInBlock = self.nextUse[blockIndex][line - self.basicBlocks[blockIndex][0]]
 
         # Optimal case #
         if op1.varfunc == "var" and self.symbolToRegister[op1.name] != "" and nextUseInBlock[op1.name] == float("inf"):
