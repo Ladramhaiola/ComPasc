@@ -34,6 +34,7 @@ class ThreeAddrCode:
             temp.append(operator) # Store the kind of instruction, or operator. Look at README
 
             if operator not in self.operator_list:
+                print (operator)
                 raise Exception('Operator Not Defined')
 
             if lhs != '':
@@ -59,6 +60,7 @@ class ThreeAddrCode:
         print ("=========================================")
 
         for code in self.code:
+            print (code)
             lineno, op, op3, op1, op2 = code
 
             if op == '=':
