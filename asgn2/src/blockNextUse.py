@@ -8,17 +8,44 @@ class blockNextUse:
         Sets the next use information for a given block of code
         '''
         self.nextUse = []                                            # Ordered list storing a lineNextUse object for every line
-        self.SymTable = SymTable
         self.code = code
 
-    def getMaxUse(self):
-
+    def getLineMaxUse(lineDict, codeLine):
+        
         maxNext = 0
+        maxSymbolRegister = None;
+
+        lhsNext = lineDict[codeLine[2]].getNextUse()
+        '''
+        getNextUse() will check whether the symbol already has a register allocated to it, only then will it                                                                        return the next use else infinity
+        '''
+        op1Next = lineDict[codeLine[3]].getNextUse()
+        op2Next = lineDict[codeLine[4]].getNextUse()
+
+        if lhsNext != float("inf") and lhsNext > maxNext:
+            maxNext = lhsNext
+            maxSymbolRegister = lineDict[lhs]
+
+        if op1Next != float("inf") and op1Next > maxNext:
+            maxNext = lhsNext
+            maxSymbolRegister = lineDict[op1]
+
+        if op2Next != float("inf") and op2Next > maxNext:
+            maxNext = lhsNext
+            maxSymbolRegister = lineDict[op2]
+
+        return maxSymbolRegister
+        
+    def getBlockMaxUse(self):
+        '''
+        Returns the varAllocateRegister object corresponding to the symbol having the maximum next use and having an already allocated register 
+        '''
+        maxNext = 0                                                     
         maxSymbolRegister = None;
         
         for i in range(len(self.code)):
 
-            tempSymbolRegister = self.nextUse[i].getMaxNextUse()
+            tempSymbolRegister = getLineMaxUse(self.nextUse[i], self.code[i])
             temp = tempMaxSymbolRegister.nextUse
 
             if temp != float("inf") and temp > maxNext:
@@ -26,14 +53,35 @@ class blockNextUse:
                 maxSymbolRegister = tempSymbolRegister
 
         return maxSymbolRegister
-        
-        
-    def main():
+
+    def assignNextUse(lineDict,codeLine):
+
+        lhs = codeLine[2]
+        op1 = codeLine[3]
+        op2 = codeLine[4]
+
+        lhs_symbol = SymTable.lookup(lhs)
+        op1_symbol = SymTable.lookup(op1)
+        op2_symbol = SymTable.lookup(op2)
+
+        lineDict[lhs] = varAllocateRegister(lhs_symbol,self.SymTable)
+        lineDict[op1] = varAllocateRegister(op1_symbol,self.SymTable)
+        lineDict[op2] = varAllocateRegister(op2_symbol,self.SymTable)
+
+        if lhs_symbol.varfunc == "var":
+            lineDict[lhs].assignNextUse(codeLine[0],"left")
+        if op1_symbol.varfunc == "var":
+            lineDict[op1].assignNextUse(codeLine[0],"right")
+        if op2_symbol.varfunc == "var":
+            lineDict[op2].assignNextUse(codeLine[0],"right")
+
+    def assign():
         '''
         Reading the code from last line to first line and updating the next use information
         '''
-        for i in range(len(code),0,-1):
+        for i in range(len(self.code)-1,-1,-1):
 
-            codeLine = code[i]
-            self.nextUse[i] = lineNextUse(self.SymTable,codeLine);
-            self.nextUse[i].assign()
+            codeLine = self.code[i]
+            lineDict = OrderedDict();
+            assignNextUse(lineDict,codeLine)
+            self.nextUse[i] = lineDict

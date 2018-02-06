@@ -15,4 +15,3 @@ class allocateRegister:
     def rotate(l, n):
         return l[-n:] + l[:-n]
 
-    def 

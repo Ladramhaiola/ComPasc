@@ -33,7 +33,10 @@ class varAllocateRegister:
         This will be called when allocating registers, processing the code from top to down
 
         '''
-        return self.nextUse
+        if self.register != "":
+            return self.nextUse
+        else:
+            return float("inf")
 
     def allocateRegister(self,index):
         '''
