@@ -5,15 +5,11 @@ Inspired from [here](http://arantxa.ii.uam.es/~modonnel/Compilers/07_2_intermedi
 
 ## Assignment
 ```
-Linenumber, unary, LHS, =, VAR
-```
-
-## Unary + or -
-```
-Linenumber, unary, LHS, + or -, VAR
+Linenumber, unary, LHS, + or = or -, VAR
 ```
 
 ## Binary Arithmetic
+
 ```
 Linenumber, op, LHS, VAR_1, VAR_2
 ```
@@ -23,27 +19,29 @@ op = ['+','-','*','/','MOD','OR','AND','SHL','SHR']
 ```
 
 ## Comparisons
-```
-Linenumber, op, LHS, VAR_1, VAR_2
-```
-where op can be:
-```
-op = ['<','>','<=','>=']
-```
 
-## Conditional/Unconditional Jump
-- Just fucking jump
 ```
+Linenumber, cmp, *EMPTY*, VAR_1, VAR_2
+```
+This directly maps with the cmp instruction present in x86.
+
+
+## Unconditional Jump
+
+``` 
 Linenumber, jmp, *EMPTY* , TARGET, *EMPTY*
 ```
-- Jump on true
+
+## Conditional Jumps
+
 ```
-Linenumber, jtrue, *EMPTY*, TARGET, VAR
+Linenumber, jcondition, *EMPTY*, TARGET, *EMPTY*
 ```
-- Jump on False
+where
 ```
-Linenumber, jfalse, *EMPTY*, TARGET, VAR
+jcondition = [je,jne,jz,jg,jl,jge,jle]
 ```
+
 
 ## Memory reference
 - Load from mem
@@ -60,19 +58,19 @@ Linenumber,"storeref", Array_start, Index_to_access, To_store_from
 
 ## Labels
 ```
-Linenumber,"label",*EMPTY*,Label_Name,*EMPTY*
+Linenumber, "label", *EMPTY*, Label_Name, *EMPTY*
 ```
 
 ## Input and Output
+- Print
 ```
-
+Linenumber, "print", *EMPTY*, MESSAGE, *EMPTY* 
 ```
 
 ## Functions
 We'll follow cdecl standard function param pushing
 parse from right to left, so that param 1 is top of the stack
 ```
-Linenumber, "Param", *EMPTY* , ARG1, *EMPTY*
 Linenumber, "Param", *EMPTY* , ARG2, *EMPTY*
 Linenumber, "call", *EMPTY*, Function_name, *EMPTY*
 Linenumber, "return", *EMPTY*, *EMPTY*, *EMPTY*
