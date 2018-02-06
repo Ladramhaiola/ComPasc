@@ -1,48 +1,91 @@
 import os
 import sys
-import math
 
 class varAllocateRegister:
     '''
     Class holding the register allocated and the next use information for a symbol in the given scope
     '''
 
-    def __init__(self,symbol,SymTable):
+    def __init__(self,SymTable,ThreeAddrCode):
 
-        self.symbol = symbol;
-        self.lineno = -1;
-        self.nextUse = float("inf");                                      # Represents a dead variable
-        self.register = "";
-        self.SymTable = SymTable;
+        # nextUse maps every basic block to a list of  dictionaries containing next use info for every symbol in the block
+        self.nextUse = []
+        self.registerToSymbol = []                                       # stores register to symbol mapping in every basic block
+        self.symbolToRegister = []                                       # symbol to register mapping in every basic block
+        self.SymTable = SymTable
+        self.basicBlocks = []
+        self.ThreeAddrCode
 
-    def assignNextUse(self,lineno,leftOrRight):
+    def getBasicBlocks(self):
         '''
-        This will be called when we will be processing the code from bottom to top for a given SymTable (scope)
+        Stores the basic blocks as [startline,endline] pairs in the list self.basicBlocks
         '''
-        self.lineno = lineno
+        code = self.ThreeAddrCode.code
+        for i in range(len(code)):
+            codeLine = code[i]
+            if codeLine[1] in ["jmp","jtrue","jfalse"]:
+                if codeLine[3] < codeLine[0]:
+                    self.basicBlocks.append([codeLine[3],codeLine[0]])
+                else:
+                    self.basicBlocks.append([codeLine[0],codeLine[3]])
 
-        if leftOrRight == "left":
-            self.nextUse = float("inf")
-        elif leftOrRight == "right":
-            self.nextUse = lineno
-        else:
-            raise Exception("Not clear if symbol on left or right of expression");
+    def blockAssignNextUse(blockIndex,code):
+        '''
+        Reading the code from last line to first line in the given block and updating the next use information.
+        '''
+        self.nextUse[blockIndex] = [];              # This is a list of dictionaries. Each dictionary corresponds to a line 
 
-    def getNextUse(self):
-        '''
-        This will be called when allocating registers, processing the code from top to down
+        for i in range(len(code),-1,-1):
 
-        '''
-        if self.register != "":
-            return self.nextUse
-        else:
-            return float("inf")
+            lineDict = {}
+            codeLine = code[i]
 
-    def allocateRegister(self,index):
+            lhs = codeLine[2]
+            op1 = codeLine[3]
+            op2 = codeLine[4]
+        
+            lhs_symbol = SymTable.lookup(lhs)
+            op1_symbol = SymTable.lookup(op1)
+            op2_symbol = SymTable.lookup(op2)
+        
+            if lhs_symbol.varfunc == "var":
+                lineDict[lhs] = float("inf")
+            if op1_symbol.varfunc == "var":
+                lineDict[op1] = codeLine[0]
+            if op2_symbol.varfunc == "var":
+                lineDict[op2] = codeLine[0]
+
+            self.nextUse[blockIndex].append(lineDict)                        # These dictionaries will be appended in reverse order of the line number
+
+        self.nextUse[blockIndex] = list(reversed(self.nextUse[blockIndex]))
+
+    def iterateOverBlocks(self):
         '''
-        This will be called after we have decided to allocate the next free register index to the symbol
+        This is being used to calculate next use line numbers for variables in a basic block
         '''
-        if index not in (1,9):
-            raise Exception("Register index not a valid one");
-            
-        self.register = "t%d"%(index)
+        code = self.ThreeAddrCode.code
+
+        for i,block in enumerate(self.basicBlocks):
+            self.blockAssignNextUse(i,code[block[0],block[1]+1])
+    
+    def getBlockMaxUse(self,blockIndex):
+        '''
+       This returns the symbol with the maximum value of next use in the given basic block
+        '''
+        blockMaxNext = 0
+        blockMaxSymbol = ""
+        blockNextUse = self.nextUse[blockIndex]                              # This is a list of dictionaries
+        for i,lineNextUse in enumerate(blockNextUse):
+            lineMaxSymbol = max(lineNextUse.iterkeys(), key=(lambda key: lineNextUse[key]))
+            lineMaxNext = lineNextUse[lineMaxSymbol]
+            if lineMaxNext > blockMaxNext:
+                blockMaxNext = lineMaxNext
+                blockMaxSymbol = lineMaxSymbol
+
+        return blockMaxSymbol
+
+    def getReg(self,blockIndex,symbol):
+        '''
+        Returns the register corresponding to a symbol (object or name)???
+        '''
+        
