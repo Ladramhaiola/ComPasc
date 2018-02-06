@@ -9,8 +9,8 @@ class ThreeAddrCode:
 
     def __init__(self,symTable):
         '''
-            Currrently houses a 3 AC list as list of lists
-            Each list has the quadruple we require
+            args:
+                symTable: symbol table constructed after parsing
         '''
         self.code = []
         self.symTable = symTable
@@ -19,8 +19,6 @@ class ThreeAddrCode:
 
     def addTo3AC (self, listCode):
         '''
-            This is shit. 
-            Don't do this.
             We need to refer to the symbol table objects, which holds variable objects for scope resolutions
             Args:
                 listcode element: Format: LineNumber, Operation, Left Hand Side, Operand 1, Operand 2

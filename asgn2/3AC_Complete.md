@@ -1,6 +1,8 @@
 
 # Precise 3 AC Here
 
+Inspired from [here](http://arantxa.ii.uam.es/~modonnel/Compilers/07_2_intermediateCodeGen-Quadruples.pdf)
+
 ## Assignment
 ```
 Linenumber, unary, LHS, =, VAR
@@ -67,6 +69,8 @@ Linenumber,"label",*EMPTY*,Label_Name,*EMPTY*
 ```
 
 ## Functions
+We'll follow cdecl standard function param pushing
+parse from right to left, so that param 1 is top of the stack
 ```
 Linenumber, "Param", *EMPTY* , ARG1, *EMPTY*
 Linenumber, "Param", *EMPTY* , ARG2, *EMPTY*
