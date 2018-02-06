@@ -2,6 +2,7 @@
 # Precise 3 AC Here
 
 Inspired from [here](http://arantxa.ii.uam.es/~modonnel/Compilers/07_2_intermediateCodeGen-Quadruples.pdf)
+Some inspiration also from [x86 syntax](http://flint.cs.yale.edu/cs421/papers/x86-asm/asm.html) 
 
 ## Assignment
 ```
