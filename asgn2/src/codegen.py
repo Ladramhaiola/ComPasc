@@ -12,17 +12,57 @@ class codeGenerator():
         self.threeAC = threeAC
         self.asm_code = ''
 
+        # Memory descriptor
+        self.memdescr = {}
+
+        # Register descriptor
+        self.regdescr = {}
+
         # Redundant, but required now for referencing
         # self.operator_list = ["unary","jmp","jtrue","jfalse","loadref","storeref","label","param","call","return","returnval"]
-        self.relop_list = ["<",">","<=",">="]
-        self.arithmetic_list = ["+","-","*","/","MOD","OR","AND","SHL","SHR"]
+
+        # Operation list for 32 bit registers
+        self.op32_dict = {"+":"add",
+                        "-":"sub",
+                        "*":"imul",
+                        "/":"idiv",
+                        "MOD":"mod",
+                        "OR":"or",
+                        "AND":"and",
+                        "SHL":"shl",
+                        "SHR":"shr"}
+
 
     ### --------------------------- INDIVIDUAL ASSEMBLY INSTRUCTIONS -------------------- ###
 
     def handle_binary(self, lineno, op, lhs, op1, op2):
         '''
+            Does this handle the case when op1 is constant ?
+            For example a = a + 3?
         '''
-        self.code += 
+
+        # GetReg gives a location L to perform Operation, L(loc) is a registor or memory location
+
+        # Get descriptors for op1 and op2: loc_op1, loc_op2
+        if loc_op1 != loc:
+            self.code += "movb %" + loc_op1 + ", %" + loc + "\n"
+        operation = self.op32_dict[op]
+        self.code += operation + " %" + loc_op2 + ", %" + loc + "\n"
+
+        # Update descriptors for L and LHS
+
+        # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
+
+    def handle_jump(self,op1):
+        self.code += "jmp " + op1.name
+
+    def handle_jtrue(self,op1,op2):
+
+    def handle_jfalse(self,op1,op2):
+
+    def loadref(self):
+
+    def storeref(self):
 
 
     def handle_funccall(self,op1):
