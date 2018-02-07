@@ -136,7 +136,6 @@ class varAllocateRegister:
         	self.movToMem (reg,MU_var)
         	msg = "Replaced NextUse"
         else:
-        	reg = ""
         	msg = "Replaced Nothing"
 
         self.registerToSymbol[reg] = lhs.name
