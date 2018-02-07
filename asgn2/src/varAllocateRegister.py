@@ -135,6 +135,7 @@ class varAllocateRegister:
         '''
        This returns the symbol with the maximum value of next use in the given basic block such that the symbol has been allocated a register
         '''
+
         blockMaxNext = 0
         blockMaxSymbol = ""
 
@@ -149,33 +150,52 @@ class varAllocateRegister:
         
         return blockMaxSymbol
 
+    def movToMem (self, reg, v):
+    	dataSection
+
     def getReg(self,blockIndex,line):
         '''
-        Refer to slide 29, CodeGen.pdf for the cases
+            Refer to slide 29, CodeGen.pdf for the cases
+            WARNING: Still not returning anything ?
         '''
         reg = ""
+        msg = ""
         codeLine = self.code[line]
         
-        lhs = self.SymTable.lookup(codeLine[2])
-        op1 = self.SymTable.lookup(codeLine[3])
-        op2 = self.SymTable.lookup(codeLine[4])
+        lhs = self.SymTable.lookup(codeLine[2]) # x
+        op1 = self.SymTable.lookup(codeLine[3]) # y
+        op2 = self.SymTable.lookup(codeLine[4]) # z
 
-        nextUseInBlock = self.nextUse[blockIndex][line-self.basicBlocks[blockIndex][0]]                   
+        # x = y OP z
 
-        # Optimal case #
-        if op1.varfunc == "var" and self.symbolToRegister[op1.name] != "" and nextUseInBlock[op1.name] == float("inf"):
+        nextUseInBlock = self.nextUse[blockIndex][line - self.basicBlocks[blockIndex][0]]
+
+        # float("inf") means that variable has no next use after that particular line in the block
+        if ( op1.varfunc == "var" and self.symbolToRegister[op1.name] != "" and nextUseInBlock[op1.name] == float("inf") ):
             reg = self.symbolToRegister[op1.name]
             self.symbolToRegister[op1.name] = ""
-        elif op2.varfunc == "var" and self.symbolToRegister[op2.name] != "" and nextUseInBlock[op2.name] == float("inf"):
+            msg = "Replaced op1"
+        elif ( op2.varfunc == "var" and self.symbolToRegister[op2.name] != "" and nextUseInBlock[op2.name] == float("inf") ):
             reg = self.symbolToRegister[op2.name]
             self.symbolToRegister[op2.name] = ""
-        elif len(self.unusedRegisters) > 0:
+            msg = "Replaced op2"
+        elif ( len(self.unusedRegisters) > 0 ):
             reg = self.unusedRegisters[0]
             self.unusedRegisters.remove(reg)
             self.usedRegister.append(reg)
-        '''
-        Still have to add the last 2 cases.
-        '''
+            msg = "Did not replace"
+        elif (( lhs.varfunc == "var" and nextUseInBlock[lhs.name] != float("inf"))):
+        	MU_var = getBlockMaxUse(blockIndex, line)
+        	reg = self.symbolToRegister[MU_var.name]
+        	self.movToMem (reg,MU_var)
+        	msg = "Replaced NextUse"
+        else:
+        	reg = ""
+        	msg = "Replaced Nothing"
 
-        self.symbolToRegister[lhs.name] = reg
         self.registerToSymbol[reg] = lhs.name
+        self.symbolToRegister[lhs.name] = reg
+
+
+
+        return (reg, msg)
