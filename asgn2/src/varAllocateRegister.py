@@ -16,9 +16,48 @@ class varAllocateRegister:
         self.usedRegisters = []
         self.SymTable = SymTable
         self.basicBlocks = []
+        self.blocksToLabels = {}                                         # key value is the [startline,endline] for a block and value is the label name
         self.leaders = []                                                # This will determine the basic blocks 
         self.code = ThreeAddrCode.code
 
+        for reg in self.unusedRegisters:
+            self.registerToSymbol = ""
+        for sym in self.SymTable.table['Ident'].keys():
+            self.symbolToRegister[sym] = ""
+        
+    def labelToLine(self,labelName):
+        '''
+        This function hasn't been used yet
+        '''
+        for i in range(len(self.code)):
+            if self.code[i][1] == "label" and self.code[i][3] == labelName:
+                return self.code[i][0]
+
+    def blockToLabel(self):
+        '''
+        Mapping every block to a label name in which that block is present
+        '''
+
+        for block in self.basicBlocks:
+            self.blocksToLabels[block] = ""
+
+        for index,block in enumerate(self.basicBlocks):
+
+            if self.code[block[0]][1] == "label":
+                labelName = self.code[block[0]][3]
+                self.blocksToLabels[block] = labelName
+
+            for j in range(index+1,len(self.basicBlocks)):                  # all blocks under the same label should get the same mapping
+                block = self.basicBlocks[j]
+                if self.code[block[0]][1] != "label":                                   
+                    self.blocksToLabels[block] = labelName
+                else:                                                        #break as soon as we get a new label name. This will be dealt with in the outer loop     
+                    break
+ 
+        for block in self.basicBlocks:
+            if self.blocksToLabels[block] == "":
+                self.blocksToLabels[block] = "Main"
+        
     def getBasicBlocks(self):
         '''
         Stores the basic blocks as [startline,endline] pairs in the list self.basicBlocks
@@ -41,13 +80,20 @@ class varAllocateRegister:
         '''
         Reading the code from last line to first line in the given block and updating the next use information.
         '''
-        self.nextUse[blockIndex] = [];              # This is a list of dictionaries. Each dictionary corresponds to a line
+        self.nextUse[blockIndex] = [];                                       # This is a list of dictionaries. Each dictionary corresponds to a line
+
         block = self.basicBlocks[blockindex]
         start = block[0]
         end = block[1]
-        code = self.code[start-1,end]               # Line numbers start from 1 but code list index starts from 0
+        code = self.code[start-1,end]                                        # Line numbers start from 1 but code list index starts from 0
 
-        for i in range(len(code),-1,-1):
+        prevLine = {}                                                        # Stores the next use info for the next line (next to the current line in the loop)
+        symbols = self.SymTable.table['Ident'].keys()                        # This is the list of all symbols
+
+        for sym in symbols:
+            prevLine[sym] = float("inf")
+        
+        for i in range(len(code)-1,-1,-1):
 
             lineDict = {}
             codeLine = code[i]
@@ -67,8 +113,13 @@ class varAllocateRegister:
             if op2_symbol.varfunc == "var":
                 lineDict[op2] = codeLine[0]
 
-            self.nextUse[blockIndex].append(lineDict)                        # These dictionaries will be appended in reverse order of the line number
+            for sym in symbols:
+                if sym not in [lhs,op1,op2]:
+                    lineDict[sym] = prevLine[sym]                            # Rest of the symbols will get the next use info of the next line
 
+            self.nextUse[blockIndex].append(lineDict)                        # These dictionaries will be appended in reverse order of the line number
+            prevLine = lineDict                                              # We need this for updating the next use for every symbol
+            
         self.nextUse[blockIndex] = list(reversed(self.nextUse[blockIndex]))
 
     def iterateOverBlocks(self):
@@ -80,20 +131,23 @@ class varAllocateRegister:
         for i,block in enumerate(self.basicBlocks):
             self.blockAssignNextUse(i)
     
-    def getBlockMaxUse(self,blockIndex): # Mend this function; it should accept line number too
+    def getBlockMaxUse(self,blockIndex, linenumber):
         '''
-            This returns the symbol with the maximum value of next use in the given basic block
+       This returns the symbol with the maximum value of next use in the given basic block such that the symbol has been allocated a register
         '''
+
         blockMaxNext = 0
         blockMaxSymbol = ""
-        blockNextUse = self.nextUse[blockIndex]                              # This is a list of dictionaries
-        for i,lineNextUse in enumerate(blockNextUse):
-            lineMaxSymbol = max(lineNextUse.iterkeys(), key=(lambda key: lineNextUse[key]))
-            lineMaxNext = lineNextUse[lineMaxSymbol]
-            if lineMaxNext > blockMaxNext:
-                blockMaxNext = lineMaxNext
-                blockMaxSymbol = lineMaxSymbol
 
+        blockNextUse = self.nextUse[blockIndex][linenumber]                              # This is a dictionary
+
+        symbols = self.SymTable.table['Ident'].keys()
+
+        for sym in symbols:
+            if blockNextUse[sym] > blockMaxNext and self.symbolToRegister[sym] != "":     # Return only the symbol which is held in some register
+                blockMaxNext = blockNextUse[sym]
+                blockMaxSymbol = sym
+        
         return blockMaxSymbol
 
     def movToMem (self, reg, v):
