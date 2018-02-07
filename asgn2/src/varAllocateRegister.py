@@ -29,7 +29,7 @@ class varAllocateRegister:
             codeLine = code[i]
             if codeLine[1] in ["jmp","je","jne","jz","jg","jl","jge","jle"]:
                 self.leaders.append(codeLine[3])       # target of a jump is a leader
-            self.leaders.append(code[i+1][3])          # statement next to a jump statement is a leader
+            self.leaders.append(code[i+1][1])          # statement next to a jump statement is a leader
 
         self.leaders = list(set(self.leaders))         # removes duplicates
         self.leaders.sort()
@@ -67,7 +67,7 @@ class varAllocateRegister:
             if op2_symbol.varfunc == "var":
                 lineDict[op2] = codeLine[0]
 
-            self.nextUse[blockIndex].append(lineDict)                        # These dictionaries will be appended in reverse order of the line number
+            self.nextUse[blockIndex].append(lineDict)     # These dictionaries will be appended in reverse order of the line number
 
         self.nextUse[blockIndex] = list(reversed(self.nextUse[blockIndex]))
 
@@ -75,14 +75,13 @@ class varAllocateRegister:
         '''
         This is being used to calculate next use line numbers for variables in a basic block
         '''
-        code = self.code
 
         for i,block in enumerate(self.basicBlocks):
             self.blockAssignNextUse(i)
     
     def getBlockMaxUse(self,blockIndex):
         '''
-       This returns the symbol with the maximum value of next use in the given basic block
+        This returns the symbol with the maximum value of next use in the given basic block
         '''
         blockMaxNext = 0
         blockMaxSymbol = ""
