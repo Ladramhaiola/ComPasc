@@ -71,7 +71,7 @@ class ThreeAddrCode:
                     temp[5] = op1
             elif (operator in self.binary_list):
                 temp[2] = self.symTabOp (lhs)
-                temp[3] = self.symTabOp (op1) 
+                temp[3] = self.symTabOp (op1, 'int', 'var') 
                 if (temp[3] == None):
                     temp[5] = op1
                 temp[4] = self.symTabOp (op2, 'int', 'var')

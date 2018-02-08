@@ -29,6 +29,7 @@ class CodeGenerator():
 
 
         # self.operator_list = ["unary","jmp","jtrue","jfalse","loadref","storeref","label","param","call","return","returnval"]
+        self.Registers = ["eax","ebx","ecx","edx"]
 
         # Operation list for 32 bit registers
         self.op32_dict = {"+":"add",
@@ -63,15 +64,18 @@ class CodeGenerator():
             return False
 
 
-    def StatementType (self, line):
+    def StatementType (self, operation, op1, op2, const1, const2):
+        '''
+            no statements of type:
+                a = 3 + b
+                instead, we insist on b + 3
+        '''
         # binary arithmetic
-        if (line[1] in self.op32_dict):
-            if (self.RepresentsInt(line[3]) and self.RepresentsInt(line[4])):
+        if (operation in self.op32_dict):
+            if (op1 == None) and (op2 == None):
                 return ('BA_2C')
-            elif (not self.RepresentsInt(line[3]) and self.RepresentsInt(line[4])):
+            elif (op1 != None) and (op2 == None):
                 return ('BA_1C_R')
-            elif (self.RepresentsInt(line[3]) and not self.RepresentsInt(line[4])):
-                return ('BA_1C_L')
             else:
                 return ('BA_V')
 
@@ -79,7 +83,7 @@ class CodeGenerator():
     def movToMem (self, reg, v):
         '''
         '''
-        ascode = "mov " + "\%" + reg + "," + v + "(,1)" + "\n"
+        ascode = "\t\tmov " + "\%" + reg + "," + v + "(,1)" + "\n"
         return ascode
 
     def getFromMem (self, x):
@@ -91,107 +95,146 @@ class CodeGenerator():
 
     ### --------------------------- INDIVIDUAL ASSEMBLY INSTRUCTIONS -------------------- ###
 
-    def handle_binary (self, lineno, op, lhs, op1, op2, const1, const2):
+    def handle_binary (self, lineno, operation, lhs, op1, op2, const1, const2):
         '''
             
         '''
-        line = self.code[lineno - 1]
+        # line = self.code[lineno - 1]
         # print ('line = ' , line, 'lineno = ' , lineno)
-        op = self.op32_dict[line[1]]
+
+        op = self.op32_dict[operation] # add/sub/idiv
         # lineno, operator, lhs, op1, op2 = line
-        statTyp = self.StatementType(line)
+
+        statTyp = self.StatementType(operation,op1,op2,const1,const2)
 
         blockIndex = self.varAllocate.line2Block(lineno)
         # handle cases a = a + b
         if (op1 == lhs):
-            if (op1 != op2):
-                flag = 0
-                if self.symbolToRegister[op2] != "":
-                    loc_op2 = self.symbolToRegister[op2]
-                else:
-                    loc_op2 = self.getFromMem(op2)
-                    flag = 1
-                loc_op1 = self.symbolToRegister[op1]
-                if (loc_op1 != ""): # a in register
-                    ascode = op + " " + loc_op2 + "," +  loc_op1 
-                    self.asm_code['text'].append(ascode)
-                    # b may be in memory or register; doesn't matter. just add it to a
-                    return
-                elif (flag == 0):
-                    ascode = op + " " + loc_op2 + "," + getFromMem(op1)
-                    self.asm_code['text'].append(ascode)
-                    # a not in register, but b is in register. simply update a's value in memory
-                    return
+            flag = 0
+            if self.symbolToRegister[op2.name] != "":
+                loc_op2 = self.symbolToRegister[op2.name]
+            else:
+                loc_op2 = self.getFromMem(op2.name)
+                flag = 1
+
+            loc_op1 = self.symbolToRegister[op1.name]
+
+            if (loc_op1 != ""): # a in register
+                ascode = "\t\t" + op + " " + loc_op2 + "," +  loc_op1 
+                self.asm_code['text'].append(ascode)
+                # b may be in memory or register; doesn't matter. just add it to a
+                return
+
+            elif (flag == 0):
+                ascode = "\t\t" + op + " " + loc_op2 + "," + getFromMem(op1.name)
+                self.asm_code['text'].append(ascode)
+                # a not in register, but b is in register. simply update a's value in memory
+                return
                 # if a and b are both not in registers, they are handled below
+
+        ## NORMAL HANDLING ##
 
         # GetReg gives a location L to perform Operation, L(loc) is a register (for this assignment)
         loc, msg = self.varAllocate.getReg(blockIndex, lineno)
 
-        if op1 in self.symTab.table['Ident'].keys() and self.symbolToRegister[op1] != "":
-            loc_op1 = self.symbolToRegister[op1] # Fetching register, which is prefered if it exists
-        else:
-            loc_op1 = self.getFromMem(op1)
-        if op2 in self.symTab.table['Ident'].keys() and self.symbolToRegister[op2] != "":
-            loc_op2 = self.symbolToRegister[op2]
-        else:
-            loc_op2 = self.getFromMem(op2)
+        if op1 != None:
+            if self.symbolToRegister[op1.name] != "":
+                loc_op1 = self.symbolToRegister[op1.name] # Fetching register, which is prefered if it exists
+            else:
+                loc_op1 = self.getFromMem(op1.name)
+
+        if op2 != None:
+            if self.symbolToRegister[op2.name] != "":
+                loc_op2 = self.symbolToRegister[op2.name]
+            else:
+                loc_op2 = self.getFromMem(op2.name)
 
         if (statTyp == 'BA_2C'):
-            ascode =  op + " $" + op1 + "," + loc + "\n" + "add $" + op2 + "," + loc + "\n"
+            ascode = "\t\t" + op + " $" + const1 + ",%" + loc + "\n\t\t" + op + " $" + const2 + ",%" + loc
         elif (statTyp == 'BA_1C_R'):
             if (msg == "Replaced op1"):
-                ascode = op + " $" + op2 + "," + loc + "\n"
+                ascode = "\t\t" + op + " $" + const2 + ",%" + loc
             else:
-                ascode = "mov " + loc_op1 + "," + loc + "\n" + op + " $" + op2 + "," + loc + "\n"
-        elif (statTyp == 'BA_1C_L'):
-            if (msg == "Replaced op2"):
-                ascode = op + " $" + op1 + "," + loc + "\n"
-            else:
-                ascode = "mov " + loc_op2 + "," + loc + "\n" + op + " $" + op1 + "," + loc + "\n"
+                ascode = "\t\tmov %" + loc_op1 + ",%" + loc + "\n\t\t" + op + " $" + const2 + ",%" + loc
         else:
-            if (op1 in self.symTab.table['Ident'].keys() and op2 in self.symTab.table['Ident'].keys() and self.symbolToRegister[op1] == "" and self.symbolToRegister[op2] == ""):
-                ascode = "mov " + loc_op1 + "," + loc + "\n" + op + " " + loc_op2 + "," + loc + "\n"
-            elif (msg == "Replaced op1"):
-                ascode = op + " " + loc_op2 + "," + loc + "\n"
-            elif (msg == "Replaced op2"):
-                ascode = op + " " + loc_op1 + "," + loc + "\n"
-            elif (msg == "Replaced nothing"):
-                ascode = op + " " + loc_op1 + "," + getFromMem(lhs) + "\n" + op + " " + loc_op2 + "," + getFromMem(lhs) + "\n"
-            else:
-                MU_var = msg[msg.find(',')+1:]
-                self.movToMem(loc,MU_var)
-                if (MU_var == op1):
-                    ascode = op + " " + loc_op2 + "," + loc_op1 + "\n"
+            # Missing the case where both in memory, and loc is also mem location
+            if (self.symbolToRegister[op1.name] == "" and self.symbolToRegister[op2.name] == ""):
+                if loc in self.Registers:
+                    ascode = "\t\tmov %" + loc_op1 + ",%" + loc + "\n" + op + " %" + loc_op2 + ",%" + loc
                 else:
-                    ascode = "mov " + loc_op2 + "," + loc + "\n" + op + " " + loc_op1 + "," + loc + "\n"
+                    loc, msg = self.varAllocate.getReg(blockIndex, lineno, True)
+            elif (msg == "Replaced op1"):
+                ascode = "\t\t" + op + " %" + loc_op2 + ",%" + loc
+            elif (msg == "Replaced op2"):
+                ascode = "\t\t" + op + " %" + loc_op1 + ",%" + loc
+            elif (msg == "Replaced nothing"):
+                ascode = "\t\t" + op + " %" + loc_op1 + ",%" + getFromMem(lhs) + "\n" + op + " %" + loc_op2 + ",%" + getFromMem(lhs)
+            else:
+                # Spill it
+                maxUse_var = msg[msg.find(',')+1:]
 
-        self.asm_code['text'].append(ascode)
+                # move to memory the var which was replaced
+                self.movToMem(loc,maxUse_var)
+
+                # Optimization (Hopefully)
+                if (maxUse_var == op1.name):
+                    ascode = "\t\t" + op + " %" + loc_op2 + ", %" + loc_op1   # loc = loc_op1
+                elif (maxUse_var == op2.name):
+                    ascode = "\t\t" + op + " %" + loc_op1 + ", %" + loc_op2   # loc = loc_op2
+                else:
+                    ascode = "\t\tmov %" + loc_op2 + ",%" + loc + "\n" + op + " %" + loc_op1 + ",%" + loc
+
+        self.asm_code[self.curr_func].append(ascode)
 
 
         ### ------------ Update descriptors for L and LHS ------------ ###
 
         # For L, if it is a register
-        Registers = ["eax","ebx","ecx","edx"]
-        if loc in Registers:
+        if loc in self.Registers:
             # print (self.registerToSymbol[loc])
-            lhs_reg = self.symbolToRegister[lhs]
+            lhs_reg = self.symbolToRegister[lhs.name]
             if (lhs_reg != "" and loc != lhs_reg):
                 self.varAllocate.unusedRegisters.append(lhs_reg)
                 self.varAllocate.usedRegisters.remove(lhs_reg)
                 self.registerToSymbol[lhs_reg] = ""
-            self.registerToSymbol[loc] = lhs
-            self.symbolToRegister[lhs] = loc                # if it is a register, update the first entry
+            self.registerToSymbol[loc] = lhs.name
+            self.symbolToRegister[lhs.name] = loc                # if it is a register, update the first entry
 
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
 
     # LIFE IS GOOD FROM HERE
 
-    def handle_cmp (op1,op2,const1,const2):
+    def handle_cmp (lineno, op1, op2, const1, const2):
         '''
-            Still to handle it.
+            Still to handle it
         '''
-        return
+        if op1 != None:
+            if self.symbolToRegister[op1.name] != "":
+                loc_op1 = self.symbolToRegister[op1.name] # Fetching register, which is prefered if it exists
+            else:
+                loc_op1 = self.getFromMem(op1.name)
+
+        if op2 != None:
+            if self.symbolToRegister[op2.name] != "":
+                loc_op2 = self.symbolToRegister[op2.name]
+            else:
+                loc_op2 = self.getFromMem(op2.name)
+
+        if op1 == None and op2 == None:
+            ascode = "\t\tcmp $" + const1 + ",$ " + const2
+        elif op1 == None and op2 != None:
+            ascode = "\t\tcmp $" + const1 + ",% " + loc_op2
+        elif op1 != None and op2 == None:
+            ascode = "\t\tcmp %" + loc_op1 + ",$ " + const2
+        else:
+            if loc_op1 not in self.Registers and loc_op2 not in self.Registers:
+                loc, msg = self.varAllocate.getReg(self.varAllocate.line2Block(lineno), lineno, True)
+                ascode = "\t\tmov %" + loc_op1 + ", %" + loc + "\n\t\tcmp %" + loc + ", %" + loc_op2
+            else:
+                ascode = "\t\tcmp %" + loc_op1 + ", %" + loc_op2
+
+        self.asm_code[self.curr_func].append(ascode)
 
     def handle_jump (self, op, const1):
         '''
@@ -273,15 +316,17 @@ class CodeGenerator():
 
             for i in range(start-1,end):
                 # i is the index into self.code
+                # print self.code[i]
 
                 lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
+                # print lhs.name
 
                 ln = int(lineno)
 
                 # DONE HOPEFULLY
                 if op in ["+","-","*","/","MOD","AND","OR","SHL","SHR"]:
-                    # self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
-                    pass
+                    self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
+                    # pass
 
                 # Would need to refer to handle_binary for most part
                 elif op == 'CMP':
@@ -349,9 +394,9 @@ class CodeGenerator():
         self.setup_data()
 
     def display_code(self):
-        print ('===========================================')
-        print ('----------------- x86 code ----------------')
-        print ('===========================================')
+        print (';===========================================')
+        print (';----------------- x86 code ----------------')
+        print (';===========================================')
 
         for codeline in self.asm_code['data']:
             print codeline
@@ -361,4 +406,4 @@ class CodeGenerator():
                 for codeLine in self.asm_code[key]:
                     print codeLine
         # print (self.asm_code['text'])
-        print ('===========================================')
+        print (';===========================================')

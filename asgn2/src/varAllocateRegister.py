@@ -198,7 +198,7 @@ class varAllocateRegister:
                 return (i)
 
 
-    def getReg(self,blockIndex,line):
+    def getReg(self, blockIndex, line, all_mem = False):
         '''
             Refer to slide 29, CodeGen.pdf for the cases
         '''
@@ -207,10 +207,10 @@ class varAllocateRegister:
         msg = ""
         codeLine = self.code[line-1]
         
-        lhs = self.SymTable.Lookup(codeLine[2]) # x
-        # print codeLine[2]
-        op1 = self.SymTable.Lookup(codeLine[3]) # y
-        op2 = self.SymTable.Lookup(codeLine[4]) # z
+        lhs = codeLine[2] # x
+        # print lhs
+        op1 = codeLine[3] # y
+        op2 = codeLine[4] # z
 
         # x = y OP z
         # print (type(self.basicBlocks))
@@ -238,7 +238,7 @@ class varAllocateRegister:
             self.unusedRegisters.remove(reg)
             self.usedRegisters.append(reg)
             msg = "Did not replace"
-        elif (( lhs != None and nextUseInBlock[lhs.name] != float("inf"))):
+        elif (( lhs != None and nextUseInBlock[lhs.name] != float("inf")) or all_mem == True):
             MU_var = self.getBlockMaxUse(blockIndex, line)
             reg = self.symbolToRegister[MU_var]
             self.symbolToRegister[MU_var] = ""
