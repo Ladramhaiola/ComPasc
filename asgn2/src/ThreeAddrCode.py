@@ -40,7 +40,7 @@ class ThreeAddrCode:
             return None
         if (x != ''):
             xEntry = self.symTable.Lookup(x)
-        if (xEntry == None):
+        if (xEntry == None and x != ''):
             xEntry = self.symTable.Define(x, typ, varfunc)
         return xEntry
 
