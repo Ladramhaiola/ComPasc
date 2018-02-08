@@ -25,8 +25,8 @@ class varAllocateRegister:
         for sym in self.SymTable.table['Ident'].keys():
             self.symbolToRegister[sym] = ""
 
-        self.getBasicBlocks()
-        self.iterateOverBlocks()
+        # self.getBasicBlocks()
+        # self.iterateOverBlocks()
         
     def labelToLine(self,labelName):
         '''
@@ -197,7 +197,7 @@ class varAllocateRegister:
         codeLine = self.code[line-1]
         
         lhs = self.SymTable.Lookup(codeLine[2]) # x
-        print codeLine[2]
+        # print codeLine[2]
         op1 = self.SymTable.Lookup(codeLine[3]) # y
         op2 = self.SymTable.Lookup(codeLine[4]) # z
 
