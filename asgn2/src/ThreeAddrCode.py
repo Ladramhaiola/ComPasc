@@ -16,7 +16,7 @@ class ThreeAddrCode:
         self.symTable = symTable
         self.jump_list = ["JMP","JLE","JGE","JGE","JLE","JNE","JE","JZ"]
         self.binary_list = ["+","-","*","/","MOD","OR","AND","LEQ","SHL","SHR","CMP"]
-        self.operator_list = ["UNARY","=","LOADREF","STOREREF","CALL","LABEL","PARAM","RETURN","RETRUNVAL","PRINT"] + self.binary_list + self.jump_list
+        self.operator_list = ["UNARY","=","LOADREF","STOREREF","CALL","LABEL","PARAM","RETURN","RETRUNVAL","PRINT"]
 
     def RepresentsNum(self,s):
         '''
@@ -28,7 +28,7 @@ class ThreeAddrCode:
         except ValueError:
             return False
 
-    def symTabOp (self, x):
+    def symTabOp (self, x, typ = 'int', varfunc = 'var'):
         '''
         args:
             x: If it is a constant, then return nothing as the object to be appended to 3Ac line.
@@ -41,7 +41,7 @@ class ThreeAddrCode:
         if (x != ''):
             xEntry = self.symTable.Lookup(x)
         if (xEntry == None):
-            xEntry = self.symTable.Define(x, 'int', 'var')
+            xEntry = self.symTable.Define(x, typ, varfunc)
         return xEntry
 
     def addTo3AC (self, listCode):
@@ -55,21 +55,30 @@ class ThreeAddrCode:
 
         for codeLine in listCode:
 
-            temp = [None] * 5 # 3 AC rep
+            temp = [None] * 7 # 3 AC rep
+            # print ('code = ', codeLine)
             lineno, operator, lhs, op1, op2 = codeLine
+            temp[0] = lineno
+            temp[1] = operator
 
-            temp.append(lineno) # Storing line number
-            temp.append(operator) # Store the kind of instruction, or operator. Look at README
-
-            if operator not in self.operator_list:
-                print (codeLine)
-                raise Exception('Operator Not Defined')
+            if (operator in self.jump_list):
+                temp[5] = op1
+            elif (operator == 'LABEL'):
+                temp[2] = lhs
+                if (lhs == 'func'):
+                    temp[3] = self.symTabOp (op1, 'int', 'func')
+                else:
+                    temp[5] = op1
+            elif (operator in self.binary_list):
+                temp[2] = self.symTabOp (lhs)
+                temp[3] = self.symTabOp (op1) 
+                if (temp[3] == None):
+                    temp[5] = op1
+                temp[4] = self.symTabOp (op2, 'int', 'var')
+                if (temp[4] == None):
+                    temp[6] = op2
             
-            temp[2] = self.symTabOp (lhs) 
-            temp[3] = self.symTabOp (op1)
-            temp[4] = self.symTabOp (op2)
-            
-            self.code.append([lineno, operator, lhs, op1, op2]) # Storing it to the global code store
+            self.code.append(temp) # Storing it to the global code store
 
 
     def display_code(self):
