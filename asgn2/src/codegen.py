@@ -45,6 +45,8 @@ class CodeGenerator():
                         "SHR":"shr",
                         "CMP":"cmp"}
 
+        self.jump_list = threeAC.jump_list
+
 
     def function_change (self, func_name):
         '''
@@ -70,6 +72,7 @@ class CodeGenerator():
             return True
         except ValueError:
             return False
+
 
     def StatementType (self, line):
         # binary arithmetic
@@ -195,16 +198,11 @@ class CodeGenerator():
 
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
-    def handle_jump (self,op1):
-        ascode = "\tjmp "
-        self.code += "jmp " + op1
-
-
-    # def handle_jtrue (self,op1,op2):
-
-    # def loadref (self):
-
-    # def storeref (self):
+    def handle_jump (self, op, op1):
+        '''
+            Handle all jumps.
+        '''
+        self.asm_code[self.curr_func].append(op.lower() + " " + op1.name)
 
 
     def handle_funccall (self,op1):
@@ -212,25 +210,30 @@ class CodeGenerator():
         WARNING: Have to take into account context of function, or global.
         Not doing that currently.
         Essentially, self.code needs to be something more elaborate.
+        args:
+            op1 is a symbol table entry.
         '''
-        self.code += 'call ' + op1 + '\n'
+        self.asm_code[self.curr_func].append('call ' + op1.name)
 
     def handle_param(self,op1):
-        self.code += 'push %' + op1 + '\n'
+        self.asm_code[self.curr_func].append('push %' + op1.name)
 
     def handle_return(self):
-        self.code += 'ret\n'
+        '''
+            Empty return
+        '''
+        self.asm_code[self.curr_func].append('ret')
 
     def handle_returnval(self,op1):
         '''
         Have to look how values are returned
         '''
-        self.code += '\nret'
+        self.asm_code[self.curr_func].append('ret')
 
 
     def handle_label (self, lineno, op1):
-        ascode = op1 + ":"
-        self.asm_code['text'].append(ascode)
+        ascode = op1.name + ":"
+        self.asm_code[self.curr_func].append(ascode)
 
 
     ### ---------------------------- AGGREGATORS ---------------------------------------- ###
@@ -243,28 +246,29 @@ class CodeGenerator():
 
         for codeLine in self.threeAC.code:
             lineno, op, lhs, op1, op2 = codeLine
-            # lineno, op are NEVER NULL
-            ln = int(lineno)
-            if op == 'unary':
-                self.handle_unary()
 
-            elif op == 'JMP':
-                self.handle_jmp()
+            ln = int(lineno)
+
+            if op == 'unary':
+                self.handle_unary ()
+
+            elif op in self.jump_list:
+                self.handle_jmp (op,op1)
 
             elif op == 'loadref':
-                self.handle_loadref()
+                self.handle_loadref ()
 
             elif op == 'storeref':
-                self.handle_storeref()
+                self.handle_storeref ()
 
-            elif op == 'LABEL':
-                self.handle_label(ln,op1)
+            elif op == 'label':
+                self.handle_label (ln,op1)
 
             elif op == 'call':
-                self.handle_funccall(op1)
+                self.handle_funccall (op1)
 
             elif op == 'param':
-                self.handle_param(op1)
+                self.handle_param( op1)
 
             elif op == 'return':
                 self.handle_return()
