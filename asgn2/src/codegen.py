@@ -47,10 +47,15 @@ class CodeGenerator():
                         "SHR":"shr",
                         "CMP":"cmp"}
 
-    def updateDescriptors(self):
-        '''
-            Update the descriptors as and when required by the algorithm
-        '''
+
+    def deallocRegs (self):
+        for reg in self.varAllocate.usedRegisters:
+            v = self.registerToSymbol[reg]
+            self.movToMem(reg,v)
+            self.varAllocate.usedRegisters.remove(reg)
+            self.varAllocate.unusedRegisters.append(reg)
+            self.registerToSymbol[reg] = ""
+            self.symbolToRegister[v] = ""
 
     def RepresentsInt(self,s):
         try: 
@@ -72,36 +77,33 @@ class CodeGenerator():
                 return ('BA_V')
 
     def movToMem (self, reg, v):
+        '''
+            QUESTION: What is (,1) ? 
+        '''
         ascode = "mov " + "\%" + reg + "," + v + "(,1)" + "\n"
         return ascode
 
     def getFromMem (self, x):
+        '''
+            WARNING: Is this correct?
+        '''
+
         ascode = x + "(,1)"
         return ascode
 
-    def deallocRegs (self):
-        for reg in self.varAllocate.usedRegisters:
-            v = self.registerToSymbol[reg]
-            self.movToMem(reg,v)
-            self.varAllocate.usedRegisters.remove(reg)
-            self.varAllocate.unusedRegisters.append(reg)
-            self.registerToSymbol[reg] = ""
-            self.symbolToRegister[v] = ""
 
     ### --------------------------- INDIVIDUAL ASSEMBLY INSTRUCTIONS -------------------- ###
 
     def handle_binary (self, lineno, op, lhs, op1, op2):
         '''
-            Does this handle the case when op1 is constant
-            For example a = a + 3? Yes, it will
+            
         '''
         line = self.code[lineno - 1]
         # print ('line = ' , line, 'lineno = ' , lineno)
         op = self.op32_dict[line[1]]
         # lineno, operator, lhs, op1, op2 = line
         statTyp = self.StatementType(line)
-        # print (line)
-        # print (statTyp)
+
         ascode = "\t"
         blockIndex = self.varAllocate.line2Block(lineno)
         # handle cases a = a + b
@@ -127,7 +129,7 @@ class CodeGenerator():
                 # if a and b are both not in registers, they are handled below
 
         # GetReg gives a location L to perform Operation, L(loc) is a register (for this assignment)
-        loc, msg = self.varAllocate.getReg(blockIndex, lineno) # Need to send things from here. What though?
+        loc, msg = self.varAllocate.getReg(blockIndex, lineno)
 
         if op1 in self.symTab.table['Ident'].keys() and self.symbolToRegister[op1] != "":
             loc_op1 = self.symbolToRegister[op1] # Fetching register, which is prefered if it exists
@@ -182,7 +184,7 @@ class CodeGenerator():
                 self.varAllocate.usedRegisters.remove(lhs_reg)
                 self.registerToSymbol[lhs_reg] = ""
             self.registerToSymbol[loc] = lhs
-            self.symbolToRegister[lhs] = loc # if it is a register, update the first entry
+            self.symbolToRegister[lhs] = loc                # if it is a register, update the first entry
 
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
@@ -231,9 +233,7 @@ class CodeGenerator():
             text section
             Refer to 3AC_complete.md for exact 3 Abstract Code definitions
         '''
-        # print (self.threeAC.code)
-        # print ('=============================')
-        # print (len(self.threeAC.code))
+
         for codeLine in self.threeAC.code:
             lineno, op, lhs, op1, op2 = codeLine
             # lineno, op are NEVER NULL
@@ -243,12 +243,6 @@ class CodeGenerator():
 
             elif op == 'JMP':
                 self.handle_jmp()
-
-            elif op == 'jtrue':
-                self.handle_jtrue()
-
-            elif op == 'jfalse':
-                self.handle_jfalse()
 
             elif op == 'loadref':
                 self.handle_loadref()
@@ -308,8 +302,9 @@ class CodeGenerator():
         print (';============================')
         print (';--------- x86 code ---------')
         print (';============================')
-        for c in self.asm_code['text']:
-            print c
+        for key in self.asm_code.keys():
+            for codeLine in self.asm_code[key]:
+                print codeLine
         # print (self.asm_code['text'])
         print (';============================')
         print (';============================')

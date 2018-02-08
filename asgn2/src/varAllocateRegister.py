@@ -153,7 +153,7 @@ class varAllocateRegister:
 
     def iterateOverBlocks(self):
         '''
-        This is being used to calculate next use line numbers for variables in a basic block
+            This is being used to calculate next use line numbers for variables in a basic block
         '''
         code = self.code
 
@@ -163,7 +163,7 @@ class varAllocateRegister:
     
     def getBlockMaxUse(self,blockIndex, linenumber):
         '''
-       This returns the symbol with the maximum value of next use in the given basic block such that the symbol has been allocated a register
+            This returns the symbol with the maximum value of next use in the given basic block such that the symbol has been allocated a register
         '''
 
         blockMaxNext = 0
@@ -190,13 +190,14 @@ class varAllocateRegister:
     def getReg(self,blockIndex,line):
         '''
             Refer to slide 29, CodeGen.pdf for the cases
-            WARNING: Still not returning anything ?
         '''
+
         reg = ""
         msg = ""
         codeLine = self.code[line-1]
         
         lhs = self.SymTable.Lookup(codeLine[2]) # x
+        print codeLine[2]
         op1 = self.SymTable.Lookup(codeLine[3]) # y
         op2 = self.SymTable.Lookup(codeLine[4]) # z
 

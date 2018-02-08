@@ -32,9 +32,9 @@ def main():
 	regAlloc = varAllocateRegister(SymTab,ac3)
 
         # Codegen object
-	# codeGen = CodeGenerator(SymTab, ac3, regAlloc)
-	# codeGen.setup_all()
-	# codeGen.display_code()
+        codeGen = CodeGenerator(SymTab, ac3, regAlloc)
+        codeGen.setup_all()
+        codeGen.display_code()
 
 if __name__ == '__main__':
 	main()
