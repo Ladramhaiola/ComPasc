@@ -14,18 +14,29 @@ class ThreeAddrCode:
         '''
         self.code = []
         self.symTable = symTable
-        self.operator_list = ["unary","=","+","-","*","/","MOD","OR","AND","LEQ","SHL","SHR","<",">","<=",">=","CMP","JUMP","JGE","JTRUE","JFALSE","LOADREF","STOREREF","CALL","LABEL","param","RETURN","RETRUNVAL","PRINT"]
+        self.jump_list = ["JMP","JLE","JGE","JGE","JLE","JNE","JE","JZ"]
+        self.binary_list = ["+","-","*","/","MOD","OR","AND","LEQ","SHL","SHR","CMP"]
+        self.operator_list = ["UNARY","=","LOADREF","STOREREF","CALL","LABEL","PARAM","RETURN","RETRUNVAL","PRINT"] + self.binary_list + self.jump_list
 
-    def RepresentsInt(self,s):
+    def RepresentsNum(self,s):
+        '''
+        Checks if the given entry is a number entry.
+        '''
         try: 
-            int(s)
+            float(s)
             return True
         except ValueError:
             return False
 
     def symTabOp (self, x):
+        '''
+        args:
+            x: If it is a constant, then return nothing as the object to be appended to 3Ac line.
+               Else, define it in the table, and return the symbolTable entry
+
+        '''
         xEntry = None
-        if (self.RepresentsInt(x) == True):
+        if (self.RepresentsNum(x) == True):
             return None
         if (x != ''):
             xEntry = self.symTable.Lookup(x)
@@ -38,7 +49,7 @@ class ThreeAddrCode:
             We need to refer to the symbol table objects, which holds variable objects for scope resolutions
             Args:
                 listcode element: Format: LineNumber, Operation, Left Hand Side, Operand 1, Operand 2
-                LineNumber, Operation are never NULL/None
+            LineNumber, Operation are never NULL/None
         '''
         # Assignment translates to addition with 0
 
@@ -53,7 +64,6 @@ class ThreeAddrCode:
             if operator not in self.operator_list:
                 print (codeLine)
                 raise Exception('Operator Not Defined')
-
             
             temp[2] = self.symTabOp (lhs) 
             temp[3] = self.symTabOp (op1)

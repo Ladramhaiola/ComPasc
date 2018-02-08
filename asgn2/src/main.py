@@ -17,15 +17,24 @@ def reader (tacf): # 3-addr code file
 def main():
 	file = sys.argv[1]
 	content = reader(file)
+
+        # Construct the Symbol Table ?
 	SymTab = SymTable()
 	ac3 = ThreeAddrCode(SymTab)
+
+        # add to 3AC structures
 	ac3.addTo3AC(content)
+
 	# print (ac3.display_code())
-	# SymTab.PrintSymTable()
-	AR = varAllocateRegister(SymTab,ac3)
-	CG = CodeGenerator(SymTab, ac3, AR)
-	CG.setup_all()
-	CG.display_code()
+        # SymTab.PrintSymTable()
+
+        # Register allocater and other auxiliaries
+	regAlloc = varAllocateRegister(SymTab,ac3)
+
+        # Codegen object
+	# codeGen = CodeGenerator(SymTab, ac3, regAlloc)
+	# codeGen.setup_all()
+	# codeGen.display_code()
 
 if __name__ == '__main__':
 	main()

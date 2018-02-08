@@ -25,6 +25,9 @@ class SymTable (object):
         pprint.pprint(self.scopelist)
 
     def GetCurrentScopeName(self):
+        '''
+            WARNING: Currently, the Symbol Table has no key with name 'ScopeName'
+        '''
         return self.scopelist[-1]['ScopeName'] # even if it contains only one scope, this command helps
 
     def Check_identifier(self, identifier, index):

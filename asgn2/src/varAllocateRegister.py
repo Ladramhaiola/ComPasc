@@ -24,13 +24,20 @@ class varAllocateRegister:
             self.registerToSymbol[reg] = ""
         for sym in self.SymTable.table['Ident'].keys():
             self.symbolToRegister[sym] = ""
+
+        self.getBasicBlocks()
+        self.iterateOverBlocks()
         
     def labelToLine(self,labelName):
         '''
-        This function hasn't been used yet
+            Now being used
+            args:
+                Takes the labelName for which you want the linenumber
+
+            ISSUE: Will FAIL if multiple labels are present with same name in different scopes
         '''
         for i in range(len(self.code)):
-            if self.code[i][1] == "label" and self.code[i][3] == labelName:
+            if self.code[i][1] == "LABEL" and self.code[i][3] == labelName:
                 return self.code[i][0]
 
     def blockToLabel(self):
@@ -60,26 +67,37 @@ class varAllocateRegister:
         
     def getBasicBlocks(self):
         '''
-        Stores the basic blocks as [startline,endline] pairs in the list self.basicBlocks
+            Stores the basic blocks as [startline,endline] pairs in the list self.basicBlocks
         '''
         code = self.code
         self.leaders.append(1)                         # first statement is a leader
+
+
         for i in range(len(code)):
+
             codeLine = code[i]
-            if codeLine[1] in ["jmp","je","jne","jz","jg","jl","jge","jle"]:
-                self.leaders.append(codeLine[3])       # target of a jump is a leader
-                # print ("code i + 1 = " ,code[i+1])
+            if codeLine[1].lower() in ["jmp","je","jne","jz","jg","jl","jge","jle"]:
+
+                # Store the linenumber of the target label
+                self.leaders.append(int(self.labelToLine(codeLine[3])))
+
+                # Add the statement that follows as a leader, if not already the last line
                 if (i != (len(code) - 1)):
-                    self.leaders.append(code[i+1][3])          # statement next to a jump statement is a leader
+                    self.leaders.append(int(code[i+1][0]))         # 0 represents the linenumber
 
         self.leaders = list(set(self.leaders))         # removes duplicates
         self.leaders.sort()
 
+
+        # Convert the leader list to get the basic block indexes, with start and endline
         for i in range(len(self.leaders)):
             if (i != (len(self.leaders) - 1)):
-                self.basicBlocks.append([self.leaders[i],self.leaders[i+1]])
+                self.basicBlocks.append([self.leaders[i],self.leaders[i+1]-1]) # -1 because the leader is not a basic block line for previous block
             else:
                 self.basicBlocks.append([self.leaders[i],int(self.code[-1][0])])
+
+        # Check if the labels are not SHITE.
+        # print self.basicBlocks
 
 
     def blockAssignNextUse(self,blockIndex):

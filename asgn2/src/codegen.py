@@ -19,8 +19,8 @@ class CodeGenerator():
                         }
         self.curr_func = '' # to know which function we are generating for right now
         self.varAllocate = varAllocate
-        self.varAllocate.getBasicBlocks()
-        self.varAllocate.iterateOverBlocks()
+        # self.varAllocate.getBasicBlocks()
+        # self.varAllocate.iterateOverBlocks()
         self.code = threeAC.code
 
         # Register descriptor
