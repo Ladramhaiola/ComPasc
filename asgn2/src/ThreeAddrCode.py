@@ -62,7 +62,7 @@ class ThreeAddrCode:
             temp[1] = operator
 
             if (operator in self.jump_list):
-                temp[5] = op1
+                temp[5] = lhs
             elif (operator == 'LABEL'):
                 temp[2] = lhs
                 if (lhs == 'FUNC'):

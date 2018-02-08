@@ -23,7 +23,7 @@ def divideToFunctions (ac3code):
 		# print (codeline)
 		if (codeline[1] == 'LABEL' and codeline[2] == 'FUNC'):
 			if (flag == 0):
-				FB['main'] = [1,i]
+				FB['_start'] = [1,i]
 				flag = 1
 			for j in range (i,len(ac3code)):
 				if (ac3code[j][1] == 'RETURN'):
@@ -31,7 +31,8 @@ def divideToFunctions (ac3code):
 			FB[codeline[3].name] = [i+1,j+1]
 			i = j + 1
 	if (flag == 0):
-		FB['main'] = [1,i]
+                # print ('Value of i',i)
+		FB['_start'] = [1,i+1]
 	return FB
 
 def main():
@@ -44,12 +45,12 @@ def main():
 	ac3.addTo3AC(content)
 
 	FB = divideToFunctions(ac3.code)
-	print (FB)
+	# print (FB)
 
 	regAlloc = varAllocateRegister(SymTab,ac3)
 
 	# Codegen object
-    	codeGen = CodeGenerator(SymTab, ac3, regAlloc)
+    	codeGen = CodeGenerator(SymTab, ac3, regAlloc, FB)
     	codeGen.setup_all()
     	codeGen.display_code()
 

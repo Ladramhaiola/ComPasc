@@ -36,9 +36,16 @@ class varAllocateRegister:
 
             ISSUE: Will FAIL if multiple labels are present with same name in different scopes
         '''
+        # print labelName
         for i in range(len(self.code)):
-            if self.code[i][1] == "LABEL" and self.code[i][3] == labelName:
-                return self.code[i][0]
+            if self.code[i][1] == "LABEL":
+                # print self.code[i]
+                if self.code[i][3] == None:
+                    if self.code[i][5] == labelName:
+                        return self.code[i][0]
+                else:
+                    if self.code[i][3].name == labelName:
+                        return self.code[i][0]
 
     def blockToLabel(self):
         '''
@@ -79,7 +86,11 @@ class varAllocateRegister:
             if codeLine[1].lower() in ["jmp","je","jne","jz","jg","jl","jge","jle"]:
 
                 # Store the linenumber of the target label
-                self.leaders.append(int(self.labelToLine(codeLine[3])))
+                # print codeLine
+                if codeLine[3] == None:
+                    self.leaders.append(int(self.labelToLine(codeLine[5])))
+                else:
+                    self.leaders.append(int(self.labelToLine(codeLine[3])))
 
                 # Add the statement that follows as a leader, if not already the last line
                 if (i != (len(code) - 1)):

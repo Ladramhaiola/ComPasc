@@ -1,14 +1,12 @@
 class CodeGenerator():
     '''
-        Issues:
-            Where to add each instruction to? Like how is the basic block interfacing happening?
         Args:
             symTab: Symbol Table formed in main.py
             threeAC: Three AC code formed in main.py
             varAllocate: the varAllocate object from main.py
     '''
 
-    def __init__(self,symTab,threeAC,varAllocate):
+    def __init__(self,symTab,threeAC,varAllocate,fBlocks):
 
         self.symTab = symTab
         self.threeAC = threeAC
@@ -18,6 +16,7 @@ class CodeGenerator():
         self.varAllocate = varAllocate
         self.varAllocate.getBasicBlocks()
         self.varAllocate.iterateOverBlocks()
+        self.functionBlocks = fBlocks
         self.code = threeAC.code
 
         # Register descriptor
@@ -40,11 +39,10 @@ class CodeGenerator():
                         "OR":"or",
                         "AND":"and",
                         "SHL":"shl",
-                        "SHR":"shr",
-                        "CMP":"cmp"}
+                        "SHR":"shr"
+                         }
 
         self.jump_list = threeAC.jump_list
-
 
 
     def deallocRegs (self):
@@ -93,7 +91,7 @@ class CodeGenerator():
 
     ### --------------------------- INDIVIDUAL ASSEMBLY INSTRUCTIONS -------------------- ###
 
-    def handle_binary (self, lineno, op, lhs, op1, op2):
+    def handle_binary (self, lineno, op, lhs, op1, op2, const1, const2):
         '''
             
         '''
@@ -201,7 +199,7 @@ class CodeGenerator():
             op has direct mapping with jumps in assembly
             const1 has the label to jumpto as a string
         '''
-        self.asm_code[self.curr_func].append(op.lower() + " " + const1)
+        self.asm_code[self.curr_func].append("\t\t" + op.lower() + " " + const1)
 
     def handle_label (self, lhs, op1, const1):
         '''
@@ -211,9 +209,9 @@ class CodeGenerator():
             const1: if non func, then simply take this
         '''
         if lhs == 'FUNC':
-            ascode = op1.name + ":"
+            ascode = "\t" + op1.name + ":"
         else:
-            ascode = const1 + ":"
+            ascode = "\t" + const1 + ":"
         self.asm_code[self.curr_func].append(ascode)
 
     def handle_funccall (self,op1):
@@ -221,26 +219,26 @@ class CodeGenerator():
         args:
             op1 is a symbol table entry.
         '''
-        self.asm_code[self.curr_func].append('call ' + op1.name)
+        self.asm_code[self.curr_func].append('\t\tcall ' + op1.name)
 
     def handle_param(self,op1):
         '''
         args:
             op1 is the symbol table entry for the object to push
         '''
-        self.asm_code[self.curr_func].append('push %' + op1.name)
+        self.asm_code[self.curr_func].append('\t\tpush %' + op1.name)
 
     def handle_return(self):
         '''
             Empty return
         '''
-        self.asm_code[self.curr_func].append('ret')
+        self.asm_code[self.curr_func].append('\t\tret')
 
     def handle_returnval(self,op1):
         '''
         Have to look how values are returned
         '''
-        self.asm_code[self.curr_func].append('ret')
+        self.asm_code[self.curr_func].append('\t\tret')
 
 
 
@@ -263,23 +261,32 @@ class CodeGenerator():
 
         # op1, op2 are symbol table objects
 
-        for key in self.OrderedCode:
+        self.asm_code['text'].append('.section .text\n\t.globl _start\n\t_start:')
+
+        for key in self.functionBlocks.keys():
 
             # key, according to the function names
+            # print key
             self.function_change(key)
 
-            for codeLine in self.OrderedCode[key]:
-                lineno, op, lhs, op1, op2, const1, const2 = codeLine
+            start, end = self.functionBlocks[key]
+
+            for i in range(start-1,end):
+                # i is the index into self.code
+
+                lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
 
                 ln = int(lineno)
 
                 # DONE HOPEFULLY
                 if op in ["+","-","*","/","MOD","AND","OR","SHL","SHR"]:
-                    self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
+                    # self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
+                    pass
 
                 # Would need to refer to handle_binary for most part
                 elif op == 'CMP':
-                    self.handle_cmp (op1, op2, const1, const2)
+                    # self.handle_cmp (op1, op2, const1, const2)
+                    pass
                 
                 # DONE HOPEFULLY
                 elif op in self.jump_list:
@@ -327,10 +334,10 @@ class CodeGenerator():
         '''
         type_to_asm = {'int':".long",'float':''}
         self.asm_code['data'] = []
-        self.asm_code['data'].append('.data \n')
+        self.asm_code['data'].append('.section .data \n')
         for var in self.symTab.table['Ident']:
-            conv = self.symTab.Lookup(var).type
-            self.asm_code['data'].append(var + ": " + type_to_asm[conv] + " 0")
+            conv = self.symTab.Lookup(var).typ
+            self.asm_code['data'].append("\t" + var + ": " + type_to_asm[conv] + " 0")
 
 
     def setup_all(self):
@@ -345,8 +352,13 @@ class CodeGenerator():
         print ('===========================================')
         print ('----------------- x86 code ----------------')
         print ('===========================================')
+
+        for codeline in self.asm_code['data']:
+            print codeline
+
         for key in self.asm_code.keys():
-            for codeLine in self.asm_code[key]:
-                print codeLine
+            if key!= 'data':
+                for codeLine in self.asm_code[key]:
+                    print codeLine
         # print (self.asm_code['text'])
         print ('===========================================')
