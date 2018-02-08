@@ -2,6 +2,7 @@ from SymTable import SymTable
 from ThreeAddrCode import ThreeAddrCode
 from codegen import CodeGenerator
 from varAllocateRegister import varAllocateRegister
+import collections
 import sys
 
 def reader (tacf): # 3-addr code file
@@ -14,27 +15,40 @@ def reader (tacf): # 3-addr code file
 			content[i].append('')
 	return content
 
+def divideToFunctions (ac3code):
+	FB = {}
+	flag = 0
+	for i in range(len(ac3code)):
+		codeline = ac3code[i]
+		if (codeline[1] == 'LABEL' and codeline[2] == 'func'):
+			if (flag == 0):
+				FB['main'] = [1,i-1]
+				flag = 1
+			for j in range (i,len(ac3code)):
+				if (ac3code[j] == 'RETURN'):
+					break
+			FB[codeline[3].name] = [i,j]
+			i = j
+	return FB
+
 def main():
 	file = sys.argv[1]
 	content = reader(file)
 
-        # Construct the Symbol Table ?
+    # Construct the Symbol Table ?
 	SymTab = SymTable()
 	ac3 = ThreeAddrCode(SymTab)
-
-        # add to 3AC structures
 	ac3.addTo3AC(content)
 
-	# print (ac3.display_code())
-        # SymTab.PrintSymTable()
+	FB = divideToFunctions(ac3.code)
+	print (FB)
 
-        # Register allocater and other auxiliaries
 	regAlloc = varAllocateRegister(SymTab,ac3)
 
-        # Codegen object
-        codeGen = CodeGenerator(SymTab, ac3, regAlloc)
-        codeGen.setup_all()
-        codeGen.display_code()
+	# Codegen object
+    	codeGen = CodeGenerator(SymTab, ac3, regAlloc)
+    	codeGen.setup_all()
+    	codeGen.display_code()
 
 if __name__ == '__main__':
 	main()

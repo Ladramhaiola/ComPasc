@@ -58,14 +58,19 @@ class SymTable (object):
                 symbol: an object of class SymTable entry
         '''
         curr_scope = self.scopelist[-1]
+        e = None
         if (varfunc == "var"):
             if (v not in curr_scope['Ident']):
-                curr_scope['Ident'][v] = SymTableEntry (v, typ, "var")
+                e = SymTableEntry (v, typ, "var")
+                curr_scope['Ident'][v] = e
         else:
             if (v not in curr_scope['Func']):
-                curr_scope['Func'][v] = SymTableEntry (v, typ, "func")
+                e = SymTableEntry (v, typ, "func")
+                curr_scope['Func'][v] = e
         # else:
             # print ('Symbol already exists!')
+        return e
+
 
     def Lookup(self, identifier):
         '''
