@@ -14,7 +14,7 @@ class ThreeAddrCode:
         '''
         self.code = []
         self.symTable = symTable
-        self.operator_list = ["unary","=","+","-","*","/","MOD","OR","AND","LEQ","SHL","SHR","<",">","<=",">=","JUMP","JTRUE","JFALSE","LOADREF","STOREREF","CALL","LABEL","param","RETURN","RETRUNVAL","PRINT"]
+        self.operator_list = ["unary","=","+","-","*","/","MOD","OR","AND","LEQ","SHL","SHR","<",">","<=",">=","CMP","JUMP","JGE","JTRUE","JFALSE","LOADREF","STOREREF","CALL","LABEL","param","RETURN","RETRUNVAL","PRINT"]
 
     def RepresentsInt(self,s):
         try: 

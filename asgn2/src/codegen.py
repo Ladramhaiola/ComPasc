@@ -44,7 +44,8 @@ class CodeGenerator():
                         "OR":"or",
                         "AND":"and",
                         "SHL":"shl",
-                        "SHR":"shr"}
+                        "SHR":"shr",
+                        "CMP":"cmp"}
 
     def updateDescriptors(self):
         '''
@@ -101,7 +102,7 @@ class CodeGenerator():
         statTyp = self.StatementType(line)
         # print (line)
         # print (statTyp)
-        ascode = ""
+        ascode = "\t"
         blockIndex = self.varAllocate.line2Block(lineno)
         # handle cases a = a + b
         if (op1 == lhs):
@@ -114,12 +115,12 @@ class CodeGenerator():
                     flag = 1
                 loc_op1 = self.symbolToRegister[op1]
                 if (loc_op1 != ""): # a in register
-                    ascode = op + " " + loc_op2 + "," +  loc_op1 + "\n" 
+                    ascode += op + " " + loc_op2 + "," +  loc_op1 + "\n" 
                     self.asm_code['text'].append(ascode)
                     # b may be in memory or register; doesn't matter. just add it to a
                     return
                 elif (flag == 0):
-                    ascode = op + " " + loc_op2 + "," + getFromMem(op1) + "\n"; 
+                    ascode += op + " " + loc_op2 + "," + getFromMem(op1) + "\n"; 
                     self.asm_code['text'].append(ascode)
                     # a not in register, but b is in register. simply update a's value in memory
                     return
@@ -138,33 +139,33 @@ class CodeGenerator():
             loc_op2 = self.getFromMem(op2)
 
         if (statTyp == 'BA_2C'):
-            ascode =  op + " $" + op1 + "," + loc + "\n" + "add $" + op2 + "," + loc + "\n"
+            ascode +=  op + " $" + op1 + "," + loc + "\n" + "add $" + op2 + "," + loc + "\n"
         elif (statTyp == 'BA_1C_R'):
             if (msg == "Replaced op1"):
-                ascode = op + " $" + op2 + "," + loc + "\n"
+                ascode += op + " $" + op2 + "," + loc + "\n"
             else:
-                ascode = "mov " + loc_op1 + "," + loc + "\n" + op + " $" + op2 + "," + loc + "\n"
+                ascode += "mov " + loc_op1 + "," + loc + "\n" + op + " $" + op2 + "," + loc + "\n"
         elif (statTyp == 'BA_1C_L'):
             if (msg == "Replaced op2"):
-                ascode = op + " $" + op1 + "," + loc + "\n"
+                ascode += op + " $" + op1 + "," + loc + "\n"
             else:
-                ascode = "mov " + loc_op2 + "," + loc + "\n" + op + " $" + op1 + "," + loc + "\n"
+                ascode += "mov " + loc_op2 + "," + loc + "\n" + op + " $" + op1 + "," + loc + "\n"
         else:
             if (op1 in self.symTab.table['Ident'].keys() and op2 in self.symTab.table['Ident'].keys() and self.symbolToRegister[op1] == "" and self.symbolToRegister[op2] == ""):
-                ascode = "mov " + loc_op1 + "," + loc + "\n" + op + " " + loc_op2 + "," + loc + "\n"
+                ascode += "mov " + loc_op1 + "," + loc + "\n" + op + " " + loc_op2 + "," + loc + "\n"
             elif (msg == "Replaced op1"):
-                ascode = op + " " + loc_op2 + "," + loc + "\n"
+                ascode += op + " " + loc_op2 + "," + loc + "\n"
             elif (msg == "Replaced op2"):
-                ascode = op + " " + loc_op1 + "," + loc + "\n"
+                ascode += op + " " + loc_op1 + "," + loc + "\n"
             elif (msg == "Replaced nothing"):
-                ascode = op + " " + loc_op1 + "," + getFromMem(lhs) + "\n" + op + " " + loc_op2 + "," + getFromMem(lhs) + "\n"
+                ascode += op + " " + loc_op1 + "," + getFromMem(lhs) + "\n" + op + " " + loc_op2 + "," + getFromMem(lhs) + "\n"
             else:
                 MU_var = msg[msg.find(',')+1:]
                 self.movToMem(loc,MU_var)
                 if (MU_var == op1):
-                    ascode = op + " " + loc_op2 + "," + loc_op1 + "\n"
+                    ascode += op + " " + loc_op2 + "," + loc_op1 + "\n"
                 else:
-                    ascode = "mov " + loc_op2 + "," + loc + "\n" + op + " " + loc_op1 + "," + loc + "\n"
+                    ascode += "mov " + loc_op2 + "," + loc + "\n" + op + " " + loc_op1 + "," + loc + "\n"
 
         self.asm_code['text'].append(ascode)
 
@@ -186,7 +187,7 @@ class CodeGenerator():
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
     def handle_jump (self,op1):
-        ascode = "jmp "
+        ascode = "\tjmp "
         self.code += "jmp " + op1
 
 
@@ -218,8 +219,12 @@ class CodeGenerator():
         self.code += '\nret'
 
 
-    ### ---------------------------- AGGREGATORS ---------------------------------------- ###
+    def handle_label (self, lineno, op1):
+        ascode = op1 + ":\n"
+        self.asm_code['text'].append(ascode)
 
+
+    ### ---------------------------- AGGREGATORS ---------------------------------------- ###
 
     def setup_text(self):
         '''
@@ -232,10 +237,11 @@ class CodeGenerator():
         for codeLine in self.threeAC.code:
             lineno, op, lhs, op1, op2 = codeLine
             # lineno, op are NEVER NULL
+            ln = int(lineno)
             if op == 'unary':
                 self.handle_unary()
 
-            elif op == 'jmp':
+            elif op == 'JMP':
                 self.handle_jmp()
 
             elif op == 'jtrue':
@@ -250,8 +256,8 @@ class CodeGenerator():
             elif op == 'storeref':
                 self.handle_storeref()
 
-            elif op == 'label':
-                self.handle_label()
+            elif op == 'LABEL':
+                self.handle_label(ln,op1)
 
             elif op == 'call':
                 self.handle_funccall(op1)
@@ -265,15 +271,14 @@ class CodeGenerator():
             elif op == 'returnval':
                 self.handle_returnval(op1)
 
-            else:
-                self.handle_binary(int(lineno),op,lhs,op1,op2)
+            # elif op in ['+','-','*','/']:
+            #     self.handle_binary(ln,op,lhs,op1,op2)
 
-            lineno = int(lineno)
-            blockIndex =  self.varAllocate.line2Block(lineno)
+            blockIndex =  self.varAllocate.line2Block(ln)
 
             # deallocate all registers at the end of each basic block
 
-            if (lineno == self.varAllocate.basicBlocks[blockIndex][1]):
+            if (ln == self.varAllocate.basicBlocks[blockIndex][1]):
                 self.deallocRegs()
 
             # print (self.registerToSymbol)
