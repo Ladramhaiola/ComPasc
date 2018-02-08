@@ -20,15 +20,16 @@ def divideToFunctions (ac3code):
 	flag = 0
 	for i in range(len(ac3code)):
 		codeline = ac3code[i]
-		if (codeline[1] == 'LABEL' and codeline[2] == 'func'):
+		# print (codeline)
+		if (codeline[1] == 'LABEL' and codeline[2] == 'FUNC'):
 			if (flag == 0):
-				FB['main'] = [1,i-1]
+				FB['main'] = [1,i]
 				flag = 1
 			for j in range (i,len(ac3code)):
-				if (ac3code[j] == 'RETURN'):
+				if (ac3code[j][1] == 'RETURN'):
 					break
-			FB[codeline[3].name] = [i,j]
-			i = j
+			FB[codeline[3].name] = [i+1,j+1]
+			i = j + 1
 	return FB
 
 def main():
