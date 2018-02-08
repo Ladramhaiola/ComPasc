@@ -32,15 +32,15 @@ class CodeGenerator():
         self.Registers = ["eax","ebx","ecx","edx"]
 
         # Operation list for 32 bit registers
-        self.op32_dict = {"+":"add",
-                        "-":"sub",
-                        "*":"imul",
-                        "/":"idiv",
+        self.op32_dict = {"+":"addl",
+                        "-":"subl",
+                        "*":"imull",
+                        "/":"idivl",
                         "MOD":"mod",
                         "OR":"or",
                         "AND":"and",
-                        "SHL":"shl",
-                        "SHR":"shr"
+                        "SHL":"shll",
+                        "SHR":"shrl"
                          }
 
         self.jump_list = threeAC.jump_list
@@ -120,13 +120,13 @@ class CodeGenerator():
             loc_op1 = self.symbolToRegister[op1.name]
 
             if (loc_op1 != ""): # a in register
-                ascode = "\t\t" + op + " " + loc_op2 + "," +  loc_op1 
+                ascode = "\t\t" + op + " %" + loc_op2 + ",%" +  loc_op1 
                 self.asm_code['text'].append(ascode)
                 # b may be in memory or register; doesn't matter. just add it to a
                 return
 
             elif (flag == 0):
-                ascode = "\t\t" + op + " " + loc_op2 + "," + getFromMem(op1.name)
+                ascode = "\t\t" + op + " %" + loc_op2 + ",(" + getFromMem(op1.name) + ")"
                 self.asm_code['text'].append(ascode)
                 # a not in register, but b is in register. simply update a's value in memory
                 return
@@ -222,17 +222,17 @@ class CodeGenerator():
                 loc_op2 = self.getFromMem(op2.name)
 
         if op1 == None and op2 == None:
-            ascode = "\t\tcmp $" + const1 + ",$ " + const2
+            ascode = "\t\tcmpl $" + const1 + ",$ " + const2
         elif op1 == None and op2 != None:
-            ascode = "\t\tcmp $" + const1 + ",% " + loc_op2
+            ascode = "\t\tcmpl $" + const1 + ",% " + loc_op2
         elif op1 != None and op2 == None:
-            ascode = "\t\tcmp %" + loc_op1 + ",$ " + const2
+            ascode = "\t\tcmpl %" + loc_op1 + ",$ " + const2
         else:
             if loc_op1 not in self.Registers and loc_op2 not in self.Registers:
                 loc, msg = self.varAllocate.getReg(self.varAllocate.line2Block(lineno), lineno, True)
-                ascode = "\t\tmov %" + loc_op1 + ", %" + loc + "\n\t\tcmp %" + loc + ", %" + loc_op2
+                ascode = "\t\tmovl %" + loc_op1 + ", %" + loc + "\n\t\tcmpl %" + loc + ", %" + loc_op2
             else:
-                ascode = "\t\tcmp %" + loc_op1 + ", %" + loc_op2
+                ascode = "\t\tcmpl %" + loc_op1 + ", %" + loc_op2
 
         self.asm_code[self.curr_func].append(ascode)
 
@@ -394,9 +394,9 @@ class CodeGenerator():
         self.setup_data()
 
     def display_code(self):
-        print (';===========================================')
-        print (';----------------- x86 code ----------------')
-        print (';===========================================')
+        # print (';===========================================')
+        # print (';----------------- x86 code ----------------')
+        # print (';===========================================')
 
         for codeline in self.asm_code['data']:
             print codeline
@@ -406,4 +406,4 @@ class CodeGenerator():
                 for codeLine in self.asm_code[key]:
                     print codeLine
         # print (self.asm_code['text'])
-        print (';===========================================')
+        # print (';===========================================')
