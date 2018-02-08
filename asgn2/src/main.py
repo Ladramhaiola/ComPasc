@@ -30,6 +30,8 @@ def divideToFunctions (ac3code):
 					break
 			FB[codeline[3].name] = [i+1,j+1]
 			i = j + 1
+	if (flag == 0):
+		FB['main'] = [1,i]
 	return FB
 
 def main():
