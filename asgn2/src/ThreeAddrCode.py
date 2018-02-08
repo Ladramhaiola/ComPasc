@@ -15,7 +15,7 @@ class ThreeAddrCode:
         self.code = []
         self.symTable = symTable
         self.jump_list = ["JMP","JLE","JGE","JGE","JLE","JNE","JE","JZ"]
-        self.binary_list = ["+","-","*","/","MOD","OR","AND","LEQ","SHL","SHR","CMP"]
+        self.binary_list = ["+","-","*","/","MOD","OR","AND","SHL","SHR","CMP"]
         self.operator_list = ["UNARY","=","LOADREF","STOREREF","CALL","LABEL","PARAM","RETURN","RETRUNVAL","PRINT"]
 
     def RepresentsNum(self,s):

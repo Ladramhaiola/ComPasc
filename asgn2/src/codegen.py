@@ -1,4 +1,3 @@
-
 class CodeGenerator():
     '''
         Issues:
@@ -16,7 +15,6 @@ class CodeGenerator():
         self.asm_code = {'text':[],
                          'data':[]}
         self.curr_func = ''
-
         self.varAllocate = varAllocate
         self.varAllocate.getBasicBlocks()
         self.varAllocate.iterateOverBlocks()
@@ -47,13 +45,6 @@ class CodeGenerator():
 
         self.jump_list = threeAC.jump_list
 
-
-    def function_change (self, func_name):
-        '''
-            If we get a basic block part which has different name than the current, add a key with that name
-        '''
-        self.asm_code[func_name] = []
-        self.curr_func = func_name
 
 
     def deallocRegs (self):
@@ -89,16 +80,13 @@ class CodeGenerator():
 
     def movToMem (self, reg, v):
         '''
-            QUESTION: What is (,1) ? 
         '''
         ascode = "mov " + "\%" + reg + "," + v + "(,1)" + "\n"
         return ascode
 
     def getFromMem (self, x):
         '''
-            WARNING: Is this correct?
         '''
-
         ascode = x + "(,1)"
         return ascode
 
@@ -182,7 +170,7 @@ class CodeGenerator():
         self.asm_code['text'].append(ascode)
 
 
-        ### --- Update descriptors for L and LHS --- ###
+        ### ------------ Update descriptors for L and LHS ------------ ###
 
         # For L, if it is a register
         Registers = ["eax","ebx","ecx","edx"]
@@ -198,24 +186,48 @@ class CodeGenerator():
 
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
-    def handle_jump (self, op, op1):
+
+    # LIFE IS GOOD FROM HERE
+
+    def handle_cmp (op1,op2,const1,const2):
+        '''
+            Still to handle it.
+        '''
+        return
+
+    def handle_jump (self, op, const1):
         '''
             Handle all jumps.
+            op has direct mapping with jumps in assembly
+            const1 has the label to jumpto as a string
         '''
-        self.asm_code[self.curr_func].append(op.lower() + " " + op1.name)
+        self.asm_code[self.curr_func].append(op.lower() + " " + const1)
 
+    def handle_label (self, lhs, op1, const1):
+        '''
+        args:
+            lhs: FUNC/NONFUNC Label
+            op1: if func label, then get from symboltable
+            const1: if non func, then simply take this
+        '''
+        if lhs == 'FUNC':
+            ascode = op1.name + ":"
+        else:
+            ascode = const1 + ":"
+        self.asm_code[self.curr_func].append(ascode)
 
     def handle_funccall (self,op1):
         '''
-        WARNING: Have to take into account context of function, or global.
-        Not doing that currently.
-        Essentially, self.code needs to be something more elaborate.
         args:
             op1 is a symbol table entry.
         '''
         self.asm_code[self.curr_func].append('call ' + op1.name)
 
     def handle_param(self,op1):
+        '''
+        args:
+            op1 is the symbol table entry for the object to push
+        '''
         self.asm_code[self.curr_func].append('push %' + op1.name)
 
     def handle_return(self):
@@ -231,63 +243,81 @@ class CodeGenerator():
         self.asm_code[self.curr_func].append('ret')
 
 
-    def handle_label (self, lineno, op1):
-        ascode = op1.name + ":"
-        self.asm_code[self.curr_func].append(ascode)
 
 
     ### ---------------------------- AGGREGATORS ---------------------------------------- ###
 
+    def function_change (self, func_name):
+        '''
+            If we get a basic block part which has different name than the current, add a key with that name
+        '''
+        self.asm_code[func_name] = []
+        self.curr_func = func_name
+
+
     def setup_text(self):
         '''
-            text section
+            Text section
             Refer to 3AC_complete.md for exact 3 Abstract Code definitions
         '''
 
-        for codeLine in self.threeAC.code:
-            lineno, op, lhs, op1, op2 = codeLine
+        # op1, op2 are symbol table objects
 
-            ln = int(lineno)
+        for key in self.OrderedCode:
 
-            if op == 'unary':
-                self.handle_unary ()
+            # key, according to the function names
+            self.function_change(key)
 
-            elif op in self.jump_list:
-                self.handle_jmp (op,op1)
+            for codeLine in self.OrderedCode[key]:
+                lineno, op, lhs, op1, op2, const1, const2 = codeLine
 
-            elif op == 'loadref':
-                self.handle_loadref ()
+                ln = int(lineno)
 
-            elif op == 'storeref':
-                self.handle_storeref ()
+                # DONE HOPEFULLY
+                if op in ["+","-","*","/","MOD","AND","OR","SHL","SHR"]:
+                    self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
 
-            elif op == 'label':
-                self.handle_label (ln,op1)
+                # Would need to refer to handle_binary for most part
+                elif op == 'CMP':
+                    self.handle_cmp (op1, op2, const1, const2)
+                
+                # DONE HOPEFULLY
+                elif op in self.jump_list:
+                    self.handle_jump (op, const1)
 
-            elif op == 'call':
-                self.handle_funccall (op1)
+                # DONE HOPEFULLY
+                elif op == 'LABEL':
+                    self.handle_label (lhs, op1, const1)
 
-            elif op == 'param':
-                self.handle_param( op1)
+                # DONE HOPEFULLY
+                elif op == 'CALL':
+                    self.handle_funccall (op1)
 
-            elif op == 'return':
-                self.handle_return()
+                # DONE HOPEFULLY
+                elif op == 'PARAM':
+                    self.handle_param (op1)
 
-            elif op == 'returnval':
-                self.handle_returnval(op1)
+                elif op == 'RETURN':
+                    self.handle_return ()
 
-            elif op in ['+','-','*','/']:
-                self.handle_binary(ln,op,lhs,op1,op2)
+                elif op == 'RETURNVAL':
+                    self.handle_returnval (op1)
 
-            blockIndex =  self.varAllocate.line2Block(ln)
+                elif op == 'LOADREF':
+                    self.handle_loadref ()
 
-            # deallocate all registers at the end of each basic block
+                elif op == 'STOREREF':
+                    self.handle_storeref ()
 
-            if (ln == self.varAllocate.basicBlocks[blockIndex][1]):
-                self.deallocRegs()
 
-            # print (self.registerToSymbol)
-            # print (self.symbolToRegister)
+                blockIndex =  self.varAllocate.line2Block(ln)
+
+                # deallocate all registers at the end of each basic block
+                if (ln == self.varAllocate.basicBlocks[blockIndex][1]):
+                    self.deallocRegs()
+
+                # print (self.registerToSymbol)
+                # print (self.symbolToRegister)
 
 
     def setup_data(self):
@@ -295,11 +325,13 @@ class CodeGenerator():
             data section
             FFT: Just pick stuff from symbol table? For now, that's okay I guess...
         '''
-
+        type_to_asm = {'int':".long",'float':''}
         self.asm_code['data'] = []
         self.asm_code['data'].append('.data \n')
         for var in self.symTab.table['Ident']:
-            self.asm_code['data'].append(var + ":" + " .long 0")
+            conv = self.symTab.Lookup(var).type
+            self.asm_code['data'].append(var + ": " + type_to_asm[conv] + " 0")
+
 
     def setup_all(self):
         '''
@@ -310,12 +342,11 @@ class CodeGenerator():
         self.setup_data()
 
     def display_code(self):
-        print (';============================')
-        print (';--------- x86 code ---------')
-        print (';============================')
+        print ('===========================================')
+        print ('----------------- x86 code ----------------')
+        print ('===========================================')
         for key in self.asm_code.keys():
             for codeLine in self.asm_code[key]:
                 print codeLine
         # print (self.asm_code['text'])
-        print (';============================')
-        print (';============================')
+        print ('===========================================')
