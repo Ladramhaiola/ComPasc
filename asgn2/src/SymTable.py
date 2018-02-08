@@ -52,14 +52,18 @@ class SymTable (object):
         }
         self.scopelist.append(temp_scope)
 
-    def Define(self, identifier, typ, varfunc):
+    def Define(self, v, typ, varfunc):
         '''
             args:
                 symbol: an object of class SymTable entry
         '''
         curr_scope = self.scopelist[-1]
-        if (identifier not in curr_scope['Ident']):
-            curr_scope['Ident'][identifier] = SymTableEntry (identifier, 'int', 'var')
+        if (varfunc == "var"):
+            if (v not in curr_scope['Ident']):
+                curr_scope['Ident'][v] = SymTableEntry (v, typ, "var")
+        else:
+            if (v not in curr_scope['Func']):
+                curr_scope['Func'][v] = SymTableEntry (v, typ, "func")
         # else:
             # print ('Symbol already exists!')
 
