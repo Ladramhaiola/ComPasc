@@ -57,8 +57,8 @@ class SymTable (object):
         curr_scope = self.scopelist[-1]
         if (identifier not in curr_scope['Ident']):
             curr_scope['Ident'][identifier] = SymTableEntry (identifier, 'int', 'var')
-        else:
-            print ('Symbol already exists!')
+        # else:
+            # print ('Symbol already exists!')
 
     def Lookup(self, identifier):
         '''

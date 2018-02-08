@@ -1,10 +1,10 @@
-1, =, a, 2
-2, =, b, 7
+1, +, a, 2, 0
+2, +, b, 7, 0
 3, +, a, a, b
-4, LEQ, a, 50
-5, JTRUE, 2
-6, CALL, foo
-7, RETURN
-8, LABEL, foo
-9, PRINT, a
-10, RETURN
+4, +, a, b, 3
+5, +, b, 1, 2
+6, +, c, a, b
+7, +, d, 4, 5
+8, +, f, 1, 3
+9, +, g, f, b
+10, +, g, a, 1

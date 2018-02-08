@@ -1,5 +1,7 @@
 from SymTable import SymTable
 from ThreeAddrCode import ThreeAddrCode
+from codegen import CodeGenerator
+from varAllocateRegister import varAllocateRegister
 import sys
 
 def reader (tacf): # 3-addr code file
@@ -18,7 +20,12 @@ def main():
 	SymTab = SymTable()
 	ac3 = ThreeAddrCode(SymTab)
 	ac3.addTo3AC(content)
-	SymTab.PrintSymTable()
+	# print (ac3.display_code())
+	# SymTab.PrintSymTable()
+	AR = varAllocateRegister(SymTab,ac3)
+	CG = CodeGenerator(SymTab, ac3, AR)
+	CG.setup_all()
+	CG.display_code()
 
 if __name__ == '__main__':
 	main()

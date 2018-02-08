@@ -40,6 +40,7 @@ class ThreeAddrCode:
                 listcode element: Format: LineNumber, Operation, Left Hand Side, Operand 1, Operand 2
                 LineNumber, Operation are never NULL/None
         '''
+        # Assignment translates to addition with 0
 
         for codeLine in listCode:
 
@@ -58,7 +59,7 @@ class ThreeAddrCode:
             temp[3] = self.symTabOp (op1)
             temp[4] = self.symTabOp (op2)
             
-            self.code.append(temp) # Storing it to the global code store
+            self.code.append([lineno, operator, lhs, op1, op2]) # Storing it to the global code store
 
 
     def display_code(self):
@@ -72,7 +73,7 @@ class ThreeAddrCode:
         print ("=========================================")
 
         for code in self.code:
-            print (code)
+            # print (code)
             lineno, op, op3, op1, op2 = code
 
             if op == '=':
