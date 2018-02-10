@@ -8,8 +8,8 @@
 8, +, f, 1, 3
 9, +, g, f, b
 10, +, g, a, 1
-11, CMP, g, a
+11, CMP, ,g, a
 12, JGE, foo
-13, LABEL, FUNC, foo
+13, LABEL, FUNC, foo, 
 14, +, g, a, 2
 15, RETURN

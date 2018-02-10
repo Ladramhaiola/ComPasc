@@ -1,5 +1,6 @@
 import os
 import sys
+from SymTable import SymTableEntry as SymTableEntry
 
 class varAllocateRegister:
     '''
@@ -81,7 +82,7 @@ class varAllocateRegister:
 
 
         for i in range(len(code)):
-
+            # print (self.leaders)
             codeLine = code[i]
             if codeLine[1].lower() in ["jmp","je","jne","jz","jg","jl","jge","jle"]:
 
@@ -98,7 +99,6 @@ class varAllocateRegister:
 
         self.leaders = list(set(self.leaders))         # removes duplicates
         self.leaders.sort()
-
 
         # Convert the leader list to get the basic block indexes, with start and endline
         for i in range(len(self.leaders)):
@@ -124,42 +124,48 @@ class varAllocateRegister:
         # print (code)
         prevLine = {}                                                        # Stores the next use info for the next line (next to the current line in the loop)
         symbols = self.SymTable.table['Ident'].keys()                        # This is the list of all symbols
-
+        # print (symbols)
         for sym in symbols:
             prevLine[sym] = float("inf")
         
-        for i in range(len(code)-1,-1,-1):
+        i = len(code)
+        for i in range(len(code),0,-1):
             lineDict = {}
-            codeLine = code[i]
+            codeLine = code[i-1]
+            # print (codeLine)
 
             lhs = codeLine[2]
             op1 = codeLine[3]
             op2 = codeLine[4]
         
-            lhs_symbol = self.SymTable.Lookup(lhs)
-            op1_symbol = self.SymTable.Lookup(op1)
-            op2_symbol = self.SymTable.Lookup(op2)
-        
-            if lhs_symbol != None:
-                lineDict[lhs] = float("inf")
-            if op1_symbol != None:
-                lineDict[op1] = codeLine[0]
+            if isinstance(lhs, SymTableEntry):
+                lineDict[lhs.name] = float("inf")
+            if op1 != None:
+                lineDict[op1.name] = codeLine[0]
                 # print ('ZZZ = ', lineDict[op1])
-            if op2_symbol != None:
-                lineDict[op2] = codeLine[0]
+            if op2 != None:
+                lineDict[op2.name] = codeLine[0]
 
-
+            # print (lineDict)
 
             for sym in symbols:
-                if sym not in [op1,op2,lhs]:
+                op1_s = ""
+                op2_s = ""
+                lhs_s = ""
+                if (op1 != None):
+                    op1_s = op1.name
+                if (op2 != None):
+                    op2_s = op2.name
+                if (isinstance(lhs, SymTableEntry)):
+                    lhs_s = lhs.name
+                # if ((op1 != None and sym != op1.name) or (op2 != None and sym != op2.name) or (lhs != None and sym != lhs.name)):
+                #     lineDict[sym] = prevLine[sym]
+                if sym not in [op1_s,op2_s,lhs_s]:
                     lineDict[sym] = prevLine[sym]                            # Rest of the symbols will get the next use info of the next line
-
-            # print ('BBB = ', lineDict['a'])
 
             self.nextUse[blockIndex].append(lineDict)                        # These dictionaries will be appended in reverse order of the line number
             prevLine = lineDict.copy()                                              # We need this for updating the next use for every symbol
-            # prevLine[lhs] = float("inf")
-            # print (lineDict)
+        
         self.nextUse[blockIndex] = list(reversed(self.nextUse[blockIndex]))
 
     def iterateOverBlocks(self):
@@ -208,15 +214,10 @@ class varAllocateRegister:
         codeLine = self.code[line-1]
         
         lhs = codeLine[2] # x
-        # print lhs
         op1 = codeLine[3] # y
         op2 = codeLine[4] # z
 
         # x = y OP z
-        # print (type(self.basicBlocks))
-        # print (self.basicBlocks)
-        # print (line - self.basicBlocks[blockIndex][0])
-        # print ('size = ', len(self.nextUse))
         if (line < self.basicBlocks[blockIndex][1]): # less than endline index
             nextUseInBlock = self.nextUse[blockIndex][line + 1 - self.basicBlocks[blockIndex][0]]
         else:
@@ -244,7 +245,6 @@ class varAllocateRegister:
             self.symbolToRegister[MU_var] = ""
             msg = "Replaced NextUse , " + MU_var
         else:
-            reg = lhs.name + "(,1)" # var
+            reg = lhs.name # var
             msg = "Replaced Nothing"
-        # print (msg)
         return (reg, msg)
