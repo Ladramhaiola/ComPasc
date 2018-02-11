@@ -1,0 +1,9 @@
+1, +, a, 1, 0
+2, +, b, 10, 0
+3, +, c, 1, 0
+4, CMP, ,a, b
+5, JGE, loo
+6, PRINT,,a,
+7, +, a, a, c
+8, LABEL, NONFUNC, loo, 
+9, RETURN,,,
