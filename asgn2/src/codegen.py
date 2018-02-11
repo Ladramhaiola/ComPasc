@@ -87,19 +87,19 @@ class CodeGenerator():
 
     def movToMem (self, reg, v):
         '''
+            move to memory, and update the descriptors
         '''
-        ascode = "\t\tmovl " + "\%" + reg + "," + v + "\n"
-        return ascode
+        # print (v)
+        ascode = "\t\tmovl " + "%" + reg + "," + v
+        self.symbolToRegister[v] = ''
+        self.registerToSymbol[reg] = ''
+        self.asm_code[self.curr_func].append(ascode)
 
     def getFromMem (self, x):
         '''
         '''
         ascode = x
         return ascode
-
-    def loadToReg (self, reg, v):
-        ascode = "\t\tmovl " + reg + ', ' + v
-        return ascode 
 
     ### --------------------------- INDIVIDUAL ASSEMBLY INSTRUCTIONS -------------------- ###
 
@@ -163,14 +163,21 @@ class CodeGenerator():
             else:
                 loc_op2 = self.getFromMem(op2.name)
 
+        ascode = ''
+
         if (statTyp == 'BA_2C'):
             n = int(const1) + int(const2)
-            ascode = "\t\t" + op + " $" + str(n) + ",%" + loc
+            if (msg == "Did not replace"):
+                ascode = "\t\tmovl " + lhs.name + ",%" + loc
+            ascode += "\n\t\t" + op + " $" + str(n) + ",%" + loc
         elif (statTyp == 'BA_1C_R'):
+            if (msg == "Did not replace"):
+                ascode = "\t\tmovl " + lhs.name + ",%" + loc
+            
             if (msg == "Replaced op1"):
                 ascode = "\t\t" + op + " $" + const2 + ",%" + loc
             else:
-                ascode = "\t\tmovl " + loc_op1 + ",%" + loc + "\n\t\t" + op + " $" + const2 + ",%" + loc
+                ascode += "\n\t\tmovl " + loc_op1 + ",%" + loc + "\n\t\t" + op + " $" + const2 + ",%" + loc
         else:
             if (self.symbolToRegister[op1.name] == "" and self.symbolToRegister[op2.name] == ""):
                 if loc in self.Registers:
@@ -188,6 +195,9 @@ class CodeGenerator():
                 ascode = "\t\t" + op + " " + loc_op1 + ",%" + loc
             elif (msg == "Replaced nothing"):
                 ascode = "\t\t" + op + " " + loc_op1 + ",%" + getFromMem(lhs) + "\n\t\t" + op + " " + loc_op2 + ",%" + getFromMem(lhs)
+            elif (msg == "Did not replace"):
+                # There is unused register
+                 ascode = "\t\tmovl %" + lhs.name + ",%" + loc + "\n\t\t" + op + " " + loc_op1 + ",%" + loc + "\n\t\t" + op + " " + loc_op2 + ",%" + loc
             else:
                 # Spill it
                 maxUse_var = msg[msg.find(',')+1:]
@@ -228,7 +238,9 @@ class CodeGenerator():
 
     def handle_cmp (self, lineno, op1, op2, const1, const2):
         '''
-            Still to handle it
+            const1 and const2 are strings
+            op1 and op2 are SymbolTable objects
+            two are definitely useless for a instruction
         '''
         if op1 != None:
             if self.symbolToRegister[op1.name] != "":
@@ -292,17 +304,28 @@ class CodeGenerator():
         '''
         self.asm_code[self.curr_func].append('\t\tpush %' + op1.name)
 
-    def handle_return(self):
-        '''
-            Empty return
-        '''
-        self.asm_code[self.curr_func].append('\t\tret')
 
-    def handle_returnval(self,op1):
+    def handle_return(self,op1):
         '''
-        Have to look how values are returned
+            Currently moving the variable to be returned to the eax register, and updating the descriptors
         '''
-        self.asm_code[self.curr_func].append('\t\tret')
+        if op1 != None:
+            # Clear EAX before putting the return value
+            self.movToMem('eax',self.registerToSymbol['eax'])
+
+            # Move the actual value to eax
+            self.asm_code[self.curr_func].append('\t\tmovl %' + op1.name + ',%eax')
+
+            # Register descriptor update
+            self.registerToSymbol['eax'] = op1.name
+
+            # memvariable update
+            self.symbolToRegister[op1.name] = 'eax'
+
+            self.asm_code[self.curr_func].append('\t\tret')
+        else:
+            self.asm_code[self.curr_func].append('\t\tret')
+
 
 
 
@@ -369,10 +392,7 @@ class CodeGenerator():
                     self.handle_param (op1)
 
                 elif op == 'RETURN':
-                    self.handle_return ()
-
-                elif op == 'RETURNVAL':
-                    self.handle_returnval (op1)
+                    self.handle_return (op1)
 
                 elif op == 'LOADREF':
                     self.handle_loadref ()
@@ -394,7 +414,6 @@ class CodeGenerator():
     def setup_data(self):
         '''
             data section
-            FFT: Just pick stuff from symbol table? For now, that's okay I guess...
         '''
         type_to_asm = {'int':".long",'float':''}
         self.asm_code['data'] = []
@@ -413,9 +432,9 @@ class CodeGenerator():
         self.setup_data()
 
     def display_code(self):
-        # print (';===========================================')
-        # print (';----------------- x86 code ----------------')
-        # print (';===========================================')
+        print ('#===========================================')
+        print ('#----------------- x86 code ----------------')
+        print ('#===========================================')
 
         for codeline in self.asm_code['data']:
             print codeline
@@ -425,4 +444,4 @@ class CodeGenerator():
                 for codeLine in self.asm_code[key]:
                     print codeLine
         # print (self.asm_code['text'])
-        # print (';===========================================')
+        print ('#===========================================')

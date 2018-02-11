@@ -10,7 +10,7 @@
 10, +, g, a, 1
 11, CMP, ,g, a
 12, JGE, foo
-13, RETURN
+13, RETURN,,,
 14, LABEL, FUNC, foo, 
 15, +, g, a, 2
-16, RETURN
+16, RETURN,,,
