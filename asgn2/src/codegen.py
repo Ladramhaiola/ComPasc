@@ -46,6 +46,11 @@ class CodeGenerator():
         self.jump_list = threeAC.jump_list
 
 
+    def printOut (self, str_v): # function to print strings stored in memory
+        ascode = 'movq $' + str_v + '%'+ 'rdi' + 'movq $0, %rax' + 'call printf'
+        return ascode
+        
+
     def deallocRegs (self):
         for reg in self.varAllocate.usedRegisters:
             v = self.registerToSymbol[reg]
@@ -319,7 +324,7 @@ class CodeGenerator():
 
         # op1, op2 are symbol table objects
 
-        self.asm_code['text'].append('\n.section .text\n\t.globl _start\n\t_start:')
+        self.asm_code['text'].append('\n.text\n\t.global main\n\tmain:')
 
         for key in self.functionBlocks.keys():
 
@@ -392,10 +397,10 @@ class CodeGenerator():
         '''
         type_to_asm = {'int':".long",'float':''}
         self.asm_code['data'] = []
-        self.asm_code['data'].append('.section .data \n')
+        self.asm_code['data'].append('.data \n')
         for var in self.symTab.table['Ident']:
             conv = self.symTab.Lookup(var).typ
-            self.asm_code['data'].append("\t" + var + ": " + type_to_asm[conv] + " 0")
+            self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " 0")
 
 
     def setup_all(self):
