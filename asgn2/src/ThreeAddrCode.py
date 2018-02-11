@@ -14,7 +14,7 @@ class ThreeAddrCode:
         '''
         self.code = []
         self.symTable = symTable
-        self.jump_list = ["JMP","JLE","JGE","JGE","JLE","JNE","JE","JZ"]
+        self.jump_list = ["JMP","JL","JG","JGE","JLE","JNE","JE","JZ"]
         self.binary_list = ["+","-","*","/","MOD","OR","AND","SHL","SHR","CMP"]
         self.operator_list = ["UNARY","=","LOADREF","STOREREF","CALL","LABEL","PARAM","RETURN","RETRUNVAL","PRINT"]
 
@@ -78,10 +78,15 @@ class ThreeAddrCode:
                 if (temp[4] == None):
                     temp[6] = op2
             elif (operator == 'RETURN'):
+                # print (op1)
                 if op1 == '':
                     temp[3] = None
                 else:
                     temp[3] = self.symTabOp (op1, 'int', 'var')
+            elif (operator == "PRINT"):
+                temp[3] = self.symTabOp (op1, 'int', 'var')
+                if (temp[3] == None):
+                    temp[5] = op1
             
             self.code.append(temp) # Storing it to the global code store
 

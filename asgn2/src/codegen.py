@@ -44,11 +44,6 @@ class CodeGenerator():
                          }
 
         self.jump_list = threeAC.jump_list
-
-
-    def printOut (self, str_v): # function to print strings stored in memory
-        ascode = 'movq $' + str_v + '%'+ 'rdi' + 'movq $0, %rax' + 'call printf'
-        return ascode
         
 
     def deallocRegs (self):
@@ -57,8 +52,6 @@ class CodeGenerator():
             self.movToMem(reg,v)
             self.varAllocate.usedRegisters.remove(reg)
             self.varAllocate.unusedRegisters.append(reg)
-            self.registerToSymbol[reg] = ""
-            self.symbolToRegister[v] = ""
 
 
     def RepresentsInt(self,s):
@@ -100,6 +93,20 @@ class CodeGenerator():
         '''
         ascode = x
         return ascode
+
+    def optOP (self, x, a, b):
+        if (x == '+'): 
+            z = a + b;
+        elif (x == '-'):
+            z = a - b;
+        elif (x == '*'):
+            z = a * b;
+        else :
+            if (b == 0):
+                z = 0
+            else:
+                z = float(a) / b
+        return int(z)
 
     ### --------------------------- INDIVIDUAL ASSEMBLY INSTRUCTIONS -------------------- ###
 
@@ -166,15 +173,15 @@ class CodeGenerator():
         ascode = ''
 
         if (statTyp == 'BA_2C'):
-            n = int(const1) + int(const2)
+            n = self.optOP(operation,int(const1),int(const2))
             if (msg == "Did not replace"):
-                ascode = "\t\tmovl " + lhs.name + ",%" + loc
+                ascode = "\t\tmovl $0,%" + loc
             ascode += "\n\t\t" + op + " $" + str(n) + ",%" + loc
         elif (statTyp == 'BA_1C_R'):
             if (msg == "Did not replace"):
-                ascode = "\t\tmovl " + lhs.name + ",%" + loc
+                ascode = "\t\tmovl $0,%" + loc
             
-            if (msg == "Replaced op1"):
+            if (msg == "Replaced op1" or loc == loc_op1):
                 ascode = "\t\t" + op + " $" + const2 + ",%" + loc
             else:
                 ascode += "\n\t\tmovl " + loc_op1 + ",%" + loc + "\n\t\t" + op + " $" + const2 + ",%" + loc
@@ -197,7 +204,7 @@ class CodeGenerator():
                 ascode = "\t\t" + op + " " + loc_op1 + ",%" + getFromMem(lhs) + "\n\t\t" + op + " " + loc_op2 + ",%" + getFromMem(lhs)
             elif (msg == "Did not replace"):
                 # There is unused register
-                 ascode = "\t\tmovl %" + lhs.name + ",%" + loc + "\n\t\t" + op + " " + loc_op1 + ",%" + loc + "\n\t\t" + op + " " + loc_op2 + ",%" + loc
+                 ascode = "\t\tmovl $0,%" + loc + "\n\t\t" + op + " " + loc_op1 + ",%" + loc + "\n\t\t" + op + " " + loc_op2 + ",%" + loc
             else:
                 # Spill it
                 maxUse_var = msg[msg.find(',')+1:]
@@ -212,9 +219,7 @@ class CodeGenerator():
                     ascode = "\t\t" + op + " " + loc_op1 + ", " + loc_op2   # loc = loc_op2
                 else:
                     ascode = "\t\tmovl " + loc_op2 + ",%" + loc + "\n\t\t" + op + " " + loc_op1 + ",%" + loc
-            # print ('else: ', ascode)
 
-        # print (ascode)
         self.asm_code[self.curr_func].append(ascode)
 
 
@@ -232,9 +237,35 @@ class CodeGenerator():
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
     def printF (self, x, typ):
-        movToMem('eax',self.registerToSymbol['eax'])
-        ascode = "movl $0, %eax \n" + "movl " + x + ",%esi \n" + "movl $.INTformat, %edi \n" + "call printf \n" + "movl ", self.registerToSymbol['eax'] + ", %eax \n" 
+        self.asm_code[self.curr_func].append('#printF starts here')
+        v = self.registerToSymbol['eax']
+        if (v == ''):
+            ascode = ''
+        else:
+            ascode = "\t\tmovl " + "%eax" + "," + v
+        flag = 1
+        if x == v:
+            flag = 0
+        if (x in self.symbolToRegister.keys() and self.symbolToRegister[x] != "" and flag):
+            x = '%' + self.symbolToRegister[x]  
+        ascode += "\n\t\tmovl $0, %eax \n" + "\t\tmovl " + x + ",%esi"
+        ascode += "\n\t\tmovl $.formatINT, %edi"
+        ascode += "\n\t\tcall printf" 
+        if (v != ''):
+            ascode += "\n\t\tmovl " + v + ", %eax \n" 
+            self.registerToSymbol['eax'] = v
+            self.symbolToRegister[v] = 'eax'
         self.asm_code[self.curr_func].append(ascode)
+        self.asm_code[self.curr_func].append('#printF ends here')
+        # self.asm_code[self.curr_func].append('' + self.registerToSymbol)
+        # print (self.registerToSymbol)
+
+    def handle_print (self, lineno, op1, const1):
+        if (op1 != None):
+            self.printF(op1.name, 'int')
+        else:
+            self.printF('$'+const1, 'int')
+
 
     def handle_cmp (self, lineno, op1, op2, const1, const2):
         '''
@@ -309,12 +340,12 @@ class CodeGenerator():
         '''
             Currently moving the variable to be returned to the eax register, and updating the descriptors
         '''
-        if op1 != None:
+        if op1 != None and op1 != '':
             # Clear EAX before putting the return value
             self.movToMem('eax',self.registerToSymbol['eax'])
 
             # Move the actual value to eax
-            self.asm_code[self.curr_func].append('\t\tmovl %' + op1.name + ',%eax')
+            self.asm_code[self.curr_func].append('\t\tmovl ' + op1.name + ',%eax')
 
             # Register descriptor update
             self.registerToSymbol['eax'] = op1.name
@@ -324,6 +355,7 @@ class CodeGenerator():
 
             self.asm_code[self.curr_func].append('\t\tret')
         else:
+            # print ('tati')
             self.asm_code[self.curr_func].append('\t\tret')
 
 
@@ -400,6 +432,9 @@ class CodeGenerator():
                 elif op == 'STOREREF':
                     self.handle_storeref ()
 
+                elif op == 'PRINT':
+                    self.handle_print (ln,op1,const1)
+
 
                 blockIndex =  self.varAllocate.line2Block(ln)
 
@@ -417,7 +452,9 @@ class CodeGenerator():
         '''
         type_to_asm = {'int':".long",'float':''}
         self.asm_code['data'] = []
+        self.asm_code['data'].append('.extern printf \n')
         self.asm_code['data'].append('.data \n')
+        self.asm_code['data'].append('.formatINT : \n .string \"%d\\n\" \n')
         for var in self.symTab.table['Ident']:
             conv = self.symTab.Lookup(var).typ
             self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " 0")
