@@ -131,7 +131,6 @@ class CodeGenerator():
             if (loc_op1 != ""): # a in register
                 ascode = "\t\t" + op + " " + loc_op2 + ", " +  loc_op1 
                 self.asm_code[self.curr_func].append(ascode)
-                # print ('special : ', ascode)
                 # b may be in memory or register; doesn't matter. just add it to a
                 return
 
@@ -173,8 +172,6 @@ class CodeGenerator():
             else:
                 ascode = "\t\tmovl " + loc_op1 + ",%" + loc + "\n\t\t" + op + " $" + const2 + ",%" + loc
         else:
-            # Missing the case where both in memory, and loc is also mem location
-            # print ('Abbe yaar')
             if (self.symbolToRegister[op1.name] == "" and self.symbolToRegister[op2.name] == ""):
                 if loc in self.Registers:
                     ascode = "\t\tmovl " + loc_op1 + ",%" + loc + "\n\t\t" + op + " " + loc_op2 + ",%" + loc
@@ -224,6 +221,10 @@ class CodeGenerator():
 
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
+    def printF (self, x, typ):
+        movToMem('eax',self.registerToSymbol['eax'])
+        ascode = "movl $0, %eax \n" + "movl " + x + ",%esi \n" + "movl $.INTformat, %edi \n" + "call printf \n" + "movl ", self.registerToSymbol['eax'] + ", %eax \n" 
+        self.asm_code[self.curr_func].append(ascode)
 
     def handle_cmp (self, lineno, op1, op2, const1, const2):
         '''
