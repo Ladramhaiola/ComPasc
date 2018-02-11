@@ -77,6 +77,11 @@ class ThreeAddrCode:
                 temp[4] = self.symTabOp (op2, 'int', 'var')
                 if (temp[4] == None):
                     temp[6] = op2
+            elif (operator == 'RETURN'):
+                if op1 == '':
+                    temp[3] = None
+                else:
+                    temp[3] = self.symTabOp (op1, 'int', 'var')
             
             self.code.append(temp) # Storing it to the global code store
 
