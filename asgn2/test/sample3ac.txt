@@ -13,6 +13,6 @@
 13, JGE, foo
 14, RETURN,,,
 15, LABEL, FUNC, foo, 
-16, +, g, a, 2
+16, +, g, a, 5
 17, PRINT,,g,
 18, RETURN,,,

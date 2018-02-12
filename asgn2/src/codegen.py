@@ -202,7 +202,7 @@ class CodeGenerator():
         elif (statTyp == 'BA_1C_R'):
 
             if (loc == loc_op1):
-                ascode += "\t\t" + op + " $" + const2 + "," + Loc
+                ascode += "\n\t\t" + op + " $" + const2 + "," + Loc
             else:
                 # The first instruction won't be allowed if both are memories, we should check for that
                 ascode += "\t\tmovl " + Loc_op1 + "," + Loc + "\n\t\t" + op + " $" + const2 + "," + Loc
@@ -225,7 +225,7 @@ class CodeGenerator():
 
                 # When loc is a register, loc and loc_op1 cannot be equal since op1 is definitely in memory. Hence we keep the initial movl
                 if loc in self.Registers:
-                    ascode += "\t\tmovl " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
+                    ascode += "\n\t\tmovl " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
                 else:
                     # We will be moving op1 to the register in this part
                     # Haven't changed printing of ascode in this block according to Loc (would have leaded to added trouble)
@@ -234,22 +234,22 @@ class CodeGenerator():
                     loc, msg = self.varAllocate.getReg(blockIndex, lineno, True)
 
                     if (self.registerToSymbol[loc] != "" and op1.name != self.registerToSymbol[loc]):
-                        s_code = '\t\tmovl ' + "%" + loc + "," + self.registerToSymbol[loc]
+                        s_code = '\n\t\tmovl ' + "%" + loc + "," + self.registerToSymbol[loc]
                         self.symbolToRegister[self.registerToSymbol[loc]] = ""
                         self.asm_code[self.curr_func].append(s_code)
 
-                    ascode += "\t\tmovl " + Loc_op1 + ",%" + loc + "\n\t\t" + op + " " + Loc_op2 + ",%" + loc
+                    ascode += "\n\t\tmovl " + Loc_op1 + ",%" + loc + "\n\t\t" + op + " " + Loc_op2 + ",%" + loc
             
             elif (msg == "Replaced nothing"):
                 # If either one of the op1 or op2 are in memory then one of our operations will fail (So I'mskipping this instruction)
-                ascode += "\t\t" + op + " " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
+                ascode += "\n\t\t" + op + " " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
 
             elif (msg == "Did not replace"):
                 # There is unused register
-                 ascode += "\t\t" + op + " " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
+                 ascode += "\n\t\t" + op + " " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
 
             else:
-                ascode += "\t\tmovl " + Loc_op2 + "," + Loc + "\n\t\t" + op + " " + Loc_op1 + "," + Loc
+                ascode += "\n\t\tmovl " + Loc_op2 + "," + Loc + "\n\t\t" + op + " " + Loc_op1 + "," + Loc
 
         self.asm_code[self.curr_func].append(ascode)
 
@@ -277,13 +277,18 @@ class CodeGenerator():
         flag = 1
         if x == v:
             flag = 0
-        if (x in self.symbolToRegister.keys() and self.symbolToRegister[x] != "" and flag):
-            x = '%' + self.symbolToRegister[x]  
-        ascode += "\n\t\tmovl $0, %eax \n" + "\t\tmovl " + x + ",%esi"
+        if (x in self.symbolToRegister.keys() and self.symbolToRegister[x] != "" and flag == 1):
+            x = '%' + self.symbolToRegister[x] 
+
+        # central code 
+        ascode += "\t\tmovl $0, %eax"
+        ascode += "\n\t\tmovl " + x + ",%esi"
         ascode += "\n\t\tmovl $.formatINT, %edi"
         ascode += "\n\t\tcall printf" 
+
+        # restore mapping when variable did not have a symbol in the first place
         if (v != ''):
-            ascode += "\n\t\tmovl " + v + ", %eax \n" 
+            ascode += "\n\t\tmovl " + v + ", %eax" 
             self.registerToSymbol['eax'] = v
             self.symbolToRegister[v] = 'eax'
         self.asm_code[self.curr_func].append(ascode)
@@ -297,6 +302,19 @@ class CodeGenerator():
         else:
             self.printF('$'+const1, 'int')
 
+   	def handle_input (self, lineno, op1):
+   		self.asm_code[self.curr_func].append('#scanF starts here')
+
+   		# central code 
+   		# ascode += "\n\t\tpush %ebp"
+        ascode += "\t\tmovl $0, %eax"
+        ascode += "\n\t\tmovl " + x + ",%esi"
+        ascode += "\n\t\tmovl $.formatINT, %edi"
+        ascode += "\n\t\tcall scanf" 
+        # ascode += "\n\t\tpop %ebp"
+
+        self.asm_code[self.curr_func].append(ascode)
+   		self.asm_code[self.curr_func].append('#scanF ends here')
 
     def handle_cmp (self, lineno, op1, op2, const1, const2):
         '''
