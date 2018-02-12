@@ -247,10 +247,14 @@ class CodeGenerator():
         if x == v:
             flag = 0
         if (x in self.symbolToRegister.keys() and self.symbolToRegister[x] != "" and flag):
-            x = '%' + self.symbolToRegister[x]  
+            x = '%' + self.symbolToRegister[x] 
+
+        # central code 
         ascode += "\n\t\tmovl $0, %eax \n" + "\t\tmovl " + x + ",%esi"
         ascode += "\n\t\tmovl $.formatINT, %edi"
         ascode += "\n\t\tcall printf" 
+
+        # restore mapping when variable did not have a symbol in the first place
         if (v != ''):
             ascode += "\n\t\tmovl " + v + ", %eax \n" 
             self.registerToSymbol['eax'] = v
