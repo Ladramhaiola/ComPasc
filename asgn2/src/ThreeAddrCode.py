@@ -16,7 +16,7 @@ class ThreeAddrCode:
         self.symTable = symTable
         self.jump_list = ["JMP","JL","JG","JGE","JLE","JNE","JE","JZ"]
         self.binary_list = ["+","-","*","/","MOD","OR","AND","SHL","SHR","CMP"]
-        self.operator_list = ["UNARY","=","LOADREF","STOREREF","CALL","LABEL","PARAM","RETURN","RETRUNVAL","PRINT"]
+        self.operator_list = ["UNARY","=","LOADREF","STOREREF","CALL","LABEL","PARAM","RETURN","RETRUNVAL","PRINT","SCAN"]
 
     def RepresentsNum(self,s):
         '''
@@ -87,6 +87,26 @@ class ThreeAddrCode:
                 temp[3] = self.symTabOp (op1, 'int', 'var')
                 if (temp[3] == None):
                     temp[5] = op1
+            elif (operator == "SCAN"):
+                temp[2] = self.symTabOp (lhs, 'int', 'var')
+            elif (operator == "DEC_ARR"):
+                temp[2] = self.symTabOp (lhs, 'int_arr', 'var')
+                temp[2].memsize = int(op1)*4
+            elif (operator == "LOADREF"): # x = a[i]
+                temp[2] = self.symTabOp (lhs, 'int', 'var') # x
+                temp[3] = self.symTabOp (op1, 'int_arr', 'var') # a = assume that this is always declared
+                temp[4] = self.symTabOp (op2, 'int', 'var') # index
+                if (temp[4] == None):
+                    temp[6] = op2
+            elif (operator == "STOREREF"): # a[i] = x
+                temp[2] = self.symTabOp (lhs, 'int_arr', 'var') # a = assume that this is always declared
+                temp[3] = self.symTabOp (op1, 'int', 'var') # index
+                if (temp[3] == None):
+                    temp[5] = op1
+                temp[4] = self.symTabOp (op2, 'int', 'var') # x
+                if (temp[4] == None):
+                    temp[6] = op2
+
             
             self.code.append(temp) # Storing it to the global code store
 

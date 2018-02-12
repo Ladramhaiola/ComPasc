@@ -83,12 +83,12 @@ class CodeGenerator():
             move to memory, and update the descriptors
         '''
         # print (v)
-        self.asm_code[self.curr_func].append('\t\t#movToMem starts here')
+        self.asm_code[self.curr_func].append('#movToMem starts here')
         ascode = "\t\tmovl " + "%" + reg + "," + v
         self.symbolToRegister[v] = ''
         self.registerToSymbol[reg] = ''
         self.asm_code[self.curr_func].append(ascode)
-        self.asm_code[self.curr_func].append('\t\t#movToMem ends here')
+        self.asm_code[self.curr_func].append('#movToMem ends here')
 
     def getFromMem (self, x):
         '''
@@ -189,7 +189,7 @@ class CodeGenerator():
 
         # This needs to be done for every such case nonetheless
         if (msg == "Did not replace"):
-            self.asm_code[self.curr_func].append("\t\t# message: " + msg)
+            self.asm_code[self.curr_func].append("# message: " + msg)
             l_code = "\t\tmovl $0," + Loc
             # Setting setNewLine is required whenever we enter a line into code
             self.asm_code[self.curr_func].append(l_code)
@@ -198,7 +198,7 @@ class CodeGenerator():
 
             # This is an optimization
             n = self.optOP(operation,int(const1),int(const2))
-            ascode += "\t\t" + op + " $" + str(n) + "," + Loc
+            ascode += "\t\tmovl $" + str(n) + "," + Loc
 
         elif (statTyp == 'BA_1C_R'):
 
@@ -252,7 +252,7 @@ class CodeGenerator():
             else:
                 ascode += "\n\t\tmovl " + Loc_op2 + "," + Loc + "\n\t\t" + op + " " + Loc_op1 + "," + Loc
 
-        self.asm_code[self.curr_func].append("\t\t# message: " + msg)
+        self.asm_code[self.curr_func].append("# message: " + msg)
         self.asm_code[self.curr_func].append(ascode)
 
 
@@ -270,17 +270,16 @@ class CodeGenerator():
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
     def printF (self, x, typ):
+        
+        changedRegisters = ['eax','ecx','edx']
+
         self.asm_code[self.curr_func].append('\t\t#printF starts here')
-        v = self.registerToSymbol['eax']
-        if (v == ''):
-            ascode = ''
-        else:
-            ascode = "\t\tmovl " + "%eax" + "," + v
-        flag = 1
-        if x == v:
-            flag = 0
-        if (x in self.symbolToRegister.keys() and self.symbolToRegister[x] != "" and flag == 1):
-            x = '%' + self.symbolToRegister[x] 
+        ascode = ''
+
+        for i,reg in enumerate(changedRegisters):
+        	v = self.registerToSymbol[reg]
+	        if (v != ''):
+	            ascode += "\n\t\tmovl " + "%" + reg + "," + v
 
         # central code 
         ascode += "\n\t\tmovl $0, %eax"
@@ -288,11 +287,12 @@ class CodeGenerator():
         ascode += "\n\t\tmovl $.formatINT, %edi"
         ascode += "\n\t\tcall printf" 
 
-        # restore mapping when variable did not have a symbol in the first place
-        if (v != ''):
-            ascode += "\n\t\tmovl " + v + ", %eax" 
-            self.registerToSymbol['eax'] = v
-            self.symbolToRegister[v] = 'eax'
+        # restore values in registers
+        for i,reg in enumerate(changedRegisters):
+        	v = self.registerToSymbol[reg]
+        	if (v != ''):
+        		ascode += "\n\t\tmovl " + v + ",%" + reg
+        
         self.asm_code[self.curr_func].append(ascode)
         self.asm_code[self.curr_func].append('\t\t#printF ends here')
         # self.asm_code[self.curr_func].append('' + self.registerToSymbol)
@@ -304,16 +304,29 @@ class CodeGenerator():
         else:
             self.printF('$'+const1, 'int')
 
-    def handle_input (self, lineno, op1):
+    def handle_input (self, lineno, lhs):
 
         self.asm_code[self.curr_func].append('#scanF starts here')
+
+        v = self.registerToSymbol['eax']
+        if (v == ''):
+            ascode = ''
+        else:
+            ascode = "\t\tmovl " + "%eax" + "," + v
+
+
         # central code 
-   	# ascode += "\n\t\tpush %ebp"
-        ascode += "\t\tmovl $0, %eax"
-        ascode += "\n\t\tmovl " + x + ",%esi"
-        ascode += "\n\t\tmovl $.formatINT, %edi"
+        # ascode += "\n\t\tpush %ebp"
+        ascode += "\n\t\tmovl $0, %eax"
+        ascode += "\n\t\tmovl $" + lhs.name + ",%esi"
+        ascode += "\n\t\tmovl $.formatINT_INP, %edi"
         ascode += "\n\t\tcall scanf" 
         # ascode += "\n\t\tpop %ebp"
+
+        if (v != ''):
+            ascode += "\n\t\tmovl " + v + ", %eax" 
+            self.registerToSymbol['eax'] = v
+            self.symbolToRegister[v] = 'eax'
 
         self.asm_code[self.curr_func].append(ascode)
         self.asm_code[self.curr_func].append('#scanF ends here')
@@ -414,7 +427,149 @@ class CodeGenerator():
             self.asm_code[self.curr_func].append('\t\tret')
 
 
+    def handle_loadref (self,lineno, lhs, op1, op2, const2):
+    	# op1.name is always avaiable
 
+    	blockIndex = self.varAllocate.line2Block(lineno)
+    	loc, msg = self.varAllocate.getReg(blockIndex, lineno, True)
+
+        self.registerToSymbol[self.symbolToRegister[lhs.name]] = ''
+    	# We'll use Loc for printing ascode and loc for accessing the data structures
+        Loc = "%" + loc
+
+    	ascode = ''
+
+    	s_code = "" # store code
+
+        if (self.registerToSymbol[loc] != "" and lhs.name != self.registerToSymbol[loc]):
+            self.asm_code[self.curr_func].append("# loc: " + loc)
+            s_code = '\t\tmovl ' + Loc + "," + self.registerToSymbol[loc]
+            self.symbolToRegister[self.registerToSymbol[loc]] = ""
+            self.registerToSymbol[loc] = ''
+            self.asm_code[self.curr_func].append(s_code)
+
+        if op2 != None and lhs != None and lhs != op2:
+
+            loc_op2, msg = self.varAllocate.getReg(blockIndex, lineno, True)
+            Loc_op2 = "%" + loc_op2
+
+            if (self.registerToSymbol[loc_op2] != "" and op2.name != self.registerToSymbol[loc_op2]):
+                self.asm_code[self.curr_func].append("# loc_op2: " + loc_op2)
+                s_code = '\t\tmovl ' + Loc_op2 + "," + self.registerToSymbol[loc_op2]
+                self.symbolToRegister[self.registerToSymbol[loc_op2]] = ""
+                self.registerToSymbol[loc_op2] = ''
+                self.asm_code[self.curr_func].append(s_code)
+
+        else:
+            
+            loc_op2 = loc
+            Loc_op2 = Loc
+
+        if (op2 != None): # if array index is a variable
+            ascode += '\t\tmovl ' + op2.name + ",%" + loc_op2
+            self.registerToSymbol[loc_op2] = op2.name
+            self.symbolToRegister[op2.name] = loc_op2
+            ascode += '\n\t\tmovl ' + op1.name + '(,%' + loc_op2 + ",4), " + Loc
+    	else: # if array index is a constant, we still need to allocate a register for the index as per x86 syntax
+    		ascode += '\t\tmovl %' + loc_op2 + ',' + self.registerToSymbol[loc_op2]
+    		ascode += '\n\t\tmovl $' + const2 + ', %' + loc_op2
+    		ascode += '\n\t\tmovl ' + op1.name + '(,%' + loc_op2 + ",4), " + Loc
+    		ascode += '\n\t\tmovl ' + self.registerToSymbol[loc_op2] + ', %' + loc_op2
+
+        #print("#",self.symbolToRegister)        
+
+        if op2 != None:
+            op2_reg = self.symbolToRegister[op2.name]
+            if (op2_reg != "" and loc_op2 != op2_reg):
+                self.varAllocate.unusedRegisters.append(op2_reg)
+                self.varAllocate.usedRegisters.remove(op2_reg)
+                self.registerToSymbol[op2_reg] = ""           
+
+        if lhs != None:
+            lhs_reg = self.symbolToRegister[lhs.name]
+            if (lhs_reg != "" and loc != lhs_reg):
+                self.varAllocate.unusedRegisters.append(lhs_reg)
+                self.varAllocate.usedRegisters.remove(lhs_reg)
+                self.registerToSymbol[lhs_reg] = ""
+            self.registerToSymbol[loc] = lhs.name
+            self.symbolToRegister[lhs.name] = loc                # if it is a register, update the first entry
+
+        #print("#",self.symbolToRegister)
+        # print ('# LOC = ', loc, loc_op2)
+        # print (self.symbolToRegister)
+        # print (self.registerToSymbol)
+        self.asm_code[self.curr_func].append(ascode)
+
+    def handle_storeref (self, lineno, lhs, op1, op2, const1, const2):
+
+        blockIndex = self.varAllocate.line2Block(lineno)
+        
+        loc_op1 = ''
+        loc_op2 = ''
+        
+        # We always require register to hold the value of i in a[i]
+        loc_op1, msg = self.varAllocate.getReg(blockIndex, lineno, True)
+        Loc_op1 = "%" + loc_op1
+
+        if (self.registerToSymbol[loc_op1] != "" and op1.name != self.registerToSymbol[loc_op1]):
+            self.asm_code[self.curr_func].append("# loc_op1: " + loc_op1)
+            s_code = '\t\tmovl ' + Loc_op1 + "," + self.registerToSymbol[loc_op1]
+            self.symbolToRegister[self.registerToSymbol[loc_op1]] = ""
+            self.registerToSymbol[loc_op1] = ''
+            self.asm_code[self.curr_func].append(s_code)
+
+        # loc_op2 is to store x in a[i] = x
+        if op2 != None and op1 != None and op1 != op2:
+
+            loc_op2, msg = self.varAllocate.getReg(blockIndex, lineno, True)
+            Loc_op2 = "%" + loc_op2
+
+            if (self.registerToSymbol[loc_op2] != "" and lhs.name != self.registerToSymbol[loc_op2]):
+                self.asm_code[self.curr_func].append("# loc_op2: " + loc_op2)
+                s_code = '\t\tmovl ' + Loc_op2 + "," + self.registerToSymbol[loc_op2]
+                self.symbolToRegister[self.registerToSymbol[loc_op2]] = ""
+                self.registerToSymbol[loc_op2] = ''
+                self.asm_code[self.curr_func].append(s_code)
+
+        else:
+            
+            loc_op2 = loc_op1
+            Loc_op2 = Loc_op1
+
+        ascode = ''
+        s_code = "" # store code
+        
+        if(op1 != op2):
+            if (op1 == None):
+                ascode += '\t\tmovl $' + const1 + ',' + Loc_op1
+            elif (self.symbolToRegister[op1.name] != loc_op1):
+                ascode += '\t\tmovl ' + op1.name + ',' + Loc_op1
+
+        if (op2 == None):
+            ascode += '\n\t\tmovl $' + const2 + ',' + lhs.name + '(,' + Loc_op1 + ',4)'
+        else:
+            ascode += '\n\t\tmovl ' + op2.name + ',' + Loc_op2
+            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + lhs.name + '(,' + Loc_op1 + ',4)'
+        
+        if op1 != None:
+            op1_reg = self.symbolToRegister[op1.name]
+            if (op1_reg != "" and loc_op1 != op1_reg):
+                self.varAllocate.unusedRegisters.append(op1_reg)
+                self.varAllocate.usedRegisters.remove(op1_reg)
+                self.registerToSymbol[op1_reg] = ""
+            self.registerToSymbol[loc_op1] = op1.name
+            self.symbolToRegister[op1.name] = loc_op1
+
+        if op2 != None and op1 != op2:
+            op2_reg = self.symbolToRegister[op2.name]
+            if (op2_reg != "" and loc_op2 != op2_reg):
+                self.varAllocate.unusedRegisters.append(op2_reg)
+                self.varAllocate.usedRegisters.remove(op2_reg)
+                self.registerToSymbol[op2_reg] = ""
+            self.registerToSymbol[loc_op2] = op2.name
+            self.symbolToRegister[op2.name] = loc_op2
+
+        self.asm_code[self.curr_func].append(ascode)
 
 
     ### ---------------------------- AGGREGATORS ---------------------------------------- ###
@@ -456,7 +611,7 @@ class CodeGenerator():
                 # Find the blockIndex
                 blockIndex =  self.varAllocate.line2Block(ln)
 
-                self.asm_code[self.curr_func].append("\t\t# Linenumber IR: " + ln)
+                self.asm_code[self.curr_func].append("# Linenumber IR: " + str(ln))
 
                 # DONE HOPEFULLY
                 if op in ["+","-","*","/","MOD","AND","OR","SHL","SHR"]:
@@ -494,14 +649,17 @@ class CodeGenerator():
                     self.handle_return (op1)
 
                 elif op == 'LOADREF':
-                    self.handle_loadref ()
+                    self.handle_loadref (ln,lhs, op1, op2, const2)
 
                 elif op == 'STOREREF':
-                    self.handle_storeref ()
+                    self.handle_storeref (ln, lhs, op1, op2, const1, const2)
 
                 elif op == 'PRINT':
                     self.handle_print (ln,op1,const1)
                     self.check_dealloc(ln,blockIndex)
+
+                elif op == 'SCAN':
+                	self.handle_input(ln,lhs)
 
 
     def check_dealloc(self,ln,blockIndex):
@@ -517,14 +675,16 @@ class CodeGenerator():
         '''
             data section
         '''
-        type_to_asm = {'int':".long",'float':''}
+        type_to_asm = {'int':".long",'float':'','int_arr':".fill"}
         self.asm_code['data'] = []
         self.asm_code['data'].append('.extern printf \n')
         self.asm_code['data'].append('.data \n')
         self.asm_code['data'].append('.formatINT : \n .string \"%d\\n\" \n')
+        self.asm_code['data'].append('.formatINT_INP : \n .string \"%d\" \n')
         for var in self.symTab.table['Ident']:
             conv = self.symTab.Lookup(var).typ
-            self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " 0")
+            memsize = self.symTab.Lookup(var).memsize # for arrays
+            self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " " + str(memsize))
 
 
     def setup_all(self):

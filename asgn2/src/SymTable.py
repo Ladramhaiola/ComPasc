@@ -85,8 +85,8 @@ class SymTableEntry(object):
     '''
     Create a symbol table entry
     '''
-    def __init__(self,name,typ,varfunc = "var"):
+    def __init__(self,name,typ,varfunc = "var", memsize = 4):
         self.name = name
         self.varfunc = varfunc # either var, function, class or object
         self.typ = typ # for var: int, char, double | for function: typ is return type
-
+        self.memsize = memsize # number of elements in the array
