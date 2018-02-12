@@ -453,32 +453,42 @@ class CodeGenerator():
 
                 ln = int(lineno)
 
+                # Find the blockIndex
+                blockIndex =  self.varAllocate.line2Block(ln)
+
                 # DONE HOPEFULLY
                 if op in ["+","-","*","/","MOD","AND","OR","SHL","SHR"]:
                     self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
+                    self.check_dealloc(ln,blockIndex)
                     # pass
 
                 # Would need to refer to handle_binary for most part
                 elif op == 'CMP':
                     self.handle_cmp (ln, op1, op2, const1, const2)
+                    self.check_dealloc(ln,blockIndex)
                 
                 # DONE HOPEFULLY
                 elif op in self.jump_list:
+                    self.check_dealloc(ln,blockIndex)
                     self.handle_jump (op, const1)
 
                 # DONE HOPEFULLY
                 elif op == 'LABEL':
+                    self.check_dealloc(ln,blockIndex)
                     self.handle_label (lhs, op1, const1)
 
                 # DONE HOPEFULLY
                 elif op == 'CALL':
+                    self.check_dealloc(ln,blockIndex)
                     self.handle_funccall (op1)
 
                 # DONE HOPEFULLY
                 elif op == 'PARAM':
                     self.handle_param (op1)
+                    self.check_dealloc(ln,blockIndex)
 
                 elif op == 'RETURN':
+                    self.check_dealloc(ln,blockIndex)
                     self.handle_return (op1)
 
                 elif op == 'LOADREF':
@@ -489,20 +499,16 @@ class CodeGenerator():
 
                 elif op == 'PRINT':
                     self.handle_print (ln,op1,const1)
+                    self.check_dealloc(ln,blockIndex)
 
 
-                blockIndex =  self.varAllocate.line2Block(ln)
-                # print "BlockIndex Number in setup_text: ",blockIndex
-
-                # deallocate all registers at the end of each basic block
-                # print self.varAllocate.basicBlocks
-                # print "Line, BBlock: ",ln, self.varAllocate.basicBlocks[blockIndex]
-                if (ln == self.varAllocate.basicBlocks[blockIndex][1]):
-                    print "# Linnumber where dealloc is called: ",ln
-                    self.deallocRegs()
-
-                # print (self.registerToSymbol)
-                # print (self.symbolToRegister)
+    def check_dealloc(self,ln,blockIndex):
+        '''
+            Checks and performs deallocation.
+        '''
+        if (ln == self.varAllocate.basicBlocks[blockIndex][1]):
+            print "# Linnumber where dealloc is called: ",ln
+            self.deallocRegs()
 
 
     def setup_data(self):
