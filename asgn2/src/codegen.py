@@ -302,11 +302,11 @@ class CodeGenerator():
         else:
             self.printF('$'+const1, 'int')
 
-   	def handle_input (self, lineno, op1):
-   		self.asm_code[self.curr_func].append('#scanF starts here')
+    def handle_input (self, lineno, op1):
 
-   		# central code 
-   		# ascode += "\n\t\tpush %ebp"
+        self.asm_code[self.curr_func].append('#scanF starts here')
+        # central code 
+   	# ascode += "\n\t\tpush %ebp"
         ascode += "\t\tmovl $0, %eax"
         ascode += "\n\t\tmovl " + x + ",%esi"
         ascode += "\n\t\tmovl $.formatINT, %edi"
@@ -314,7 +314,7 @@ class CodeGenerator():
         # ascode += "\n\t\tpop %ebp"
 
         self.asm_code[self.curr_func].append(ascode)
-   		self.asm_code[self.curr_func].append('#scanF ends here')
+        self.asm_code[self.curr_func].append('#scanF ends here')
 
     def handle_cmp (self, lineno, op1, op2, const1, const2):
         '''
