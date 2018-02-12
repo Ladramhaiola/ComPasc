@@ -269,6 +269,116 @@ class CodeGenerator():
 
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
+    def handle_division(self, lineno, operation, lhs, op1, op2, const1, const2):
+        '''
+        Look at 'https://stackoverflow.com/questions/39658992/division-in-x86-assembly-gas' for the exact syntax used
+        '''
+        # These will be changed during the division
+        changedRegisters = ['eax','edx']
+        statTyp = self.StatementType("/", op1, op2, const1, const2)
+        blockIndex = self.varAllocate.line2Block(lineno)
+        
+        s_code = ''
+
+        for reg in changedRegisters:
+            if self.registerToSymbol[reg] != "":
+                s_code = "\t\tmovl %" + reg + "," + self.registerToSymbol[reg]
+                self.asm_code[self.curr_func].append(s_code)
+            
+        if op1 != None:
+            if self.symbolToRegister[op1.name] != "":
+                loc_op1 = self.symbolToRegister[op1.name] # Fetching register, which is prefered if it exists
+                Loc_op1 = "%" + loc_op1
+            else:
+                loc_op1 = self.getFromMem(op1.name)
+                Loc_op1 = loc_op1
+
+
+        if op2 != None:
+            if self.symbolToRegister[op2.name] != "":
+                loc_op2 = self.symbolToRegister[op2.name] 
+                Loc_op2 = '%' + loc_op2 
+            else:
+                loc_op2 = self.getFromMem(op2.name)
+                Loc_op2 = loc_op2
+
+        
+        # This is for storing the value in lhs finally
+        loc, msg = self.varAllocate.getReg(blockIndex, lineno)
+
+        # We'll use Loc for printing ascode and loc for accessing the data structures
+        if loc in self.Registers:
+            Loc = "%" + loc
+        else:
+            Loc = loc
+
+        # Done this after getting loc_op1 and loc_op2 for preventing redundant movl operations  
+        if (loc in self.Registers and self.registerToSymbol[loc] != "" and lhs.name != self.registerToSymbol[loc] and loc not in changedRegisters):
+
+            s_code = '\t\tmovl ' + Loc + "," + self.registerToSymbol[loc]
+            self.symbolToRegister[self.registerToSymbol[loc]] = ""
+            self.asm_code[self.curr_func].append(s_code)
+
+        ascode = ''
+        l_code = ''
+
+        # No need to do this here as we are ultimately going to move the value of ecx to loc
+        # # This needs to be done for every such case nonetheless
+        # if (msg == "Did not replace"):
+        #     l_code = "\t\tmovl $0," + Loc
+        #     # Setting setNewLine is required whenever we enter a line into code
+        #     self.asm_code[self.curr_func].append(l_code)
+
+        if (statTyp == 'BA_2C'):
+
+            ascode += "\t\tmovl $" + const1 + "%eax"
+            ascode += "\n\t\tcdq"
+            ascode += "\n\t\tidivl $" + const2
+
+            # After this the quotient is stored in eax and the remainder in edx
+            
+        elif (statTyp == 'BA_1C_R'):
+
+            if loc_op1 != "eax":
+                l_code = "\t\tmovl " + Loc_op1 + "%eax"
+                self.asm_code[self.curr_func].append(l_code)
+            ascode += "\t\tcdq"
+            ascode += "\n\t\tidivl $" + const2
+            
+        else:
+
+            if loc_op1 != "eax":
+                l_code = "\t\tmovl " + Loc_op1 + "%eax"
+                self.asm_code[self.curr_func].append(l_code)
+            ascode += "\t\tcdq"
+            ascode += "\n\t\tidivl " + Loc_op2
+
+        # At this point, we have the quotient in eax and the remainder in edx
+
+        if loc != "eax" and operation == "/":
+            ascode += "\n\t\tmovl %eax," + Loc
+        if loc != "edx" and operation == "MOD":
+            ascode += "\n\t\tmovl %edx," + Loc
+
+        self.asm_code[self.curr_func].append(ascode)
+
+        # Reload the values in eax and edx according to the mapping (only if loc is not one of them)
+        for reg in changedRegisters:
+            if self.registerToSymbol[reg] != "" and reg!= loc:
+                s_code = "\t\tmovl " + self.registerToSymbol[reg] + ",%" + reg
+                self.asm_code[self.curr_func].append(s_code)
+        
+        # We can change the mapping for Loc and lhs
+        if loc in self.Registers:
+            lhs_reg = self.symbolToRegister[lhs.name]
+            if (lhs_reg != "" and loc != lhs_reg):
+                self.varAllocate.unusedRegisters.append(lhs_reg)
+                self.varAllocate.usedRegisters.remove(lhs_reg)
+                self.registerToSymbol[lhs_reg] = ""
+            self.registerToSymbol[loc] = lhs.name
+            self.symbolToRegister[lhs.name] = loc                # if it is a register, update the first entry
+        
+        
     def printF (self, x, typ):
         
         changedRegisters = ['eax','ecx','edx']
@@ -299,6 +409,9 @@ class CodeGenerator():
         # print (self.registerToSymbol)
 
     def handle_print (self, lineno, op1, const1):
+
+        ascode = ''
+        
         if (op1 != None):
             self.printF(op1.name, 'int')
         else:
@@ -605,7 +718,6 @@ class CodeGenerator():
 
                 lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
                 # print lhs.name
-
                 ln = int(lineno)
 
                 # Find the blockIndex
@@ -614,11 +726,14 @@ class CodeGenerator():
                 self.asm_code[self.curr_func].append("# Linenumber IR: " + str(ln))
 
                 # DONE HOPEFULLY
-                if op in ["+","-","*","/","MOD","AND","OR","SHL","SHR"]:
+                if op in ["+","-","*","AND","OR","SHL","SHR"]:
                     self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
                     self.check_dealloc(ln,blockIndex)
                     # pass
 
+                elif op in ["/","MOD"]:
+                    self.handle_division(ln, op, lhs, op1, op2, const1, const2)
+                    
                 # Would need to refer to handle_binary for most part
                 elif op == 'CMP':
                     self.handle_cmp (ln, op1, op2, const1, const2)
