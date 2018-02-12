@@ -2,7 +2,7 @@
 2, +, b, 10, 0
 3, +, c, 1, 0
 4, LABEL, NONFUNC, aa,
-5, CMP, ,b, a
+5, CMP,,b, a
 6, JGE, loo
 7, PRINT,,a,
 8, +, a, a, 1

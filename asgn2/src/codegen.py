@@ -405,8 +405,6 @@ class CodeGenerator():
         
         self.asm_code[self.curr_func].append(ascode)
         self.asm_code[self.curr_func].append('\t\t#printF ends here')
-        # self.asm_code[self.curr_func].append('' + self.registerToSymbol)
-        # print (self.registerToSymbol)
 
     def handle_print (self, lineno, op1, const1):
 
@@ -782,7 +780,6 @@ class CodeGenerator():
             Checks and performs deallocation.
         '''
         if (ln == self.varAllocate.basicBlocks[blockIndex][1]):
-            print "# Linnumber where dealloc is called: ",ln
             self.deallocRegs()
 
 
