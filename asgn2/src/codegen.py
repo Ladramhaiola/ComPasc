@@ -275,14 +275,14 @@ class CodeGenerator():
         '''
         # These will be changed during the division
         changedRegisters = ['eax','edx']
-        
         statTyp = self.StatementType("/", op1, op2, const1, const2)
-
+        blockIndex = self.varAllocate.line2Block(lineno)
+        
         s_code = ''
 
         for reg in changedRegisters:
             if self.registerToSymbol[reg] != "":
-                s_code = "\t\tmovl %" + reg + "," + self.symbolToRegister[reg]
+                s_code = "\t\tmovl %" + reg + "," + self.registerToSymbol[reg]
                 self.asm_code[self.curr_func].append(s_code)
             
         if op1 != None:
@@ -320,6 +320,7 @@ class CodeGenerator():
             self.asm_code[self.curr_func].append(s_code)
 
         ascode = ''
+        l_code = ''
 
         # No need to do this here as we are ultimately going to move the value of ecx to loc
         # # This needs to be done for every such case nonetheless
@@ -338,14 +339,18 @@ class CodeGenerator():
             
         elif (statTyp == 'BA_1C_R'):
 
-            ascode += "\t\tmovl " + Loc_op1 + "%eax"
-            ascode += "\n\t\tcdq"
+            if loc_op1 != "eax":
+                l_code = "\t\tmovl " + Loc_op1 + "%eax"
+                self.asm_code[self.curr_func].append(l_code)
+            ascode += "\t\tcdq"
             ascode += "\n\t\tidivl $" + const2
             
         else:
 
-            ascode += "\t\tmovl" + Loc_op1 + "%eax"
-            ascode += "\n\t\tcdq"
+            if loc_op1 != "eax":
+                l_code = "\t\tmovl " + Loc_op1 + "%eax"
+                self.asm_code[self.curr_func].append(l_code)
+            ascode += "\t\tcdq"
             ascode += "\n\t\tidivl " + Loc_op2
 
         # At this point, we have the quotient in eax and the remainder in edx
@@ -563,7 +568,7 @@ class CodeGenerator():
                 # Find the blockIndex
                 blockIndex =  self.varAllocate.line2Block(ln)
 
-                self.asm_code[self.curr_func].append("\t\t# Linenumber IR: " + ln)
+                self.asm_code[self.curr_func].append("# Linenumber IR: " + str(ln))
 
                 # DONE HOPEFULLY
                 if op in ["+","-","*","AND","OR","SHL","SHR"]:
