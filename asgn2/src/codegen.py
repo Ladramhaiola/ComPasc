@@ -283,7 +283,7 @@ class CodeGenerator():
             x = '%' + self.symbolToRegister[x] 
 
         # central code 
-        ascode += "\t\tmovl $0, %eax"
+        ascode += "\n\t\tmovl $0, %eax"
         ascode += "\n\t\tmovl " + x + ",%esi"
         ascode += "\n\t\tmovl $.formatINT, %edi"
         ascode += "\n\t\tcall printf" 
