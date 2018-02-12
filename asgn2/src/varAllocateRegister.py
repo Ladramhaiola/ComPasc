@@ -228,11 +228,11 @@ class varAllocateRegister:
         # float("inf") means that variable has no next use after that particular line in the block
         if ( op1 != None and self.symbolToRegister[op1.name] != "" and nextUseInBlock[op1.name] == float("inf") ):
             reg = self.symbolToRegister[op1.name]
-            self.symbolToRegister[op1.name] = ""
+            #self.symbolToRegister[op1.name] = ""
             msg = "Replaced op1"
         elif ( op2 != None and self.symbolToRegister[op2.name] != "" and nextUseInBlock[op2.name] == float("inf") ):
             reg = self.symbolToRegister[op2.name]
-            self.symbolToRegister[op2.name] = ""
+            #self.symbolToRegister[op2.name] = ""
             msg = "Replaced op2"
         elif ( len(self.unusedRegisters) > 0 ):
             reg = self.unusedRegisters[0]
@@ -242,7 +242,7 @@ class varAllocateRegister:
         elif (( lhs != None and nextUseInBlock[lhs.name] != float("inf")) or all_mem == True):
             MU_var = self.getBlockMaxUse(blockIndex, line)
             reg = self.symbolToRegister[MU_var]
-            self.symbolToRegister[MU_var] = ""
+            #self.symbolToRegister[MU_var] = ""
             msg = "Replaced NextUse , " + MU_var
         else:
             reg = lhs.name # var
