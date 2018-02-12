@@ -1,18 +1,27 @@
-
-# 3 AC Specifics here:
-
-## Intro
+# Intro
 Would essentially use Quadruple 3 AC structure
+The precise 3AC Structure and Syntax is available [here](./3AC_Complete.md)
 
-## Assumptions
-Assignments on left have all new variables, that is no overlapping identifier names
-Maybe this shit helps in Basic Block Identifying
+# Build and Folder Details
+
+## Folder Details
+- main.py: program starts executing from here
+- SymTable.py: symboltable and symboltable entry classes
+- varAllocateRegister.py: basic blocks, nextuse and all such things
+- ThreeAddrCode.py: structure and helpers for 3AC
+- codegen.py: This is the heart of assignment. Assembly code is generated here
+
+## To Build
+```
+cd asgn2
+make
+bin/codegen test/test1.ir
+```
 
 ## data types
 - int:
 - string:
 - char:
-- float/double:
 - array: 
 
 ## instructions and their types
@@ -31,18 +40,14 @@ Maybe this shit helps in Basic Block Identifying
     - AND: op = and
 
 - Array reference:
-    - a = x[i]: lineno, op = 'loadfromarray', lhs='variable(temp here)',op1="array starting index",op2="refering index"
-    - Similarly store to array required? Like x[i] = a? or model it as memory reference? But is bidirectional, might provide ease in breaking into two in asm
-    - [Meeting] Good to separate it
 
 - If statement:
-    - our IR won't have if statement. We will simply have conditional jump and jump
-    - lineno, op = , lhs = , op1 = , op2 = 
+    - our IR won't have if statement. We will simply have (un)conditional jump
 
 - Goto Statement:
-    - Include conditional jumps here?
+    - (un)conditional jumps here
 
-# Modelling check with above instructions
+# Validity checking with our IR set
 
 ## Arithmetic
 - Easy
@@ -70,18 +75,12 @@ Maybe this shit helps in Basic Block Identifying
 
 ## lambda call
 - Maybe convert it to a simple function call in the IR?
-[Not of concern for now]
 - [Meeting] Yes, May have to keep a dict while converting to function to account for environ variables.
 
 ## Input-Output
-- Ask Sir if we can directly use the interfacing provided by x86, and in turn refer it to the way we are using functions
-- Yes.
+- Direct interfacing by calling C calls in x86
 
-## classes and objects
+## Classes and Objects
 - Ask Sir about inheritance
 - [Meeting] Classes boiled down to IR and details already exisiting in SymTable
 
-# CODE Generation
-
-What we need:
-Register and Address descriptors
