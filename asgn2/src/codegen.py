@@ -83,10 +83,12 @@ class CodeGenerator():
             move to memory, and update the descriptors
         '''
         # print (v)
+        self.asm_code[self.curr_func].append('\t\t#movToMem starts here')
         ascode = "\t\tmovl " + "%" + reg + "," + v
         self.symbolToRegister[v] = ''
         self.registerToSymbol[reg] = ''
         self.asm_code[self.curr_func].append(ascode)
+        self.asm_code[self.curr_func].append('\t\t#movToMem ends here')
 
     def getFromMem (self, x):
         '''
@@ -268,7 +270,7 @@ class CodeGenerator():
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
     def printF (self, x, typ):
-        #self.asm_code[self.curr_func].append('#printF starts here')
+        self.asm_code[self.curr_func].append('\t\t#printF starts here')
         v = self.registerToSymbol['eax']
         if (v == ''):
             ascode = ''
@@ -292,7 +294,7 @@ class CodeGenerator():
             self.registerToSymbol['eax'] = v
             self.symbolToRegister[v] = 'eax'
         self.asm_code[self.curr_func].append(ascode)
-        #self.asm_code[self.curr_func].append('#printF ends here')
+        self.asm_code[self.curr_func].append('\t\t#printF ends here')
         # self.asm_code[self.curr_func].append('' + self.registerToSymbol)
         # print (self.registerToSymbol)
 
@@ -490,9 +492,13 @@ class CodeGenerator():
 
 
                 blockIndex =  self.varAllocate.line2Block(ln)
+                # print "BlockIndex Number in setup_text: ",blockIndex
 
                 # deallocate all registers at the end of each basic block
+                # print self.varAllocate.basicBlocks
+                # print "Line, BBlock: ",ln, self.varAllocate.basicBlocks[blockIndex]
                 if (ln == self.varAllocate.basicBlocks[blockIndex][1]):
+                    print "# Linnumber where dealloc is called: ",ln
                     self.deallocRegs()
 
                 # print (self.registerToSymbol)

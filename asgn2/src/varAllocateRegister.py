@@ -200,8 +200,8 @@ class varAllocateRegister:
     def line2Block (self, line):
         for i in range(len(self.basicBlocks)):
             block = self.basicBlocks[i]
-            if (line <= block[1] or line >= block[0]):
-                return (i)
+            if (line <= block[1] and line >= block[0]):
+                return i
 
 
     def getReg(self, blockIndex, line, all_mem = False):
