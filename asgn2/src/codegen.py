@@ -116,7 +116,7 @@ class CodeGenerator():
         '''
         # line = self.code[lineno - 1]
         # print ('line = ' , line, 'lineno = ' , lineno)
-
+        
         op = self.op32_dict[operation] # add/sub/idiv
         # lineno, operator, lhs, op1, op2 = line
 
@@ -125,8 +125,8 @@ class CodeGenerator():
 
         blockIndex = self.varAllocate.line2Block(lineno)
 
-        #For debugging
-        self.asm_code[self.curr_func].append("#This is for line number %d"%(lineno))
+        # #For debugging
+        # self.asm_code[self.curr_func].append("#This is for line number %d"%(lineno))
 
         # Have assigned loc_op1 and loc_op2 above to aid in handling the case for lhs == op1
         # We use Loc_op1 for printing inside ascode and loc_op1 for accessing the data structures. This helps in removing the specificity in print statements
@@ -164,8 +164,10 @@ class CodeGenerator():
                 self.asm_code[self.curr_func].append(ascode)
                 return
 
+            
         ## NORMAL HANDLING ##
         s_code = "" # store code
+        l_code = "" # load code
 
         # GetReg gives a location L to perform Operation, L(loc) is a register (for this assignment)
         loc, msg = self.varAllocate.getReg(blockIndex, lineno)
@@ -187,13 +189,15 @@ class CodeGenerator():
 
         # This needs to be done for every such case nonetheless
         if (msg == "Did not replace"):
-            ascode += "\t\tmovl $0," + Loc
+            l_code = "\t\tmovl $0," + Loc
+            # Setting setNewLine is required whenever we enter a line into code
+            self.asm_code[self.curr_func].append(l_code)
 
         if (statTyp == 'BA_2C'):
 
             # This is an optimization
             n = self.optOP(operation,int(const1),int(const2))
-            ascode += "\n\t\t" + op + " $" + str(n) + "," + Loc
+            ascode += "\t\t" + op + " $" + str(n) + "," + Loc
 
         elif (statTyp == 'BA_1C_R'):
 
@@ -201,17 +205,17 @@ class CodeGenerator():
                 ascode += "\t\t" + op + " $" + const2 + "," + Loc
             else:
                 # The first instruction won't be allowed if both are memories, we should check for that
-                ascode += "\n\t\tmovl " + Loc_op1 + "," + Loc + "\n\t\t" + op + " $" + const2 + "," + Loc
+                ascode += "\t\tmovl " + Loc_op1 + "," + Loc + "\n\t\t" + op + " $" + const2 + "," + Loc
 
         else:
 
             # This should remove a lot of redundancies
             if (loc in self.Registers and loc == loc_op1):
-                ascode += "\n\t\t" + op + " " + Loc_op2 + "," + Loc
+                ascode += "\t\t" + op + " " + Loc_op2 + "," + Loc
 
             # Symmetric case    
             elif (loc in self.Registers and loc == loc_op2):
-                ascode += "\n\t\t" + op + " " + Loc_op1 + "," + Loc
+                ascode += "\t\t" + op + " " + Loc_op1 + "," + Loc
                 '''    
                 When both op1 and op2 are in memory. This will further be divided into 2 cases depending on the return value of getReg().
                 We can check the condition for op1 being in memory by comparing the first character of Loc_op1 with '%' 
@@ -264,7 +268,7 @@ class CodeGenerator():
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
     def printF (self, x, typ):
-        self.asm_code[self.curr_func].append('#printF starts here')
+        #self.asm_code[self.curr_func].append('#printF starts here')
         v = self.registerToSymbol['eax']
         if (v == ''):
             ascode = ''
@@ -283,7 +287,7 @@ class CodeGenerator():
             self.registerToSymbol['eax'] = v
             self.symbolToRegister[v] = 'eax'
         self.asm_code[self.curr_func].append(ascode)
-        self.asm_code[self.curr_func].append('#printF ends here')
+        #self.asm_code[self.curr_func].append('#printF ends here')
         # self.asm_code[self.curr_func].append('' + self.registerToSymbol)
         # print (self.registerToSymbol)
 
