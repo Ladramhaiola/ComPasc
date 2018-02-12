@@ -116,8 +116,6 @@ class CodeGenerator():
         '''
             
         '''
-        # line = self.code[lineno - 1]
-        # print ('line = ' , line, 'lineno = ' , lineno)
         
         op = self.op32_dict[operation] # add/sub/idiv
         # lineno, operator, lhs, op1, op2 = line
@@ -182,7 +180,7 @@ class CodeGenerator():
 
         # Done this after getting loc_op1 and loc_op2 for preventing redundant movl operations  
         if (loc in self.Registers and self.registerToSymbol[loc] != "" and lhs.name != self.registerToSymbol[loc]):
-
+            self.asm_code[self.curr_func].append("\t\t# loc: " + loc)
             s_code = '\t\tmovl ' + Loc + "," + self.registerToSymbol[loc]
             self.symbolToRegister[self.registerToSymbol[loc]] = ""
             self.asm_code[self.curr_func].append(s_code)
@@ -191,6 +189,7 @@ class CodeGenerator():
 
         # This needs to be done for every such case nonetheless
         if (msg == "Did not replace"):
+            self.asm_code[self.curr_func].append("\t\t# message: " + msg)
             l_code = "\t\tmovl $0," + Loc
             # Setting setNewLine is required whenever we enter a line into code
             self.asm_code[self.curr_func].append(l_code)
@@ -248,11 +247,12 @@ class CodeGenerator():
 
             elif (msg == "Did not replace"):
                 # There is unused register
-                 ascode += "\n\t\t" + op + " " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
+                ascode += "\n\t\t" + op + " " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
 
             else:
                 ascode += "\n\t\tmovl " + Loc_op2 + "," + Loc + "\n\t\t" + op + " " + Loc_op1 + "," + Loc
 
+        self.asm_code[self.curr_func].append("\t\t# message: " + msg)
         self.asm_code[self.curr_func].append(ascode)
 
 
@@ -455,6 +455,8 @@ class CodeGenerator():
 
                 # Find the blockIndex
                 blockIndex =  self.varAllocate.line2Block(ln)
+
+                self.asm_code[self.curr_func].append("\t\t# Linenumber IR: " + ln)
 
                 # DONE HOPEFULLY
                 if op in ["+","-","*","/","MOD","AND","OR","SHL","SHR"]:
