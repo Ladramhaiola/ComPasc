@@ -63,6 +63,10 @@ Linenumber, "label", *EMPTY*, Label_Name, *EMPTY*
 ```
 
 ## Input and Output
+- Input
+```
+Linenumber, "SCAN", *lhs*, *EMPTY*, *EMPTY* 
+```
 - Print
 ```
 Linenumber, "print", *EMPTY*, MESSAGE, *EMPTY* 
