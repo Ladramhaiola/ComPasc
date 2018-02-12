@@ -83,10 +83,12 @@ class CodeGenerator():
             move to memory, and update the descriptors
         '''
         # print (v)
+        self.asm_code[self.curr_func].append('\t\t#movToMem starts here')
         ascode = "\t\tmovl " + "%" + reg + "," + v
         self.symbolToRegister[v] = ''
         self.registerToSymbol[reg] = ''
         self.asm_code[self.curr_func].append(ascode)
+        self.asm_code[self.curr_func].append('\t\t#movToMem ends here')
 
     def getFromMem (self, x):
         '''
@@ -114,8 +116,6 @@ class CodeGenerator():
         '''
             
         '''
-        # line = self.code[lineno - 1]
-        # print ('line = ' , line, 'lineno = ' , lineno)
         
         op = self.op32_dict[operation] # add/sub/idiv
         # lineno, operator, lhs, op1, op2 = line
@@ -180,7 +180,7 @@ class CodeGenerator():
 
         # Done this after getting loc_op1 and loc_op2 for preventing redundant movl operations  
         if (loc in self.Registers and self.registerToSymbol[loc] != "" and lhs.name != self.registerToSymbol[loc]):
-
+            self.asm_code[self.curr_func].append("\t\t# loc: " + loc)
             s_code = '\t\tmovl ' + Loc + "," + self.registerToSymbol[loc]
             self.symbolToRegister[self.registerToSymbol[loc]] = ""
             self.asm_code[self.curr_func].append(s_code)
@@ -189,6 +189,7 @@ class CodeGenerator():
 
         # This needs to be done for every such case nonetheless
         if (msg == "Did not replace"):
+            self.asm_code[self.curr_func].append("\t\t# message: " + msg)
             l_code = "\t\tmovl $0," + Loc
             # Setting setNewLine is required whenever we enter a line into code
             self.asm_code[self.curr_func].append(l_code)
@@ -246,11 +247,12 @@ class CodeGenerator():
 
             elif (msg == "Did not replace"):
                 # There is unused register
-                 ascode += "\n\t\t" + op + " " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
+                ascode += "\n\t\t" + op + " " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
 
             else:
                 ascode += "\n\t\tmovl " + Loc_op2 + "," + Loc + "\n\t\t" + op + " " + Loc_op1 + "," + Loc
 
+        self.asm_code[self.curr_func].append("\t\t# message: " + msg)
         self.asm_code[self.curr_func].append(ascode)
 
 
@@ -373,7 +375,7 @@ class CodeGenerator():
         
         
     def printF (self, x, typ):
-        #self.asm_code[self.curr_func].append('#printF starts here')
+        self.asm_code[self.curr_func].append('\t\t#printF starts here')
         v = self.registerToSymbol['eax']
         if (v == ''):
             ascode = ''
@@ -386,7 +388,7 @@ class CodeGenerator():
             x = '%' + self.symbolToRegister[x] 
 
         # central code 
-        ascode += "\t\tmovl $0, %eax"
+        ascode += "\n\t\tmovl $0, %eax"
         ascode += "\n\t\tmovl " + x + ",%esi"
         ascode += "\n\t\tmovl $.formatINT, %edi"
         ascode += "\n\t\tcall printf" 
@@ -397,7 +399,7 @@ class CodeGenerator():
             self.registerToSymbol['eax'] = v
             self.symbolToRegister[v] = 'eax'
         self.asm_code[self.curr_func].append(ascode)
-        #self.asm_code[self.curr_func].append('#printF ends here')
+        self.asm_code[self.curr_func].append('\t\t#printF ends here')
         # self.asm_code[self.curr_func].append('' + self.registerToSymbol)
         # print (self.registerToSymbol)
 
@@ -410,11 +412,11 @@ class CodeGenerator():
         else:
             self.printF('$'+const1, 'int')
 
-   	def handle_input (self, lineno, op1):
-   		self.asm_code[self.curr_func].append('#scanF starts here')
+    def handle_input (self, lineno, op1):
 
-   		# central code 
-   		# ascode += "\n\t\tpush %ebp"
+        self.asm_code[self.curr_func].append('#scanF starts here')
+        # central code 
+   	# ascode += "\n\t\tpush %ebp"
         ascode += "\t\tmovl $0, %eax"
         ascode += "\n\t\tmovl " + x + ",%esi"
         ascode += "\n\t\tmovl $.formatINT, %edi"
@@ -558,9 +560,15 @@ class CodeGenerator():
                 # print lhs.name
                 ln = int(lineno)
 
+                # Find the blockIndex
+                blockIndex =  self.varAllocate.line2Block(ln)
+
+                self.asm_code[self.curr_func].append("\t\t# Linenumber IR: " + ln)
+
                 # DONE HOPEFULLY
                 if op in ["+","-","*","AND","OR","SHL","SHR"]:
                     self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
+                    self.check_dealloc(ln,blockIndex)
                     # pass
 
                 elif op in ["/","MOD"]:
@@ -569,24 +577,30 @@ class CodeGenerator():
                 # Would need to refer to handle_binary for most part
                 elif op == 'CMP':
                     self.handle_cmp (ln, op1, op2, const1, const2)
+                    self.check_dealloc(ln,blockIndex)
                 
                 # DONE HOPEFULLY
                 elif op in self.jump_list:
+                    self.check_dealloc(ln,blockIndex)
                     self.handle_jump (op, const1)
 
                 # DONE HOPEFULLY
                 elif op == 'LABEL':
+                    self.check_dealloc(ln,blockIndex)
                     self.handle_label (lhs, op1, const1)
 
                 # DONE HOPEFULLY
                 elif op == 'CALL':
+                    self.check_dealloc(ln,blockIndex)
                     self.handle_funccall (op1)
 
                 # DONE HOPEFULLY
                 elif op == 'PARAM':
                     self.handle_param (op1)
+                    self.check_dealloc(ln,blockIndex)
 
                 elif op == 'RETURN':
+                    self.check_dealloc(ln,blockIndex)
                     self.handle_return (op1)
 
                 elif op == 'LOADREF':
@@ -597,16 +611,16 @@ class CodeGenerator():
 
                 elif op == 'PRINT':
                     self.handle_print (ln,op1,const1)
+                    self.check_dealloc(ln,blockIndex)
 
 
-                blockIndex =  self.varAllocate.line2Block(ln)
-
-                # deallocate all registers at the end of each basic block
-                if (ln == self.varAllocate.basicBlocks[blockIndex][1]):
-                    self.deallocRegs()
-
-                # print (self.registerToSymbol)
-                # print (self.symbolToRegister)
+    def check_dealloc(self,ln,blockIndex):
+        '''
+            Checks and performs deallocation.
+        '''
+        if (ln == self.varAllocate.basicBlocks[blockIndex][1]):
+            print "# Linnumber where dealloc is called: ",ln
+            self.deallocRegs()
 
 
     def setup_data(self):
