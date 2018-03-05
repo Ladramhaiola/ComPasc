@@ -33,23 +33,23 @@ def p_CompoundStmt(p):
 
 def p_StmtList(p):
     ''' StmtList : Statement SEMICOLON
-                | StmtList Statement SEMICOLON'''
+    | StmtList Statement SEMICOLON'''
 
 def p_Statement(p):
     ''' Statement : SimpleStatement
-                | StructStmt '''
+    | StructStmt '''
 
 def p_SimpleStatement(p):
     ''' SimpleStatement : '''
 
 def p_StructStmt(p):
     ''' StructStmt : CompoundStmt
-                    | ConditionalStmt 
-                    | LoopStmt '''
+    | ConditionalStmt 
+    | LoopStmt '''
 
 def p_ConditionalStmt(p):
     ''' ConditionalStmt : IfStmt SEMICOLON
-                        | CaseStmt SEMICOLON '''
+    | CaseStmt SEMICOLON '''
 
 def p_IfStmt(p):
     ''' IfStmt : IF THEN ELSE'''
@@ -64,8 +64,8 @@ def p_CaseLabel(p):
     ''' CaseLabel : ConstExpr DOTDOT ConstExpr SEMICOLON '''
 
 def p_LoopStmt(p):
-    ''' LoopStmt : RepeatStmt 
-                | WhileStmt '''
+    ''' LoopStmt : RepeatStmt
+    | WhileStmt '''
 
 def p_RepeatStmt(p):
     ''' RepeatStmt : REPEAT Statement UNTIL Expression SEMICOLON '''
@@ -87,21 +87,21 @@ def p_Factor(p):
 
 def p_Type(p):
     ''' Type : TypeID
-            | SimpleType
-            | PointerType
-            | StringType
-            | ProcedureType '''
+    | SimpleType
+    | PointerType
+    | StringType
+    | ProcedureType '''
 
 def p_SimpleType(p):
     ''' SimpleType : OrdinalType
-                | RealType '''
+    | RealType '''
 
 def p_PointerType(p):
     ''' PointerType : POWER ID '''
 
 def p_StringType(p):
     ''' StringType : STRING
-                | STRING LSQUARE ConstExpr RSQUARE '''
+    | STRING LSQUARE ConstExpr RSQUARE '''
 
 def p_ProcedureType(p):
     ''' ProcedureType : '''
@@ -111,15 +111,15 @@ def p_TypeArgs(p):
 
 def p_TypeID(p):
     ''' TypeID : INTEGER
-                | REAL
-                | CHAR '''
+    | REAL
+    | CHAR '''
 
 def p_OrdinalType(p):
     ''' OrdinalType : INTEGER'''
 
 def p_RealType(p):
     ''' RealType : DOUBLE'''
-
+    
 def p_TypeSection(p):
     ''' TypeSection : '''
 
@@ -128,24 +128,24 @@ def p_TypeDecl(p):
 
 def p_RestrictedType(p):
     ''' RestrictedType : ObjType
-                    | ClassType '''
+    | ClassType '''
 
 def p_RelOp(p):
     ''' RelOp : '''
 
 def p_AddOp(p):
     ''' AddOp : PLUS
-            | MINUS
-            | OR
-            | XOR '''
+    | MINUS
+    | OR
+    | XOR '''
 
 def p_MulOp(p):
     ''' MulOp : MULTIPLY
-            | DIVIDE
-            | MOD
-            | AND
-            | SHL
-            | SHR '''
+    | DIVIDE
+    | MOD
+    | AND
+    | SHL
+    | SHR '''
 
 def p_ExprList(p):
     ''' ExprList : '''
@@ -164,14 +164,14 @@ def p_ConstDecl(p):
 
 def p_TypedConst(p):
     ''' TypedConst : ConstExpr
-                    | ArrayConst '''
+    | ArrayConst '''
 
 def p_Array(p):
     ''' Array : '''
 
 def p_TypeArray(p):
     ''' TypeArray : TypeID
-                | PointerType '''
+    | PointerType '''
 
 def p_ArrayConst(p):
     ''' ArrayConst : '''
@@ -191,9 +191,9 @@ def p_VarDecl(p):
 
 def p_ProcedureDeclSection(p):
     ''' ProcedureDeclSection : ProcedureDecl
-                            | FuncDecl
-                            | ConstrucDecl
-                            | LambFuncDecl '''
+    | FuncDecl
+    | ConstrucDecl
+    | LambFuncDecl '''
 
 def p_ConstrucDecl(p):
     ''' ConstrucDecl : ConstrucHeading SEMICOLON Block SEMICOLON '''
@@ -249,7 +249,7 @@ def p_ObjMethodList(p):
 
 def p_ObjMethodHeading(p):
     ''' ObjMethodHeading : ProcedureHeading
-                        | FuncHeading '''
+    | FuncHeading '''
 ### ------------------------------------------- ###
 
 ### --------------------- CLASS DEFS ------------ ###
@@ -277,7 +277,7 @@ def p_ClassMethodList(p):
 
 def p_ClassMethodHeading(p):
     ''' ClassMethodHeading : ProcedureHeading
-                        | FuncHeading '''
+    | FuncHeading '''
 
 ### ---------------------------------------- ###
 
@@ -286,14 +286,17 @@ def p_ClassMethodHeading(p):
 
 def p_Input(p):
     ''' Input : READ
-            | READLN LPAREN IdentList RPAREN '''
+    | READLN LPAREN IdentList RPAREN '''
 
 def p_Output(p):
     ''' Output : WRITE
-            | WRITELN LPAREN IdentList RPAREN '''
+    | WRITELN LPAREN IdentList RPAREN '''
 
 ### -------------------------------- ###
 
+def p_error(p):
+    print "Syntax Error at Line: , Pos: "
+    # Add formatters later here, to fetch line number and position
 
 
 def main():
