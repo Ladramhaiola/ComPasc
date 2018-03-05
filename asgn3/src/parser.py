@@ -12,25 +12,29 @@ def p_Goal(p):
     ''' Goal : Program SEMICOLON '''
 
 def p_Program(p):
-    ''' Program : '''
+    ''' Program : PROGRAM Identifier LPAREN IdentList RPAREN SEMICOLON ProgramBlock DOT SEMICOLON'''
+    # The rule in pdf is wrong as Ident has following semicolon
 
 def p_ProgramBlock(p):
-    ''' ProgramBlock : '''
+    ''' ProgramBlock : Block '''
 
 def p_Block(p):
-    ''' Block : '''
+    ''' Block : DeclSection CompoundStmt'''
 
 def p_DeclSection(p):
     ''' DeclSection : '''
+    # Involves star over OR
 
 def p_CompoundStmt(p):
-    ''' CompoundStmt : '''
+    ''' CompoundStmt : BEGIN StmtList END SEMICOLON'''
 
 def p_StmtList(p):
-    ''' StmtList : '''
+    ''' StmtList : Statement SEMICOLON
+                | StmtList Statement SEMICOLON'''
 
 def p_Statement(p):
-    ''' Statement : '''
+    ''' Statement : SimpleStatement
+                | StructStmt '''
 
 def p_SimpleStatement(p):
     ''' SimpleStatement : '''
@@ -155,6 +159,9 @@ def p_Ident(p):
 # WARNING
 def p_Identifier(p):
     ''' Identifier : ID'''
+
+def p_IdentList(p):
+    ''' IdentList : '''
 
 def p_VarSection(p):
     ''' VarSection : '''
