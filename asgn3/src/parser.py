@@ -10,23 +10,28 @@ from tokens import *
 
 ### ------------------------------- ###
 
-# As step 1, mapping directly from the pdf file
 def p_Goal(p):
     ''' Goal : Program '''
 
 def p_Program(p):
     ''' Program : PROGRAM ID LPAREN IdentList RPAREN SEMICOLON ProgramBlock DOT '''
-    # The rule in pdf is wrong as Ident has following semicolon
 
 def p_ProgramBlock(p):
     ''' ProgramBlock : Block '''
 
 def p_Block(p):
-    ''' Block : DeclSection CompoundStmt'''
+    ''' Block : CompoundStmt
+    | DeclSection CompoundStmt'''
 
 def p_DeclSection(p):
-    ''' DeclSection : '''
-    # Involves star over OR
+    ''' DeclSection : DeclSection WhichSection
+    | '''
+
+def p_WhichSection(p):
+    ''' WhichSection : ConstSection
+    | TypeSection
+    | VarSection
+    | ProcedureDeclSection '''
 
 def p_CompoundStmt(p):
     ''' CompoundStmt : BEGIN StmtList END SEMICOLON'''
@@ -52,16 +57,23 @@ def p_ConditionalStmt(p):
     | CaseStmt SEMICOLON '''
 
 def p_IfStmt(p):
-    ''' IfStmt : IF THEN ELSE'''
+    ''' IfStmt : IF Expression THEN Statement 
+    | IF Expression THEN Statement ELSE Statement '''
 
 def p_CaseStmt(p):
-    ''' CaseStmt : '''
+    # Should get 3 rules here
+    ''' CaseStmt : CASE Expression OF CaseSelector END'''
 
 def p_CaseSelector(p):
-    ''' CaseSelector : '''
+    ''' CaseSelector : CaseLabel CommaCaseLabel COLON Statement '''
+
+def p_CommaCaseLabel(p):
+    ''' CommaCaseLabel : CommaCaseLabel COMMA CaseLabel 
+    | '''
 
 def p_CaseLabel(p):
-    ''' CaseLabel : ConstExpr DOTDOT ConstExpr SEMICOLON '''
+    ''' CaseLabel : ConstExpr 
+    | ConstExpr DOTDOT ConstExpr '''
 
 def p_LoopStmt(p):
     ''' LoopStmt : RepeatStmt
@@ -104,7 +116,10 @@ def p_StringType(p):
     | STRING LSQUARE ConstExpr RSQUARE '''
 
 def p_ProcedureType(p):
-    ''' ProcedureType : '''
+    ''' ProcedureType : ProcedureHeading
+    | ProcedureHeading OF OBJECT
+    | FuncHeading
+    | FuncHeading OF OBJECT '''
 
 def p_TypeArgs(p):
     ''' TypeArgs : '''
@@ -121,7 +136,11 @@ def p_RealType(p):
     ''' RealType : DOUBLE'''
     
 def p_TypeSection(p):
-    ''' TypeSection : '''
+    ''' TypeSection : TYPE ColonTypeDecl '''
+
+def p_ColonTypeDecl(p):
+    ''' ColonTypeDecl : ColonTypeDecl VarDecl SEMICOLON 
+    | '''
 
 def p_TypeDecl(p):
     ''' TypeDecl : '''
@@ -147,8 +166,12 @@ def p_MulOp(p):
     | SHL
     | SHR '''
 
+def p_CommaExpression(p):
+    ''' CommaExpression : CommaExpression COMMA Expression
+    | '''
+
 def p_ExprList(p):
-    ''' ExprList : '''
+    ''' ExprList : Expression CommaExpression'''
 
 def p_Designator(p):
     ''' Designator : '''
@@ -184,7 +207,11 @@ def p_IdentList(p):
     ''' IdentList : '''
 
 def p_VarSection(p):
-    ''' VarSection : '''
+    ''' VarSection : VAR ColonVarDecl '''
+
+def p_ColonVarDecl(p):
+    ''' ColonVarDecl : ColonVarDecl VarDecl SEMICOLON
+    | '''
 
 def p_VarDecl(p):
     ''' VarDecl : '''
@@ -228,6 +255,9 @@ def p_LambFunc(p):
 
 
 ### ---------------- OBJECT DEFS -------------- ###
+
+def p_ObjDefThings(p):
+    ''' ObjDefThings : '''
 
 def p_ObjType(p):
     ''' ObjType : '''
@@ -303,6 +333,10 @@ def main():
     parser = yacc.yacc()
 
     # Do the things that we want to here
+    '''
+    inputfile = open(sys.argv[1],'r').read()
+    yacc.parse(inputfile)
+    '''
 
 if __name__ == '__main__':
     main()
