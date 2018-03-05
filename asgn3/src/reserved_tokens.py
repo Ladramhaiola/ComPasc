@@ -43,10 +43,10 @@ reserved = {
     'inherited':'INHERITED',
     'self':'SELF',
     #adding absent tokens
-    'integer':'INT_TYPE',
-    'string':'STRING_TYPE',
-    'real':'REAL_TYPE',
-    'char':'CHAR_TYPE',
+    'integer':'INTEGER',
+    'string':'STRING',
+    'real':'REAL',
+    'char':'CHAR',
     'double':'DOUBLE',
     'lambda':'LAMBDA',
     'public':'PUBLIC', # why is this required?
