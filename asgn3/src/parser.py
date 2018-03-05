@@ -1,18 +1,21 @@
 import ply.yacc as yacc
 from tokens import *
 
+### ------------ ISSUES ----------- ###
 
 # Ambiguity checking?
 # Remove the Lexer error that Goutham said
-# Pointer Type Statement in Grammar?
-# Do we need to expand rules like Identifier, which is a token?
+# Use of Pointer Type Statement in Grammar? Since we are not working with pointers[?]
+# Do we need to expand rules like Identifier, which is a token? NO
+
+### ------------------------------- ###
 
 # As step 1, mapping directly from the pdf file
 def p_Goal(p):
-    ''' Goal : Program SEMICOLON '''
+    ''' Goal : Program '''
 
 def p_Program(p):
-    ''' Program : PROGRAM Identifier LPAREN IdentList RPAREN SEMICOLON ProgramBlock DOT SEMICOLON'''
+    ''' Program : PROGRAM ID LPAREN IdentList RPAREN SEMICOLON ProgramBlock DOT '''
     # The rule in pdf is wrong as Ident has following semicolon
 
 def p_ProgramBlock(p):
@@ -40,13 +43,16 @@ def p_SimpleStatement(p):
     ''' SimpleStatement : '''
 
 def p_StructStmt(p):
-    ''' StructStmt : '''
+    ''' StructStmt : CompoundStmt
+                    | ConditionalStmt 
+                    | LoopStmt '''
 
 def p_ConditionalStmt(p):
-    ''' ConditionalStmt : '''
+    ''' ConditionalStmt : IfStmt SEMICOLON
+                        | CaseStmt SEMICOLON '''
 
 def p_IfStmt(p):
-    ''' IfStmt : '''
+    ''' IfStmt : IF THEN ELSE'''
 
 def p_CaseStmt(p):
     ''' CaseStmt : '''
@@ -55,40 +61,47 @@ def p_CaseSelector(p):
     ''' CaseSelector : '''
 
 def p_CaseLabel(p):
-    ''' CaseLabel : '''
+    ''' CaseLabel : ConstExpr DOTDOT ConstExpr SEMICOLON '''
 
 def p_LoopStmt(p):
-    ''' LoopStmt : '''
+    ''' LoopStmt : RepeatStmt 
+                | WhileStmt '''
 
 def p_RepeatStmt(p):
-    ''' RepeatStmt : '''
+    ''' RepeatStmt : REPEAT Statement UNTIL Expression SEMICOLON '''
 
 def p_WhileStmt(p):
-    ''' WhileStmt : '''
+    ''' WhileStmt : WHILE Expression DO Statement SEMICOLON '''
 
 def p_Expression(p):
-    ''' Expression : '''
+    ''' Expression : SimpleExpression '''
 
 def p_SimpleExpression(p):
     ''' SimpleExpression : '''
 
 def p_Term(p):
-    ''' Term : '''
+    ''' Term : Factor '''
 
 def p_Factor(p):
-    ''' Factor : '''
+    ''' Factor : Designator '''
 
 def p_Type(p):
-    ''' Type : '''
+    ''' Type : TypeID
+            | SimpleType
+            | PointerType
+            | StringType
+            | ProcedureType '''
 
 def p_SimpleType(p):
-    ''' SimpleType : '''
+    ''' SimpleType : OrdinalType
+                | RealType '''
 
 def p_PointerType(p):
-    ''' PointerType : '''
+    ''' PointerType : POWER ID '''
 
 def p_StringType(p):
-    ''' StringType : '''
+    ''' StringType : STRING
+                | STRING LSQUARE ConstExpr RSQUARE '''
 
 def p_ProcedureType(p):
     ''' ProcedureType : '''
@@ -97,13 +110,15 @@ def p_TypeArgs(p):
     ''' TypeArgs : '''
 
 def p_TypeID(p):
-    ''' TypeID : '''
+    ''' TypeID : INTEGER
+                | REAL
+                | CHAR '''
 
 def p_OrdinalType(p):
-    ''' OrdinalType : '''
+    ''' OrdinalType : INTEGER'''
 
 def p_RealType(p):
-    ''' RealType : '''
+    ''' RealType : DOUBLE'''
 
 def p_TypeSection(p):
     ''' TypeSection : '''
@@ -112,16 +127,25 @@ def p_TypeDecl(p):
     ''' TypeDecl : '''
 
 def p_RestrictedType(p):
-    ''' RestrictedType : '''
+    ''' RestrictedType : ObjType
+                    | ClassType '''
 
 def p_RelOp(p):
     ''' RelOp : '''
 
 def p_AddOp(p):
-    ''' AddOp : '''
+    ''' AddOp : PLUS
+            | MINUS
+            | OR
+            | XOR '''
 
 def p_MulOp(p):
-    ''' MulOp : '''
+    ''' MulOp : MULTIPLY
+            | DIVIDE
+            | MOD
+            | AND
+            | SHL
+            | SHR '''
 
 def p_ExprList(p):
     ''' ExprList : '''
@@ -139,13 +163,15 @@ def p_ConstDecl(p):
     ''' ConstDecl : '''
 
 def p_TypedConst(p):
-    ''' TypedConst : '''
+    ''' TypedConst : ConstExpr
+                    | ArrayConst '''
 
 def p_Array(p):
     ''' Array : '''
 
 def p_TypeArray(p):
-    ''' TypeArray : '''
+    ''' TypeArray : TypeID
+                | PointerType '''
 
 def p_ArrayConst(p):
     ''' ArrayConst : '''
@@ -153,12 +179,6 @@ def p_ArrayConst(p):
 def p_ConstExpr(p):
     ''' ConstExpr : '''
 
-def p_Ident(p):
-    ''' Ident : ID SEMICOLON'''
-
-# WARNING
-def p_Identifier(p):
-    ''' Identifier : ID'''
 
 def p_IdentList(p):
     ''' IdentList : '''
@@ -170,36 +190,39 @@ def p_VarDecl(p):
     ''' VarDecl : '''
 
 def p_ProcedureDeclSection(p):
-    ''' ProcedureDeclSection : '''
+    ''' ProcedureDeclSection : ProcedureDecl
+                            | FuncDecl
+                            | ConstrucDecl
+                            | LambFuncDecl '''
 
 def p_ConstrucDecl(p):
-    ''' ConstrucDecl : '''
+    ''' ConstrucDecl : ConstrucHeading SEMICOLON Block SEMICOLON '''
 
 def p_ConstrucHeading(p):
-    ''' ConstrucHeading : '''
+    ''' ConstrucHeading : CONSTRUCTOR ID FormalParams '''
 
 def p_FuncDecl(p):
-    ''' FuncDecl : '''
+    ''' FuncDecl : FuncHeading SEMICOLON Block SEMICOLON '''
 
 def p_FuncHeading(p):
-    ''' FuncHeading : '''
+    ''' FuncHeading : FUNCTION ID LPAREN FormalParams RPAREN'''
 
 def p_FormalParams(p):
-    ''' FormalParams : '''
+    ''' FormalParams : IdentList '''
 
 def p_ProcedureDecl(p):
-    ''' ProcedureDecl : '''
+    ''' ProcedureDecl : ProcedureHeading SEMICOLON Block SEMICOLON '''
 
 def p_ProcedureHeading(p):
-    ''' ProcedureHeading : '''
+    ''' ProcedureHeading : PROCEDURE ID FormalParams '''
 
 ### ---------------- LAMBDA DEFS -------------- ###
 
 def p_LambFuncDecl(p):
-    ''' LambFuncDecl : '''
+    ''' LambFuncDecl : ID COLON SimpleExpression '''
 
 def p_LambFunc(p):
-    ''' LambFunc : '''
+    ''' LambFunc : ID LPAREN ConstExpr RPAREN '''
 
 ### ------------------------------------------- ###
 
@@ -210,22 +233,23 @@ def p_ObjType(p):
     ''' ObjType : '''
 
 def p_ObjVis(p):
-    ''' ObjVis :  '''
+    ''' ObjVis : PUBLIC '''
 
 def p_ObjTypeSection(p):
-    ''' ObjTypeSection : '''
+    ''' ObjTypeSection : TypeSection '''
 
 def p_ObjConstSection(p):
-    ''' ObjConstSection : '''
+    ''' ObjConstSection : ConstSection '''
 
 def p_ObjVarSection(p):
-    ''' ObjVarSection : '''
+    ''' ObjVarSection : VarSection '''
 
 def p_ObjMethodList(p):
     ''' ObjMethodList : '''
 
 def p_ObjMethodHeading(p):
-    ''' ObjMethodHeading : '''
+    ''' ObjMethodHeading : ProcedureHeading
+                        | FuncHeading '''
 ### ------------------------------------------- ###
 
 ### --------------------- CLASS DEFS ------------ ###
@@ -234,25 +258,26 @@ def p_ClassType(p):
     ''' ClassType : '''
 
 def p_ClassHeritage(p):
-    ''' ClassHeritage : '''
+    ''' ClassHeritage : LPAREN IdentList RPAREN'''
 
 def p_ClassVis(p):
-    ''' ClassVis : '''
+    ''' ClassVis : PUBLIC'''
 
 def p_ClassTypeSection(p):
-    ''' ClassTypeSection : '''
+    ''' ClassTypeSection : TypeSection '''
 
 def p_ClassConstSection(p):
-    ''' ClassConstSection : '''
+    ''' ClassConstSection : ConstSection '''
 
 def p_ClassVarSection(p):
-    ''' ClassVarSection : '''
+    ''' ClassVarSection : VarSection '''
 
 def p_ClassMethodList(p):
     ''' ClassMethodList : '''
 
 def p_ClassMethodHeading(p):
-    ''' ClassMethodHeading : '''
+    ''' ClassMethodHeading : ProcedureHeading
+                        | FuncHeading '''
 
 ### ---------------------------------------- ###
 
@@ -260,10 +285,12 @@ def p_ClassMethodHeading(p):
 ### ------------ INPUT / OUTPUT ------------ ###
 
 def p_Input(p):
-    ''' Input : '''
+    ''' Input : READ
+            | READLN LPAREN IdentList RPAREN '''
 
 def p_Output(p):
-    ''' Output : '''
+    ''' Output : WRITE
+            | WRITELN LPAREN IdentList RPAREN '''
 
 ### -------------------------------- ###
 

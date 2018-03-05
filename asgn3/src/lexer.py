@@ -27,6 +27,7 @@ def build (debug=True):
     t_LSQUARE = r'\['
     t_RSQUARE = r'\]'
     t_DOT = r'\.'
+    t_DOTDOT = r'\\.\.'
     t_COMMA = r'\,'
     t_INVERTCOMMA = r'\''
     t_INVERTDOUBLECOMMA = r'\"'

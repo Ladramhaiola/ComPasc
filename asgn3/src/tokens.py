@@ -18,6 +18,7 @@ tokens = [
     'LSQUARE',                                          #LEFT SQUARE BRACKET '['
     'RSQUARE',
     'DOT',
+    'DOTDOT',
     'COMMA',
     'INVERTCOMMA',                                      # '\''     
     'INVERTDOUBLECOMMA',                                # '\"'

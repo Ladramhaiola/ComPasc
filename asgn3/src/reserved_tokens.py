@@ -11,7 +11,7 @@ reserved = {
     'break':'BREAK',
     'case':'CASE',
     'const':'CONSTANT',
-    'constructor':'CONSTRUCT',
+    'constructor':'CONSTRUCTOR',
     'continue':'CONTINUE',
     'div':'DIV',
     'do':'DO',
