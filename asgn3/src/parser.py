@@ -45,7 +45,10 @@ def p_Statement(p):
     | StructStmt '''
 
 def p_SimpleStatement(p):
-    ''' SimpleStatement : '''
+    ''' SimpleStatement : 
+        | Designator ASSIGNTO Expression
+        | INHERITED
+        | LPAREN Expression RPAREN'''
 
 def p_StructStmt(p):
     ''' StructStmt : CompoundStmt
@@ -86,16 +89,39 @@ def p_WhileStmt(p):
     ''' WhileStmt : WHILE Expression DO Statement SEMICOLON '''
 
 def p_Expression(p):
-    ''' Expression : SimpleExpression '''
+    ''' Expression : SimpleExpression RelSimpleStar '''
+
+def p_RelSimpleStar(p):
+    ''' RelSimpleStar : RelSimpleStar RelOp SimpleExpression
+    | '''
 
 def p_SimpleExpression(p):
-    ''' SimpleExpression : '''
+    ''' SimpleExpression : PLUS Term AddTermStar
+    | MINUS Term AddTermStar '''
+
+def p_AddTermStar(p):
+    ''' AddTermStar : AddTermStar AddOp Term
+    | '''
 
 def p_Term(p):
-    ''' Term : Factor '''
+    ''' Term : Factor MulFacStar '''
+
+def p_MulFacStar(p):
+    ''' MulFacStar : MulFacStar MulOp Factor 
+    | '''
 
 def p_Factor(p):
-    ''' Factor : Designator '''
+    ''' Factor : Designator 
+    | ATRATE Designator
+    | STRING
+    | NUMBER
+    | NIL
+    | LPAREN Expression RPAREN
+    | NOT Factor
+    | INHERITED Designator
+    | INHERITED
+    | TypeID LPAREN Expression RPAREN
+    | LPAREN LambFunc RPAREN '''
 
 def p_Type(p):
     ''' Type : TypeID
@@ -122,7 +148,8 @@ def p_ProcedureType(p):
     | FuncHeading OF OBJECT '''
 
 def p_TypeArgs(p):
-    ''' TypeArgs : '''
+    ''' TypeArgs : LANGLE TypeID RANGLE
+    | LANGLE STRING RANGLE '''
 
 def p_TypeID(p):
     ''' TypeID : INTEGER
@@ -143,14 +170,22 @@ def p_ColonTypeDecl(p):
     | '''
 
 def p_TypeDecl(p):
-    ''' TypeDecl : '''
+    ''' TypeDecl : ID EQUALS Type
+    | ID EQUALS RestrictedType
+    | ID EQUALS TYPE Type
+    | ID EQUALS TYPE RestrictedType '''
 
 def p_RestrictedType(p):
     ''' RestrictedType : ObjType
     | ClassType '''
 
 def p_RelOp(p):
-    ''' RelOp : '''
+    ''' RelOp : LANGLE
+    | RANGLE
+    | GEQ
+    | LEQ
+    | NOTEQUALS
+    | EQUALS'''
 
 def p_AddOp(p):
     ''' AddOp : PLUS
@@ -177,34 +212,45 @@ def p_Designator(p):
     ''' Designator : '''
 
 def p_DesignatorSubElem(p):
-    ''' DesignatorSubElem : '''
+    ''' DesignatorSubElem : ID
+    | LSQUARE ExprList RSQUARE
+    | POWER SEMICOLON '''
 
 def p_ConstSection(p):
-    ''' ConstSection : '''
+    ''' ConstSection : CONSTANT ColonConstDecl'''
+
+def p_ColonConstDecl(p):
+    ''' ColonConstDecl : ColonConstDecl ConstDecl SEMICOLON
+    | '''
 
 def p_ConstDecl(p):
-    ''' ConstDecl : '''
+    ''' ConstDecl : ID EQUALS ConstExpr
+    | ID COLON TypeID EQUALS TypedConst '''
 
 def p_TypedConst(p):
     ''' TypedConst : ConstExpr
     | ArrayConst '''
 
 def p_Array(p):
-    ''' Array : '''
+    ''' Array : ARRAY LSQUARE RSQUARE OF TypeArray '''
 
 def p_TypeArray(p):
     ''' TypeArray : TypeID
     | PointerType '''
 
 def p_ArrayConst(p):
-    ''' ArrayConst : '''
+    ''' ArrayConst : LPAREN TypedConst CommaTypedConst RPAREN '''
+
+def p_CommaTypedConst(p):
+    ''' CommaTypedConst : CommaTypedConst COMMA TypedConst 
+    | '''
 
 def p_ConstExpr(p):
     ''' ConstExpr : '''
 
 
 def p_IdentList(p):
-    ''' IdentList : '''
+    ''' IdentList : ID '''
 
 def p_VarSection(p):
     ''' VarSection : VAR ColonVarDecl '''
@@ -260,7 +306,7 @@ def p_ObjDefThings(p):
     ''' ObjDefThings : '''
 
 def p_ObjType(p):
-    ''' ObjType : '''
+    ''' ObjType : OBJECT END'''
 
 def p_ObjVis(p):
     ''' ObjVis : PUBLIC '''
@@ -275,7 +321,7 @@ def p_ObjVarSection(p):
     ''' ObjVarSection : VarSection '''
 
 def p_ObjMethodList(p):
-    ''' ObjMethodList : '''
+    ''' ObjMethodList : ObjMethodHeading '''
 
 def p_ObjMethodHeading(p):
     ''' ObjMethodHeading : ProcedureHeading
@@ -285,7 +331,7 @@ def p_ObjMethodHeading(p):
 ### --------------------- CLASS DEFS ------------ ###
 
 def p_ClassType(p):
-    ''' ClassType : '''
+    ''' ClassType : CLASS END'''
 
 def p_ClassHeritage(p):
     ''' ClassHeritage : LPAREN IdentList RPAREN'''
@@ -303,7 +349,7 @@ def p_ClassVarSection(p):
     ''' ClassVarSection : VarSection '''
 
 def p_ClassMethodList(p):
-    ''' ClassMethodList : '''
+    ''' ClassMethodList : ClassMethodHeading '''
 
 def p_ClassMethodHeading(p):
     ''' ClassMethodHeading : ProcedureHeading
