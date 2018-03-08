@@ -2,7 +2,7 @@
 
 # The core lexer program. Uses PLY
 
-import lex
+import ply.lex as lex
 from tokens import *
 import sys
 from reserved_tokens import *
@@ -119,45 +119,45 @@ def build (debug=True):
         return lex.lex()
 
 
-if __name__ == '__main__':
-    # Build the lexer
-    lexer = build(debug=False)
-    
-    if len(sys.argv) > 1:
-        f = open(sys.argv[1],"r")
-        data = f.read()
-        f.close()
-    else:
-        data = ""
-        while 1:
-            try:
-                data += raw_input() + "\n"
-            except:
-                break
-    
-    lex.input(data)
-    
-    tok_count_dict = {}
-    tok_lexeme_dict = {}
 
-    # Tokenize
+# Build the lexer
+lexer = build(debug=False)
+
+if len(sys.argv) > 1:
+    f = open(sys.argv[1],"r")
+    data = f.read()
+    f.close()
+else:
+    data = ""
     while 1:
-        tok = lex.token()
-        if not tok: break      # No more input
-        if tok.type not in tok_count_dict:
-            tok_count_dict[tok.type] = 1
-            tok_lexeme_dict[tok.type] = [tok.value]
-        elif (tok.type != 'ID' or (tok.type == 'ID' and tok.value not in tok_lexeme_dict[tok.type])):
-            tok_count_dict[tok.type] += 1
-            if (tok.type == 'ID' or tok.type == 'STRING' or tok.type == 'CHARACTER' or tok.type == 'NUMBER'):
-                tok_lexeme_dict[tok.type].append(tok.value)
-            
-    print ('     Token \t Occurances\t Lexemes')
-    print ('-------------------------------------------')
-    for key, count in tok_count_dict.items(): 
-        if (key == 'ID' or key == 'STRING' or key == 'CHARACTER' or key == 'NUMBER'):
-            print ('%12s  %12s %12s' % (key, count, tok_lexeme_dict[key][0]))
-            for i in range (1,len(tok_lexeme_dict[key])):
-                print ('\t \t \t   %12s' % (tok_lexeme_dict[key][i]))
-        else:
-            print ('%12s  %12s %12s' % (key, count, tok_lexeme_dict[key][0]))
+        try:
+            data += raw_input() + "\n"
+        except:
+            break
+
+lex.input(data)
+
+tok_count_dict = {}
+tok_lexeme_dict = {}
+
+# Tokenize
+while 1:
+    tok = lex.token()
+    if not tok: break      # No more input
+    if tok.type not in tok_count_dict:
+        tok_count_dict[tok.type] = 1
+        tok_lexeme_dict[tok.type] = [tok.value]
+    elif (tok.type != 'ID' or (tok.type == 'ID' and tok.value not in tok_lexeme_dict[tok.type])):
+        tok_count_dict[tok.type] += 1
+        if (tok.type == 'ID' or tok.type == 'STRING' or tok.type == 'CHARACTER' or tok.type == 'NUMBER'):
+            tok_lexeme_dict[tok.type].append(tok.value)
+        
+print ('     Token \t Occurances\t Lexemes')
+print ('-------------------------------------------')
+for key, count in tok_count_dict.items(): 
+    if (key == 'ID' or key == 'STRING' or key == 'CHARACTER' or key == 'NUMBER'):
+        print ('%12s  %12s %12s' % (key, count, tok_lexeme_dict[key][0]))
+        for i in range (1,len(tok_lexeme_dict[key])):
+            print ('\t \t \t   %12s' % (tok_lexeme_dict[key][i]))
+    else:
+        print ('%12s  %12s %12s' % (key, count, tok_lexeme_dict[key][0]))

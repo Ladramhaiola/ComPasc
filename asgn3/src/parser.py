@@ -1,5 +1,6 @@
 import ply.yacc as yacc
 import sys
+import ply.lex as lex
 from tokens import *
 from lexer import *
 
