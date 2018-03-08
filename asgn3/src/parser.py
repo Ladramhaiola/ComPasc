@@ -126,13 +126,15 @@ def p_Factor(p):
     | TypeID LPAREN Expression RPAREN
     | LPAREN LambFunc RPAREN '''
 
+# Added ID as a form of type for handling objects and classes
 def p_Type(p):
     ''' Type : TypeID
     | SimpleType
     | PointerType
     | StringType
     | ProcedureType 
-    | Array '''
+    | Array 
+    | ID'''
 
 def p_SimpleType(p):
     ''' SimpleType : OrdinalType
@@ -163,9 +165,11 @@ def p_OrdinalType(p):
 
 def p_RealType(p):
     ''' RealType : DOUBLE'''
-    
+
+# Added without the keyword TYPE for classes and objects
 def p_TypeSection(p):
-    ''' TypeSection : TYPE ColonTypeDecl '''
+    ''' TypeSection : TYPE ColonTypeDecl 
+    | ColonTypeDecl'''
 
 def p_ColonTypeDecl(p):
     ''' ColonTypeDecl : ColonTypeDecl TypeDecl SEMICOLON 
@@ -223,8 +227,10 @@ def p_DesignatorSubElem(p):
     | LSQUARE ExprList RSQUARE
     | POWER SEMICOLON '''
 
+# Added without keyword CONSTANT for classes and objects
 def p_ConstSection(p):
-    ''' ConstSection : CONSTANT ColonConstDecl'''
+    ''' ConstSection : CONSTANT ColonConstDecl
+    | '''
 
 def p_ColonConstDecl(p):
     ''' ColonConstDecl : ColonConstDecl ConstDecl SEMICOLON
@@ -257,22 +263,25 @@ def p_ConstExpr(p):
 
 
 def p_IdentList(p):
-    ''' IdentList : ID TypeArgs CommaIDTyeArgs'''
+    ''' IdentList : ID TypeArgs CommaIDTypeArgs
+    | ID CommaIDTypeArgs'''
 
 def p_CommaIDTypeArgs(p):
-    ''' CommaIDTyeArgs : CommaIDTyeArgs COMMA ID TypeArgs
-    | CommaIDTyeArgs COMMA ID 
+    ''' CommaIDTypeArgs : CommaIDTypeArgs COMMA ID TypeArgs
+    | CommaIDTypeArgs COMMA ID                 
     | '''
 
+# Added VarSection without starting with the keyword VAR for classes and objects
 def p_VarSection(p):
-    ''' VarSection : VAR ColonVarDecl '''
+    ''' VarSection : VAR ColonVarDecl 
+    | ColonVarDecl'''
 
 def p_ColonVarDecl(p):
     ''' ColonVarDecl : VarDecl SEMICOLON ColonVarDecl
     | '''
 
 def p_VarDecl(p):
-    ''' VarDecl : ID COLON Type'''
+    ''' VarDecl : IdentList COLON Type'''
 
 def p_ProcedureDeclSection(p):
     ''' ProcedureDeclSection : ProcedureDecl
@@ -280,26 +289,35 @@ def p_ProcedureDeclSection(p):
     | ConstrucDecl
     | LambFuncDecl '''
 
+# Don't need to add SEMICOLON after Block
 def p_ConstrucDecl(p):
-    ''' ConstrucDecl : ConstrucHeading SEMICOLON Block SEMICOLON '''
+    ''' ConstrucDecl : ConstrucHeading SEMICOLON Block '''
 
 def p_ConstrucHeading(p):
     ''' ConstrucHeading : CONSTRUCTOR ID FormalParams '''
 
 def p_FuncDecl(p):
-    ''' FuncDecl : FuncHeading SEMICOLON Block SEMICOLON '''
+    ''' FuncDecl : FuncHeading SEMICOLON Block '''
 
 def p_FuncHeading(p):
     ''' FuncHeading : FUNCTION ID LPAREN FormalParams RPAREN'''
 
+def p_FuncHeadingSemicolon(p):
+    ''' FuncHeadingSemicolon : FUNCTION ID LPAREN FormalParams RPAREN SEMICOLON'''
+
 def p_FormalParams(p):
-    ''' FormalParams : IdentList '''
+    ''' FormalParams : IdentList 
+    | '''
 
 def p_ProcedureDecl(p):
-    ''' ProcedureDecl : ProcedureHeading SEMICOLON Block SEMICOLON '''
+    ''' ProcedureDecl : ProcedureHeading SEMICOLON Block '''
 
+#replaced ID by designator for dealing with Object.Function
 def p_ProcedureHeading(p):
-    ''' ProcedureHeading : PROCEDURE ID FormalParams '''
+    ''' ProcedureHeading : PROCEDURE Designator FormalParams '''
+
+def p_ProcedureHeadingSemicolon(p):
+    ''' ProcedureHeadingSemicolon : PROCEDURE Designator FormalParams SEMICOLON '''
 
 ### ---------------- LAMBDA DEFS -------------- ###
 
@@ -321,12 +339,17 @@ def p_ObjectHeritage(p):
     ''' ObjectHeritage : LPAREN IdentList RPAREN
     | '''
 
-def p_ObjectBody(p):
-    ''' ObjectBody : ObjectBody ObjectVis ObjectTypeSection ObjectConstSection ObjectVarSection ObjectMethodList
+# The problem here is that the first Identifier list is being identified as that in VarSection rather than type section
+def p_ObjectBody(p): 
+    ''' ObjectBody : ObjectBody ObjectVis ObjectVarSection ObjectTypeSection ObjectConstSection ObjectMethodList
     | '''
     
 def p_ObjectVis(p):
     ''' ObjectVis : PUBLIC
+    | '''
+
+def p_ObjectVarSection(p):
+    ''' ObjectVarSection : VarSection 
     | '''
 
 def p_ObjectTypeSection(p):
@@ -337,17 +360,13 @@ def p_ObjectConstSection(p):
     ''' ObjectConstSection : ConstSection 
     | '''
 
-def p_ObjectVarSection(p):
-    ''' ObjectVarSection : VarSection 
-    | '''
-
 def p_ObjectMethodList(p):
     ''' ObjectMethodList : ObjectMethodHeading 
     | '''
 
 def p_ObjectMethodHeading(p):
-    ''' ObjectMethodHeading : ProcedureHeading
-    | FuncHeading '''
+    ''' ObjectMethodHeading : ProcedureHeadingSemicolon
+    | FuncHeadingSemicolon '''
 
 ### ------------------------------------------- ###
 
@@ -385,8 +404,8 @@ def p_ClassMethodList(p):
     | '''
 
 def p_ClassMethodHeading(p):
-    ''' ClassMethodHeading : ProcedureHeading
-    | FuncHeading '''
+    ''' ClassMethodHeading : ProcedureHeadingSemicolon
+    | FuncHeadingSemicolon '''
 
 ### ---------------------------------------- ###
 

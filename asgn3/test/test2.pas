@@ -2,12 +2,15 @@ Program TestObjects;
  
 Type
    DrawingObject = Object
-      x, y : single;
-      height, width : single;
+      x, y : INTEGER;
+      height, width : INTEGER;       // replaced 'single' by 'integer' for now
       procedure Draw;  //  procedure declared in here
    end;
  
-  procedure DrawingObject.Draw;
+Var
+  Rectangle : DrawingObject;
+
+procedure DrawingObject.Draw;
   begin
        writeln('Drawing an Object');
        writeln(' x = ', x, ' y = ', y);  // object fields
@@ -17,10 +20,7 @@ Type
 //    moveto (x, y);  // probably would need to include a platform dependent drawing unit to do actual drawing
 //    ... more code to actually draw a shape on the screen using the other parameters
   end;
- 
-Var
-  Rectangle : DrawingObject;
- 
+
 begin
  
   Rectangle.x:= 50;  //  the fields specific to the variable "Rectangle"
@@ -32,10 +32,10 @@ begin
  
   Rectangle.Draw;  //  Calling the method (procedure)
  
-  with Rectangle do   //  With works the same way even with the method (procedure) field
-   begin
-       x:= 75;
-       Draw;
-   end;
+  { with Rectangle do   //  With works the same way even with the method (procedure) field }
+  {  begin }
+  {      x:= 75; }
+  {      Draw; }
+  {  end; }
  
-end.
+end;
