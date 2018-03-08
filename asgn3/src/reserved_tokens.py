@@ -21,11 +21,12 @@ reserved = {
     'function':'FUNCTION',
     'if':'IF',
     'mod':'MOD',
-    'nil':'NIL',
+    # 'nil':'NIL',
     'not':'NOT',
     'object':'OBJECT',
     'of':'OF',
     'or':'OR',
+    'one':'ONE',
     'procedure':'PROCEDURE',
     'program':'PROGRAM',
     'repeat':'REPEAT',
@@ -49,11 +50,11 @@ reserved = {
     'char':'CHAR',
     'double':'DOUBLE',
     'lambda':'LAMBDA',
-    'public':'PUBLIC', # why is this required?
-    'readln':'READLN',
-    'writeln':'WRITELN',
-    'read':'READ',
-    'write':'WRITE'
+    'public':'PUBLIC' # why is this required?
+    # 'readln':'READLN',
+    # 'writeln':'WRITELN',
+    # 'read':'READ',
+    # 'write':'WRITE'
     #POSSIBILITIES FOR ADDITION:
     #'absolute':''
 }

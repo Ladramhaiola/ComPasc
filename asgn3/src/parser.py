@@ -1,5 +1,7 @@
 import ply.yacc as yacc
+import sys
 from tokens import *
+from lexer import *
 
 ### ------------ ISSUES ----------- ###
 
@@ -130,7 +132,8 @@ def p_Type(p):
     | SimpleType
     | PointerType
     | StringType
-    | ProcedureType '''
+    | ProcedureType 
+    | Array '''
 
 def p_SimpleType(p):
     ''' SimpleType : OrdinalType
@@ -166,7 +169,7 @@ def p_TypeSection(p):
     ''' TypeSection : TYPE ColonTypeDecl '''
 
 def p_ColonTypeDecl(p):
-    ''' ColonTypeDecl : ColonTypeDecl VarDecl SEMICOLON 
+    ''' ColonTypeDecl : ColonTypeDecl TypeDecl SEMICOLON 
     | '''
 
 def p_TypeDecl(p):
@@ -176,7 +179,7 @@ def p_TypeDecl(p):
     | ID EQUALS TYPE RestrictedType '''
 
 def p_RestrictedType(p):
-    ''' RestrictedType : ObjType
+    ''' RestrictedType : ObjectType
     | ClassType '''
 
 def p_RelOp(p):
@@ -270,7 +273,7 @@ def p_ColonVarDecl(p):
     | '''
 
 def p_VarDecl(p):
-    ''' VarDecl : '''
+    ''' VarDecl : IdentList COLON Type'''
 
 def p_ProcedureDeclSection(p):
     ''' ProcedureDeclSection : ProcedureDecl
@@ -389,15 +392,13 @@ def p_ClassMethodHeading(p):
 ### ---------------------------------------- ###
 
 
-### ------------ INPUT / OUTPUT ------------ ###
+# def p_Input(p):
+    # ''' Input : READ
+    # | READLN LPAREN IdentList RPAREN '''
 
-def p_Input(p):
-    ''' Input : READ
-    | READLN LPAREN IdentList RPAREN '''
-
-def p_Output(p):
-    ''' Output : WRITE
-    | WRITELN LPAREN IdentList RPAREN '''
+# def p_Output(p):
+    # ''' Output : WRITE
+    # | WRITELN LPAREN IdentList RPAREN '''
 
 ### -------------------------------- ###
 
@@ -410,10 +411,8 @@ def main():
     parser = yacc.yacc()
 
     # Do the things that we want to here
-    '''
     inputfile = open(sys.argv[1],'r').read()
     yacc.parse(inputfile)
-    '''
 
 if __name__ == '__main__':
     main()
