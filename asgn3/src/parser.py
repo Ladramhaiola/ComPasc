@@ -309,54 +309,75 @@ def p_LambFunc(p):
 
 ### ---------------- OBJECT DEFS -------------- ###
 
-def p_ObjDefThings(p):
-    ''' ObjDefThings : '''
+def p_ObjectType(p):
+    ''' ObjectType : OBJECT ObjectHeritage ObjectBody END'''
 
-def p_ObjType(p):
-    ''' ObjType : OBJECT END'''
+def p_ObjectHeritage(p):
+    ''' ObjectHeritage : LPAREN IdentList RPAREN
+    | '''
 
-def p_ObjVis(p):
-    ''' ObjVis : PUBLIC '''
+def p_ObjectBody(p):
+    ''' ObjectBody : ObjectBody ObjectVis ObjectTypeSection ObjectConstSection ObjectVarSection ObjectMethodList
+    | '''
+    
+def p_ObjectVis(p):
+    ''' ObjectVis : PUBLIC
+    | '''
 
-def p_ObjTypeSection(p):
-    ''' ObjTypeSection : TypeSection '''
+def p_ObjectTypeSection(p):
+    ''' ObjectTypeSection : TypeSection 
+    | '''
 
-def p_ObjConstSection(p):
-    ''' ObjConstSection : ConstSection '''
+def p_ObjectConstSection(p):
+    ''' ObjectConstSection : ConstSection 
+    | '''
 
-def p_ObjVarSection(p):
-    ''' ObjVarSection : VarSection '''
+def p_ObjectVarSection(p):
+    ''' ObjectVarSection : VarSection 
+    | '''
 
-def p_ObjMethodList(p):
-    ''' ObjMethodList : ObjMethodHeading '''
+def p_ObjectMethodList(p):
+    ''' ObjectMethodList : ObjectMethodHeading 
+    | '''
 
-def p_ObjMethodHeading(p):
-    ''' ObjMethodHeading : ProcedureHeading
+def p_ObjectMethodHeading(p):
+    ''' ObjectMethodHeading : ProcedureHeading
     | FuncHeading '''
+
 ### ------------------------------------------- ###
 
 ### --------------------- CLASS DEFS ------------ ###
 
 def p_ClassType(p):
-    ''' ClassType : CLASS END'''
+    ''' ClassType : CLASS ClassHeritage ClassBody END'''
 
 def p_ClassHeritage(p):
-    ''' ClassHeritage : LPAREN IdentList RPAREN'''
+    ''' ClassHeritage : LPAREN IdentList RPAREN
+    | '''
 
+def p_ClassBody(p):
+    ''' ClassBody : ClassBody ClassVis ClassTypeSection ClassConstSection ClassVarSection ClassMethodList
+    | '''
+    
 def p_ClassVis(p):
-    ''' ClassVis : PUBLIC'''
+    ''' ClassVis : PUBLIC
+    | '''
 
 def p_ClassTypeSection(p):
-    ''' ClassTypeSection : TypeSection '''
+    ''' ClassTypeSection : TypeSection 
+    | '''
 
 def p_ClassConstSection(p):
-    ''' ClassConstSection : ConstSection '''
+    ''' ClassConstSection : ConstSection 
+    | '''
 
 def p_ClassVarSection(p):
-    ''' ClassVarSection : VarSection '''
+    ''' ClassVarSection : VarSection 
+    | '''
 
 def p_ClassMethodList(p):
-    ''' ClassMethodList : ClassMethodHeading '''
+    ''' ClassMethodList : ClassMethodHeading 
+    | '''
 
 def p_ClassMethodHeading(p):
     ''' ClassMethodHeading : ProcedureHeading
