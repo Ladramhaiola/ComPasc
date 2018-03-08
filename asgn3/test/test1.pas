@@ -1,6 +1,7 @@
 PROGRAM Greeting;
-VAR MyMessage: STRING;
+VAR 
+MyMessage: STRING;
 BEGIN
 MyMessage := 'Hello world!';
 WRITELN(MyMessage);
-END.
+END;

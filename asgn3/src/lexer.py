@@ -70,7 +70,7 @@ def build (debug=True):
         return t
 
     # define string
-    def t_STRING(t): 
+    def t_USERSTRING(t): 
         r"(\"([^\\\"]|(\\.))*\")|(\'([^\\\']|(\\.))*\')"
         escaped = 0 
         str = t.value[1:-1] 

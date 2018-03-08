@@ -17,10 +17,7 @@ def p_Goal(p):
     ''' Goal : Program '''
 
 def p_Program(p):
-    ''' Program : PROGRAM ID LPAREN IdentList RPAREN SEMICOLON ProgramBlock '''
-
-def p_ProgramBlock(p):
-    ''' ProgramBlock : Block '''
+    ''' Program : PROGRAM ID  SEMICOLON Block '''
 
 def p_Block(p):
     ''' Block : CompoundStmt
@@ -98,28 +95,29 @@ def p_Expression(p):
     ''' Expression : SimpleExpression RelSimpleStar '''
 
 def p_RelSimpleStar(p):
-    ''' RelSimpleStar : RelSimpleStar RelOp SimpleExpression
+    ''' RelSimpleStar : RelOp SimpleExpression RelSimpleStar
     | '''
 
 def p_SimpleExpression(p):
     ''' SimpleExpression : PLUS Term AddTermStar
-    | MINUS Term AddTermStar '''
+    | MINUS Term AddTermStar 
+    | Term AddTermStar '''
 
 def p_AddTermStar(p):
-    ''' AddTermStar : AddTermStar AddOp Term
+    ''' AddTermStar : AddOp Term AddTermStar
     | '''
 
 def p_Term(p):
     ''' Term : Factor MulFacStar '''
 
 def p_MulFacStar(p):
-    ''' MulFacStar : MulFacStar MulOp Factor 
+    ''' MulFacStar : MulOp Factor MulFacStar
     | '''
 
 def p_Factor(p):
     ''' Factor : Designator 
     | Designator LPAREN ExprList RPAREN
-    | STRING
+    | USERSTRING
     | NUMBER
     | LPAREN Expression RPAREN
     | NOT Factor
@@ -270,11 +268,11 @@ def p_VarSection(p):
     ''' VarSection : VAR ColonVarDecl '''
 
 def p_ColonVarDecl(p):
-    ''' ColonVarDecl : ColonVarDecl VarDecl SEMICOLON
+    ''' ColonVarDecl : VarDecl SEMICOLON ColonVarDecl
     | '''
 
 def p_VarDecl(p):
-    ''' VarDecl : IdentList COLON Type'''
+    ''' VarDecl : ID COLON Type'''
 
 def p_ProcedureDeclSection(p):
     ''' ProcedureDeclSection : ProcedureDecl
@@ -404,7 +402,7 @@ def p_ClassMethodHeading(p):
 ### -------------------------------- ###
 
 def p_error(p):
-    print "Syntax Error at Line: , Pos: "
+    print "Syntax Error at Line: %d, Pos: %d"%(p.lineno,p.lexpos)
     # Add formatters later here, to fetch line number and position
 
 
@@ -413,7 +411,7 @@ def main():
 
     # Do the things that we want to here
     inputfile = open(sys.argv[1],'r').read()
-    yacc.parse(inputfile)
+    yacc.parse(inputfile, debug = 1)
 
 if __name__ == '__main__':
     main()

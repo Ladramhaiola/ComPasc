@@ -48,7 +48,7 @@ tokens = [
     'CHARACTER',                                      
     'UNDERSCORE',
     'ID',
-    'STRING',
+    'USERSTRING',
     'COMMENT',
     #Bases of numbers
     #'HEX',
