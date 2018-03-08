@@ -115,10 +115,9 @@ def p_MulFacStar(p):
 
 def p_Factor(p):
     ''' Factor : Designator 
-    | ATRATE Designator
+    | Designator LPAREN ExprList RPAREN
     | STRING
     | NUMBER
-    | NIL
     | LPAREN Expression RPAREN
     | NOT Factor
     | INHERITED Designator
@@ -141,14 +140,12 @@ def p_PointerType(p):
     ''' PointerType : POWER ID '''
 
 def p_StringType(p):
-    ''' StringType : STRING
-    | STRING LSQUARE ConstExpr RSQUARE '''
+    ''' StringType : STRING '''
 
 def p_ProcedureType(p):
     ''' ProcedureType : ProcedureHeading
-    | ProcedureHeading OF OBJECT
     | FuncHeading
-    | FuncHeading OF OBJECT '''
+    '''
 
 def p_TypeArgs(p):
     ''' TypeArgs : LANGLE TypeID RANGLE
@@ -199,6 +196,7 @@ def p_AddOp(p):
 def p_MulOp(p):
     ''' MulOp : MULTIPLY
     | DIVIDE
+    | DIV
     | MOD
     | AND
     | SHL
@@ -239,7 +237,7 @@ def p_TypedConst(p):
     | ArrayConst '''
 
 def p_Array(p):
-    ''' Array : ARRAY LSQUARE RSQUARE OF TypeArray '''
+    ''' Array : ARRAY LSQUARE ONE DOTDOT OrdinalType RSQUARE OF TypeArray '''
 
 def p_TypeArray(p):
     ''' TypeArray : TypeID
@@ -257,7 +255,12 @@ def p_ConstExpr(p):
 
 
 def p_IdentList(p):
-    ''' IdentList : ID '''
+    ''' IdentList : ID TypeArgs CommaIDTyeArgs'''
+
+def p_CommaIDTypeArgs(p):
+    ''' CommaIDTyeArgs : CommaIDTyeArgs COMMA ID TypeArgs
+    | CommaIDTyeArgs COMMA ID 
+    | '''
 
 def p_VarSection(p):
     ''' VarSection : VAR ColonVarDecl '''
