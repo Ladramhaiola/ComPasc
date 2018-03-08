@@ -14,7 +14,7 @@ def p_Goal(p):
     ''' Goal : Program '''
 
 def p_Program(p):
-    ''' Program : PROGRAM ID LPAREN IdentList RPAREN SEMICOLON ProgramBlock DOT '''
+    ''' Program : PROGRAM ID LPAREN IdentList RPAREN SEMICOLON ProgramBlock '''
 
 def p_ProgramBlock(p):
     ''' ProgramBlock : Block '''
@@ -34,21 +34,23 @@ def p_WhichSection(p):
     | ProcedureDeclSection '''
 
 def p_CompoundStmt(p):
-    ''' CompoundStmt : BEGIN StmtList END SEMICOLON'''
+    ''' CompoundStmt : BEGIN StmtList END SEMICOLON '''
 
 def p_StmtList(p):
-    ''' StmtList : Statement SEMICOLON
-    | StmtList Statement SEMICOLON'''
+    ''' StmtList : StmtList Statement SEMICOLON
+    | Statement SEMICOLON '''
 
 def p_Statement(p):
     ''' Statement : SimpleStatement
-    | StructStmt '''
+    | StructStmt 
+    | '''
 
 def p_SimpleStatement(p):
-    ''' SimpleStatement : 
-        | Designator ASSIGNTO Expression
-        | INHERITED
-        | LPAREN Expression RPAREN'''
+    ''' SimpleStatement : Designator
+    | Designator LPAREN ExprList RPAREN
+    | Designator ASSIGNTO Expression
+    | INHERITED
+    | LPAREN Expression RPAREN'''
 
 def p_StructStmt(p):
     ''' StructStmt : CompoundStmt
@@ -64,19 +66,20 @@ def p_IfStmt(p):
     | IF Expression THEN Statement ELSE Statement '''
 
 def p_CaseStmt(p):
-    # Should get 3 rules here
-    ''' CaseStmt : CASE Expression OF CaseSelector END'''
+    ''' CaseStmt : CASE Expression OF CaseSelector ColonCaseSelector END
+    | CASE Expression OF CaseSelector ColonCaseSelector ELSE Statement SEMICOLON END '''
 
-def p_CaseSelector(p):
-    ''' CaseSelector : CaseLabel CommaCaseLabel COLON Statement '''
-
-def p_CommaCaseLabel(p):
-    ''' CommaCaseLabel : CommaCaseLabel COMMA CaseLabel 
+def p_ColonCaseSelector(p):
+    ''' ColonCaseSelector : ColonCaseSelector SEMICOLON CaseSelector 
     | '''
 
+def p_CaseSelector(p):
+    ''' CaseSelector : CaseLabel COLON Statement '''
+
+
 def p_CaseLabel(p):
-    ''' CaseLabel : ConstExpr 
-    | ConstExpr DOTDOT ConstExpr '''
+    # THIS IS NOT CORRECT. WILL PUT INTEGER/NUMBER
+    ''' CaseLabel : NUMBER '''
 
 def p_LoopStmt(p):
     ''' LoopStmt : RepeatStmt
@@ -209,10 +212,14 @@ def p_ExprList(p):
     ''' ExprList : Expression CommaExpression'''
 
 def p_Designator(p):
-    ''' Designator : '''
+    ''' Designator : ID DesSubEleStar'''
+
+def p_DesSubEleStar(p):
+    ''' DesSubEleStar : DesSubEleStar DesignatorSubElem 
+    | '''
 
 def p_DesignatorSubElem(p):
-    ''' DesignatorSubElem : ID
+    ''' DesignatorSubElem : DOT ID
     | LSQUARE ExprList RSQUARE
     | POWER SEMICOLON '''
 
