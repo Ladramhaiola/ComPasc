@@ -34,6 +34,7 @@ reserved = {
     'shr':'SHR',
     'then':'THEN',
     'to':'TO',
+    'downto':'DOWNTO',
     'type':'TYPE',
     'until':'UNTIL',
     'var':'VAR',
