@@ -1,48 +1,51 @@
-(*****************************************************************************
- * A simple bubble sort program.  Reads integers, one per line, and prints   *
- * them out in sorted order.  Blows up if there are more than 49.            *
- *****************************************************************************)
-PROGRAM Sort(input, output);
-    CONST
-	(* Max array size. *)
+PROGRAM Sort (input, output);
+
+CONST
 	MaxElts = 50;
-    TYPE 
-	(* Type of the element array. *)
+TYPE 
 	IntArrType = ARRAY [1..MaxElts] OF Integer;
 
-    VAR
-	(* Indexes, exchange temp, array size. *)
+VAR
 	i, j, tmp, size: integer;
-
-	(* Array of ints *)
 	arr: IntArrType;
 
-    (* Read in the integers. *)
-    PROCEDURE ReadArr(VAR size: Integer; VAR a: IntArrType);
-	BEGIN
-	    size := 1;
-	    WHILE NOT eof DO BEGIN
+PROCEDURE ReadArr(size: Integer; a: IntArrType);
+BEGIN
+    size := 1;
+    WHILE NOT eof DO 
+    BEGIN
 		readln(a[size]);
-		IF NOT eof THEN 
-		    size := size + 1
-	    END
+	END;
+	IF NOT eof THEN
+	BEGIN
+	    size := size + 1;
+    END;
+END;
+
+BEGIN
+	ReadArr(size, arr);
+	i := size - 1;
+	WHILE i > 1 DO
+	BEGIN
+		j := 1;
+		WHILE j < i DO 
+	    BEGIN
+			IF arr[j] > arr[j + 1] THEN
+			BEGIN
+		    	tmp := arr[j];
+		    	arr[j] := arr[j + 1];
+		    	arr[j + 1] := tmp;
+			END;
+			j := j + 1;
+		END;
+		i := i - 1;
 	END;
 
-    BEGIN
-	(* Read *)
-	ReadArr(size, arr);
-
-	(* Sort using bubble sort. *)
-	FOR i := size - 1 DOWNTO 1 DO
-	    FOR j := 1 TO i DO 
-		IF arr[j] > arr[j + 1] THEN BEGIN
-		    tmp := arr[j];
-		    arr[j] := arr[j + 1];
-		    arr[j + 1] := tmp;
-		END;
-
-	(* Print. *)
-	FOR i := 1 TO size DO
-	    writeln(arr[i])
-    END.
+	i := 1;
+	WHILE i < size DO
+	BEGIN
+	    writeln(arr[i]);
+	    i := i + 1;
+    END;
+END.
 	    
