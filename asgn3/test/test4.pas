@@ -47,5 +47,5 @@ BEGIN
 	    writeln(arr[i]);
 	    i := i + 1;
     END;
-END.
+END;
 	    

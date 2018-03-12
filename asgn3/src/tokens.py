@@ -19,14 +19,14 @@ tokens = [
     'RSQUARE',
     'DOT',
     'COMMA',
-    'INVERTCOMMA',                                      # '\''     
-    'INVERTDOUBLECOMMA',                                # '\"'
+    #'INVERTCOMMA',                                      # '\''     
+    #'INVERTDOUBLECOMMA',                                # '\"'
     'LPAREN',                                           #LEFT PARENTHESES '('
     'RPAREN',
     'COLON',
     'SEMICOLON',                                        # ';'
     'POWER',                                            # '^'
-    'ATRATE',                                           # '@'
+    #'ATRATE',                                           # '@'
     'LCURLY',                                           # '{'
     'RCURLY',
     #'DOLLAR',                                          # will have to check whether to remove or keep these (DOLLAR and HASH)
@@ -40,7 +40,7 @@ tokens = [
     'ASSIGNTO',                                         # ':=' (used in assignment statements)
     'LEQ',                                    # '<='
     'GEQ',                                 # '>='
-    'DOUBLESLASH',                                      # '//'  
+    #'DOUBLESLASH',                                      # '//'  
     #Identifiers and constants
     'NUMBER',
     'CHARACTER',                                      

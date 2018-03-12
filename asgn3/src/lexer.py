@@ -29,14 +29,14 @@ def build (debug=True):
     t_RSQUARE = r'\]'
     t_DOT = r'\.'
     t_COMMA = r'\,'
-    t_INVERTCOMMA = r'\''
-    t_INVERTDOUBLECOMMA = r'\"'
+    #t_INVERTCOMMA = r'\''
+    #t_INVERTDOUBLECOMMA = r'\"'
     t_LPAREN = r'\('
     t_RPAREN = r'\)'
     t_COLON = r'\:'
     t_SEMICOLON = r'\;'
     t_POWER = r'\^'
-    t_ATRATE = r'\@'
+    #t_ATRATE = r'\@'
     t_LCURLY = r'\{'
     t_RCURLY = r'\}'
     t_AMPERSAND = r'\&'
@@ -46,7 +46,7 @@ def build (debug=True):
     t_ASSIGNTO = r'\:\='
     t_LEQ = r'\<\='
     t_GEQ = r'\>\='
-    t_DOUBLESLASH = r'\\\\'
+    #t_DOUBLESLASH = r'\\\\'
 
 
 
