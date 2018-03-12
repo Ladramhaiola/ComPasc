@@ -44,12 +44,12 @@ def p_CompoundStmt(p):
     reverse_output.append(p.slice)
 
 def p_StmtList(p):
-    ''' StmtList : StmtList Statement SEMICOLON
-    | Statement SEMICOLON '''
+    ''' StmtList : Statement StmtList 
+    | Statement'''
     reverse_output.append(p.slice)
 
 def p_Statement(p):
-    ''' Statement : SimpleStatement
+    ''' Statement : SimpleStatement SEMICOLON
     | StructStmt 
     | '''
     reverse_output.append(p.slice)
@@ -107,8 +107,9 @@ def p_RepeatStmt(p):
     ''' RepeatStmt : REPEAT Statement UNTIL Expression SEMICOLON '''
     reverse_output.append(p.slice)
 
+#No need of semicolon after WhileStmt because CompoundStatement will handle it
 def p_WhileStmt(p):
-    ''' WhileStmt : WHILE Expression DO Statement SEMICOLON '''
+    ''' WhileStmt : WHILE Expression DO Statement '''
     reverse_output.append(p.slice)
 
 def p_Expression(p):
@@ -183,9 +184,10 @@ def p_ProcedureType(p):
     '''
     reverse_output.append(p.slice)
 
+#Modified TypeArgs because in our test cases, we don't have parameter list like a<int>, rather we have a:int
 def p_TypeArgs(p):
-    ''' TypeArgs : LANGLE TypeID RANGLE
-    | LANGLE STRING RANGLE '''
+    ''' TypeArgs : LPAREN TypeID RPAREN
+    | LPAREN STRING RPAREN '''
     reverse_output.append(p.slice)
 
 def p_TypeID(p):
@@ -204,8 +206,7 @@ def p_RealType(p):
 
 # Added without the keyword TYPE for classes and objects
 def p_TypeSection(p):
-    ''' TypeSection : TYPE ColonTypeDecl 
-    | ColonTypeDecl'''
+    ''' TypeSection : TYPE ColonTypeDecl '''
     reverse_output.append(p.slice)
 
 def p_ColonTypeDecl(p):
@@ -272,7 +273,7 @@ def p_DesSubEleStar(p):
 def p_DesignatorSubElem(p):
     ''' DesignatorSubElem : DOT ID
     | LSQUARE ExprList RSQUARE
-    | POWER SEMICOLON '''
+    | POWER '''
     reverse_output.append(p.slice)
 
 # Added without keyword CONSTANT for classes and objects
@@ -295,7 +296,7 @@ def p_TypedConst(p):
     ''' TypedConst : ConstExpr
     | ArrayConst '''
     reverse_output.append(p.slice)
-
+    
 def p_Array(p):
     ''' Array : ARRAY LSQUARE RANGE RSQUARE OF TypeArray '''
     reverse_output.append(p.slice)
@@ -318,7 +319,7 @@ def p_ConstExpr(p):
     ''' ConstExpr : '''
     reverse_output.append(p.slice)
 
-
+#the identList for procedure definition and var declaration is not the same
 def p_IdentList(p):
     ''' IdentList : ID TypeArgs CommaIDTypeArgs
     | ID CommaIDTypeArgs'''
@@ -330,10 +331,21 @@ def p_CommaIDTypeArgs(p):
     | '''
     reverse_output.append(p.slice)
 
+#ParamIdentList and ParamIdent are added for handling Formal Parameters for function or procedure declaration
+def p_ParamIdentList(p):
+    ''' ParamIdentList : ParamIdent COMMA ParamIdentList
+    | ParamIdent
+    | '''
+    reverse_output.append(p.slice)
+
+def p_ParamIdent(p):
+    ''' ParamIdent : ID COLON Type
+    | ID '''
+    reverse_output.append(p.slice)
+    
 # Added VarSection without starting with the keyword VAR for classes and objects
 def p_VarSection(p):
-    ''' VarSection : VAR ColonVarDecl 
-    | ColonVarDecl'''
+    ''' VarSection : VAR ColonVarDecl '''
     reverse_output.append(p.slice)
 
 def p_ColonVarDecl(p):
@@ -358,7 +370,11 @@ def p_ConstrucDecl(p):
     reverse_output.append(p.slice)
 
 def p_ConstrucHeading(p):
-    ''' ConstrucHeading : CONSTRUCTOR ID FormalParams '''
+    ''' ConstrucHeading : CONSTRUCTOR Designator FormalParams '''
+    reverse_output.append(p.slice)
+
+def p_ConstrucHeadingSemicolon(p):
+    ''' ConstrucHeadingSemicolon : CONSTRUCTOR Designator FormalParams SEMICOLON '''
     reverse_output.append(p.slice)
 
 def p_FuncDecl(p):
@@ -366,15 +382,16 @@ def p_FuncDecl(p):
     reverse_output.append(p.slice)
 
 def p_FuncHeading(p):
-    ''' FuncHeading : FUNCTION ID LPAREN FormalParams RPAREN'''
+    ''' FuncHeading : FUNCTION Designator FormalParams COLON Type '''
     reverse_output.append(p.slice)
 
 def p_FuncHeadingSemicolon(p):
-    ''' FuncHeadingSemicolon : FUNCTION ID LPAREN FormalParams RPAREN SEMICOLON'''
+    ''' FuncHeadingSemicolon : FUNCTION Designator FormalParams COLON Type SEMICOLON '''
     reverse_output.append(p.slice)
 
+#Included LPAREN and RPAREN in the definition of FORMALPARAMS
 def p_FormalParams(p):
-    ''' FormalParams : IdentList 
+    ''' FormalParams : LPAREN ParamIdentList RPAREN
     | '''
     reverse_output.append(p.slice)
 
@@ -427,17 +444,17 @@ def p_ObjectVis(p):
     reverse_output.append(p.slice)
 
 def p_ObjectVarSection(p):
-    ''' ObjectVarSection : VarSection 
+    ''' ObjectVarSection : ColonVarDecl
     | '''
     reverse_output.append(p.slice)
 
 def p_ObjectTypeSection(p):
-    ''' ObjectTypeSection : TypeSection 
+    ''' ObjectTypeSection : ColonTypeDecl 
     | '''
     reverse_output.append(p.slice)
 
 def p_ObjectConstSection(p):
-    ''' ObjectConstSection : ConstSection 
+    ''' ObjectConstSection : ColonConstDecl 
     | '''
     reverse_output.append(p.slice)
 
@@ -448,7 +465,8 @@ def p_ObjectMethodList(p):
 
 def p_ObjectMethodHeading(p):
     ''' ObjectMethodHeading : ProcedureHeadingSemicolon
-    | FuncHeadingSemicolon '''
+    | FuncHeadingSemicolon 
+    | ConstrucHeadingSemicolon '''
     reverse_output.append(p.slice)
 
 ### ------------------------------------------- ###
@@ -475,17 +493,17 @@ def p_ClassVis(p):
     reverse_output.append(p.slice)
 
 def p_ClassTypeSection(p):
-    ''' ClassTypeSection : TypeSection 
+    ''' ClassTypeSection : ColonTypeDecl 
     | '''
     reverse_output.append(p.slice)
 
 def p_ClassConstSection(p):
-    ''' ClassConstSection : ConstSection 
+    ''' ClassConstSection : ColonConstDecl 
     | '''
     reverse_output.append(p.slice)
 
 def p_ClassVarSection(p):
-    ''' ClassVarSection : VarSection 
+    ''' ClassVarSection : ColonVarDecl 
     | '''
     reverse_output.append(p.slice)
 
@@ -496,7 +514,8 @@ def p_ClassMethodList(p):
 
 def p_ClassMethodHeading(p):
     ''' ClassMethodHeading : ProcedureHeadingSemicolon
-    | FuncHeadingSemicolon '''
+    | FuncHeadingSemicolon 
+    | ConstrucHeadingSemicolon '''
     reverse_output.append(p.slice)
 
 ### ---------------------------------------- ###
