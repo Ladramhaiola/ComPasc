@@ -1,11 +1,10 @@
 program exObjects;
 type 
    Rectangle = object  
-   private  
+   public
       length, width: integer; 
-   public  
+      
       constructor init(l, w: integer);
-      destructor done;
       
       procedure setlength(l: integer);
       function getlength(): integer;  
@@ -14,7 +13,6 @@ type
       function getwidth(): integer;  
       
       procedure draw;
-      { so you should die }
 end;
 
 var
@@ -26,11 +24,6 @@ begin
    length := l;
    width := w;
 end;
-
-destructor Rectangle.done;
-begin
-   writeln(' *** Desctructor Called');
-end; 
 
 procedure Rectangle.setlength(l: integer);
 begin
@@ -56,11 +49,17 @@ procedure Rectangle.draw;
 var 
    i, j: integer;
 begin
-   for i:= 1 to length do
+   i := 1;
+   while i < length do
    begin
-      for j:= 1 to width do
+      j := 1;
+      while j < width do
+      begin
          write(' * ');
+         j := j + 1;
+      end;
       writeln;
+      i := i + 1;
    end;
 end;
 
@@ -72,10 +71,9 @@ begin
    
    writeln('Draw a rectangle:', pr1^.getlength(), ' by ',pr1^.getwidth());
    pr1^.draw;
-   pr1^.init(2., 9);
+   pr1^.init(2, 9);
    
    writeln('Draw a rectangle:', pr1^.getlength(), ' by ' ,pr1^.getwidth());
    pr1^.draw;
    dispose(pr1);
-   r1.done;
 end.
