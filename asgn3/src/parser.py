@@ -19,7 +19,8 @@ def p_Goal(p):
     reverse_output.append(p.slice)
 
 def p_Program(p):
-    ''' Program : PROGRAM ID  SEMICOLON Block '''
+    ''' Program : PROGRAM ID SEMICOLON Block 
+    | PROGRAM ID LPAREN IdentList RPAREN SEMICOLON Block'''
     reverse_output.append(p.slice)
 
 def p_Block(p):
