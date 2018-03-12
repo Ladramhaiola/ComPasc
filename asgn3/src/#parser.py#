@@ -37,8 +37,9 @@ def p_CompoundStmt(p):
     ''' CompoundStmt : BEGIN StmtList END SEMICOLON '''
 
 def p_StmtList(p):
-    ''' StmtList : Statement SEMICOLON StmtList
-    | Statement SEMICOLON '''
+    ''' StmtList : Statement SemicolonStmtList '''
+
+def p_
 
 def p_Statement(p):
     ''' Statement : SimpleStatement
