@@ -10,4 +10,4 @@ Begin {no semicolon}
 	Sum := Num1 + Num2; {addition} 
 	Writeln(Sum);
 	Readln;
-End.                
+End;                
