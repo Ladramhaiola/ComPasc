@@ -15,6 +15,7 @@ def build (debug=True):
     '''
 
     # Should we use tokens for +- or literals?
+    # define identifier
 
     t_PLUS = r'\+'
     t_MINUS = r'\-'
@@ -27,7 +28,6 @@ def build (debug=True):
     t_LSQUARE = r'\['
     t_RSQUARE = r'\]'
     t_DOT = r'\.'
-    t_DOTDOT = r'\\.\.'
     t_COMMA = r'\,'
     t_INVERTCOMMA = r'\''
     t_INVERTDOUBLECOMMA = r'\"'
@@ -49,10 +49,6 @@ def build (debug=True):
     t_DOUBLESLASH = r'\\\\'
 
 
-    # define identifier
-    def t_RANGE(t):
-        r'[0-9]*\.\.[0-9]*'
-        return t
 
     def t_ID(t):
         r'[A-Za-z](_?[A-Za-z0-9])*(\.[A-Za-z](_?[A-Za-z0-9])*)?'

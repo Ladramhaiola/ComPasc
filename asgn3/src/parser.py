@@ -75,13 +75,13 @@ def p_ConditionalStmt(p):
     reverse_output.append(p.slice)
 
 def p_IfStmt(p):
-    ''' IfStmt : IF Expression THEN Statement 
-    | IF Expression THEN Statement ELSE Statement '''
+    ''' IfStmt : IF Expression THEN CompoundStmt
+    | IF Expression THEN CompoundStmt ELSE CompoundStmt '''
     reverse_output.append(p.slice)
 
 def p_CaseStmt(p):
     ''' CaseStmt : CASE Expression OF CaseSelector ColonCaseSelector END
-    | CASE Expression OF CaseSelector ColonCaseSelector ELSE Statement SEMICOLON END '''
+    | CASE Expression OF CaseSelector ColonCaseSelector ELSE CompoundStmt SEMICOLON END '''
     reverse_output.append(p.slice)
 
 def p_ColonCaseSelector(p):
@@ -108,9 +108,9 @@ def p_RepeatStmt(p):
     ''' RepeatStmt : REPEAT Statement UNTIL Expression SEMICOLON '''
     reverse_output.append(p.slice)
 
-#No need of semicolon after WhileStmt because CompoundStatement will handle it
+#No need of semicolon after WhileStmt because CompoundStmt will handle it
 def p_WhileStmt(p):
-    ''' WhileStmt : WHILE Expression DO Statement '''
+    ''' WhileStmt : WHILE Expression DO CompoundStmt '''
     reverse_output.append(p.slice)
 
 def p_Expression(p):
@@ -299,7 +299,8 @@ def p_TypedConst(p):
     reverse_output.append(p.slice)
     
 def p_Array(p):
-    ''' Array : ARRAY LSQUARE RANGE RSQUARE OF TypeArray '''
+    # Currently ADHOC for test4
+    ''' Array : ARRAY LSQUARE NUMBER DOT DOT ID RSQUARE OF TypeArray '''
     reverse_output.append(p.slice)
 
 def p_TypeArray(p):
@@ -317,7 +318,7 @@ def p_CommaTypedConst(p):
     reverse_output.append(p.slice)
 
 def p_ConstExpr(p):
-    ''' ConstExpr : '''
+    ''' ConstExpr : NUMBER'''
     reverse_output.append(p.slice)
 
 #the identList for procedure definition and var declaration is not the same

@@ -18,7 +18,6 @@ tokens = [
     'LSQUARE',                                          #LEFT SQUARE BRACKET '['
     'RSQUARE',
     'DOT',
-    'DOTDOT',
     'COMMA',
     'INVERTCOMMA',                                      # '\''     
     'INVERTDOUBLECOMMA',                                # '\"'
@@ -43,7 +42,6 @@ tokens = [
     'GEQ',                                 # '>='
     'DOUBLESLASH',                                      # '//'  
     #Identifiers and constants
-    'RANGE',
     'NUMBER',
     'CHARACTER',                                      
     'UNDERSCORE',
