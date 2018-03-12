@@ -283,7 +283,7 @@ def p_ConstSection(p):
     reverse_output.append(p.slice)
 
 def p_ColonConstDecl(p):
-    ''' ColonConstDecl : ColonConstDecl ConstDecl SEMICOLON
+    ''' ColonConstDecl : ConstDecl SEMICOLON ColonConstDecl
     | '''
     reverse_output.append(p.slice)
 
@@ -306,6 +306,7 @@ def p_ArrayBetween(p):
     | NUMBER DOT DOT ID
     | ID DOT DOT ID
     | ID DOT DOT NUMBER '''
+    reverse_output.append(p.slice)
 
 def p_TypeArray(p):
     ''' TypeArray : TypeID
@@ -317,7 +318,7 @@ def p_ArrayConst(p):
     reverse_output.append(p.slice)
 
 def p_CommaTypedConst(p):
-    ''' CommaTypedConst : CommaTypedConst COMMA TypedConst 
+    ''' CommaTypedConst : COMMA TypedConst CommaTypedConst
     | '''
     reverse_output.append(p.slice)
 
@@ -332,8 +333,8 @@ def p_IdentList(p):
     reverse_output.append(p.slice)
 
 def p_CommaIDTypeArgs(p):
-    ''' CommaIDTypeArgs : CommaIDTypeArgs COMMA ID TypeArgs
-    | CommaIDTypeArgs COMMA ID                 
+    ''' CommaIDTypeArgs : COMMA ID TypeArgs CommaIDTypeArgs
+    | COMMA ID CommaIDTypeArgs                 
     | '''
     reverse_output.append(p.slice)
 
