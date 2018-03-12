@@ -37,11 +37,11 @@ def p_CompoundStmt(p):
     ''' CompoundStmt : BEGIN StmtList END SEMICOLON '''
 
 def p_StmtList(p):
-    ''' StmtList : StmtList Statement SEMICOLON
-    | Statement SEMICOLON '''
+    ''' StmtList : Statement StmtList 
+    | Statement'''
 
 def p_Statement(p):
-    ''' Statement : SimpleStatement
+    ''' Statement : SimpleStatement SEMICOLON
     | StructStmt 
     | '''
 
@@ -88,8 +88,9 @@ def p_LoopStmt(p):
 def p_RepeatStmt(p):
     ''' RepeatStmt : REPEAT Statement UNTIL Expression SEMICOLON '''
 
+#No need of semicolon after WhileStmt because CompoundStatement will handle it
 def p_WhileStmt(p):
-    ''' WhileStmt : WHILE Expression DO Statement SEMICOLON '''
+    ''' WhileStmt : WHILE Expression DO Statement '''
 
 def p_Expression(p):
     ''' Expression : SimpleExpression RelSimpleStar '''
@@ -151,9 +152,10 @@ def p_ProcedureType(p):
     | FuncHeading
     '''
 
+#Modified TypeArgs because in our test cases, we don't have parameter list like a<int>, rather we have a:int
 def p_TypeArgs(p):
-    ''' TypeArgs : LANGLE TypeID RANGLE
-    | LANGLE STRING RANGLE '''
+    ''' TypeArgs : LPAREN TypeID RPAREN
+    | LPAREN STRING RPAREN '''
 
 def p_TypeID(p):
     ''' TypeID : INTEGER
@@ -168,8 +170,7 @@ def p_RealType(p):
 
 # Added without the keyword TYPE for classes and objects
 def p_TypeSection(p):
-    ''' TypeSection : TYPE ColonTypeDecl 
-    | ColonTypeDecl'''
+    ''' TypeSection : TYPE ColonTypeDecl '''
 
 def p_ColonTypeDecl(p):
     ''' ColonTypeDecl : ColonTypeDecl TypeDecl SEMICOLON 
@@ -225,7 +226,7 @@ def p_DesSubEleStar(p):
 def p_DesignatorSubElem(p):
     ''' DesignatorSubElem : DOT ID
     | LSQUARE ExprList RSQUARE
-    | POWER SEMICOLON '''
+    | POWER '''
 
 # Added without keyword CONSTANT for classes and objects
 def p_ConstSection(p):
@@ -243,7 +244,7 @@ def p_ConstDecl(p):
 def p_TypedConst(p):
     ''' TypedConst : ConstExpr
     | ArrayConst '''
-
+    
 def p_Array(p):
     ''' Array : ARRAY LSQUARE ONE DOTDOT OrdinalType RSQUARE OF TypeArray '''
 
@@ -261,7 +262,7 @@ def p_CommaTypedConst(p):
 def p_ConstExpr(p):
     ''' ConstExpr : '''
 
-
+#the identList for procedure definition and var declaration is not the same
 def p_IdentList(p):
     ''' IdentList : ID TypeArgs CommaIDTypeArgs
     | ID CommaIDTypeArgs'''
@@ -271,10 +272,19 @@ def p_CommaIDTypeArgs(p):
     | CommaIDTypeArgs COMMA ID                 
     | '''
 
+#ParamIdentList and ParamIdent are added for handling Formal Parameters for function or procedure declaration
+def p_ParamIdentList(p):
+    ''' ParamIdentList : ParamIdent COMMA ParamIdentList
+    | ParamIdent
+    | '''
+
+def p_ParamIdent(p):
+    ''' ParamIdent : ID COLON Type
+    | ID '''
+    
 # Added VarSection without starting with the keyword VAR for classes and objects
 def p_VarSection(p):
-    ''' VarSection : VAR ColonVarDecl 
-    | ColonVarDecl'''
+    ''' VarSection : VAR ColonVarDecl '''
 
 def p_ColonVarDecl(p):
     ''' ColonVarDecl : VarDecl SEMICOLON ColonVarDecl
@@ -294,19 +304,23 @@ def p_ConstrucDecl(p):
     ''' ConstrucDecl : ConstrucHeading SEMICOLON Block '''
 
 def p_ConstrucHeading(p):
-    ''' ConstrucHeading : CONSTRUCTOR ID FormalParams '''
+    ''' ConstrucHeading : CONSTRUCTOR Designator FormalParams '''
+
+def p_ConstrucHeadingSemicolon(p):
+    ''' ConstrucHeadingSemicolon : CONSTRUCTOR Designator FormalParams SEMICOLON '''
 
 def p_FuncDecl(p):
     ''' FuncDecl : FuncHeading SEMICOLON Block '''
 
 def p_FuncHeading(p):
-    ''' FuncHeading : FUNCTION ID LPAREN FormalParams RPAREN'''
+    ''' FuncHeading : FUNCTION Designator FormalParams COLON Type '''
 
 def p_FuncHeadingSemicolon(p):
-    ''' FuncHeadingSemicolon : FUNCTION ID LPAREN FormalParams RPAREN SEMICOLON'''
+    ''' FuncHeadingSemicolon : FUNCTION Designator FormalParams COLON Type SEMICOLON '''
 
+#Included LPAREN and RPAREN in the definition of FORMALPARAMS
 def p_FormalParams(p):
-    ''' FormalParams : IdentList 
+    ''' FormalParams : LPAREN ParamIdentList RPAREN
     | '''
 
 def p_ProcedureDecl(p):
@@ -349,15 +363,15 @@ def p_ObjectVis(p):
     | '''
 
 def p_ObjectVarSection(p):
-    ''' ObjectVarSection : VarSection 
+    ''' ObjectVarSection : ColonVarDecl
     | '''
 
 def p_ObjectTypeSection(p):
-    ''' ObjectTypeSection : TypeSection 
+    ''' ObjectTypeSection : ColonTypeDecl 
     | '''
 
 def p_ObjectConstSection(p):
-    ''' ObjectConstSection : ConstSection 
+    ''' ObjectConstSection : ColonConstDecl 
     | '''
 
 def p_ObjectMethodList(p):
@@ -366,7 +380,8 @@ def p_ObjectMethodList(p):
 
 def p_ObjectMethodHeading(p):
     ''' ObjectMethodHeading : ProcedureHeadingSemicolon
-    | FuncHeadingSemicolon '''
+    | FuncHeadingSemicolon 
+    | ConstrucHeadingSemicolon '''
 
 ### ------------------------------------------- ###
 
@@ -388,15 +403,15 @@ def p_ClassVis(p):
     | '''
 
 def p_ClassTypeSection(p):
-    ''' ClassTypeSection : TypeSection 
+    ''' ClassTypeSection : ColonTypeDecl 
     | '''
 
 def p_ClassConstSection(p):
-    ''' ClassConstSection : ConstSection 
+    ''' ClassConstSection : ColonConstDecl 
     | '''
 
 def p_ClassVarSection(p):
-    ''' ClassVarSection : VarSection 
+    ''' ClassVarSection : ColonVarDecl 
     | '''
 
 def p_ClassMethodList(p):
@@ -405,7 +420,8 @@ def p_ClassMethodList(p):
 
 def p_ClassMethodHeading(p):
     ''' ClassMethodHeading : ProcedureHeadingSemicolon
-    | FuncHeadingSemicolon '''
+    | FuncHeadingSemicolon 
+    | ConstrucHeadingSemicolon '''
 
 ### ---------------------------------------- ###
 
