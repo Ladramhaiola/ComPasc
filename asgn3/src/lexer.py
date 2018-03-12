@@ -55,7 +55,7 @@ def build (debug=True):
         return t
 
     def t_ID(t):
-        r'[A-Za-z](_?[A-Za-z0-9])*'
+        r'[A-Za-z](_?[A-Za-z0-9])*(\.[A-Za-z](_?[A-Za-z0-9])*)?'
         t.type = reserved.get(t.value.lower(), 'ID')
         return t
 
