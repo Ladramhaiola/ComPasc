@@ -65,15 +65,15 @@ end;
 
 begin
    r1.init(3, 7);
-   writeln('Draw a rectangle:', r1.getlength(), ' by ' , r1.getwidth());
+   //writeln('Draw a rectangle:', r1.getlength(), ' by ' , r1.getwidth());
    r1.draw;
    new(pr1, init(5, 4));
    
-   writeln('Draw a rectangle:', pr1^.getlength(), ' by ',pr1^.getwidth());
+   //writeln('Draw a rectangle:', pr1^.getlength(), ' by ',pr1^.getwidth());
    pr1^.draw;
    pr1^.init(2, 9);
    
-   writeln('Draw a rectangle:', pr1^.getlength(), ' by ' ,pr1^.getwidth());
+   //writeln('Draw a rectangle:', pr1^.getlength(), ' by ' ,pr1^.getwidth());
    pr1^.draw;
    dispose(pr1);
-end.
+end;

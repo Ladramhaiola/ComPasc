@@ -37,11 +37,11 @@ def p_CompoundStmt(p):
     ''' CompoundStmt : BEGIN StmtList END SEMICOLON '''
 
 def p_StmtList(p):
-    ''' StmtList : Statement SEMICOLON StmtList
-    | Statement SEMICOLON '''
+    ''' StmtList : Statement StmtList 
+    | Statement'''
 
 def p_Statement(p):
-    ''' Statement : SimpleStatement
+    ''' Statement : SimpleStatement SEMICOLON
     | StructStmt 
     | '''
 
@@ -226,7 +226,7 @@ def p_DesSubEleStar(p):
 def p_DesignatorSubElem(p):
     ''' DesignatorSubElem : DOT ID
     | LSQUARE ExprList RSQUARE
-    | POWER SEMICOLON '''
+    | POWER '''
 
 # Added without keyword CONSTANT for classes and objects
 def p_ConstSection(p):
