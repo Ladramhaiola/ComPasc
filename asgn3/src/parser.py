@@ -12,38 +12,47 @@ from lexer import *
 # Do we need to expand rules like Identifier, which is a token? NO
 
 ### ------------------------------- ###
+reverse_output = []
 
 def p_Goal(p):
     ''' Goal : Program '''
+    reverse_output.append(p.slice)
 
 def p_Program(p):
     ''' Program : PROGRAM ID  SEMICOLON Block '''
+    reverse_output.append(p.slice)
 
 def p_Block(p):
     ''' Block : CompoundStmt
     | DeclSection CompoundStmt'''
+    reverse_output.append(p.slice)
 
 def p_DeclSection(p):
     ''' DeclSection : DeclSection WhichSection
     | '''
+    reverse_output.append(p.slice)
 
 def p_WhichSection(p):
     ''' WhichSection : ConstSection
     | TypeSection
     | VarSection
     | ProcedureDeclSection '''
+    reverse_output.append(p.slice)
 
 def p_CompoundStmt(p):
     ''' CompoundStmt : BEGIN StmtList END SEMICOLON '''
+    reverse_output.append(p.slice)
 
 def p_StmtList(p):
     ''' StmtList : StmtList Statement SEMICOLON
     | Statement SEMICOLON '''
+    reverse_output.append(p.slice)
 
 def p_Statement(p):
     ''' Statement : SimpleStatement
     | StructStmt 
     | '''
+    reverse_output.append(p.slice)
 
 def p_SimpleStatement(p):
     ''' SimpleStatement : Designator
@@ -51,68 +60,85 @@ def p_SimpleStatement(p):
     | Designator ASSIGNTO Expression
     | INHERITED
     | LPAREN Expression RPAREN'''
+    reverse_output.append(p.slice)
 
 def p_StructStmt(p):
     ''' StructStmt : CompoundStmt
     | ConditionalStmt 
     | LoopStmt '''
+    reverse_output.append(p.slice)
 
 def p_ConditionalStmt(p):
     ''' ConditionalStmt : IfStmt SEMICOLON
     | CaseStmt SEMICOLON '''
+    reverse_output.append(p.slice)
 
 def p_IfStmt(p):
     ''' IfStmt : IF Expression THEN Statement 
     | IF Expression THEN Statement ELSE Statement '''
+    reverse_output.append(p.slice)
 
 def p_CaseStmt(p):
     ''' CaseStmt : CASE Expression OF CaseSelector ColonCaseSelector END
     | CASE Expression OF CaseSelector ColonCaseSelector ELSE Statement SEMICOLON END '''
+    reverse_output.append(p.slice)
 
 def p_ColonCaseSelector(p):
     ''' ColonCaseSelector : ColonCaseSelector SEMICOLON CaseSelector 
     | '''
+    reverse_output.append(p.slice)
 
 def p_CaseSelector(p):
     ''' CaseSelector : CaseLabel COLON Statement '''
+    reverse_output.append(p.slice)
 
 
 def p_CaseLabel(p):
     # THIS IS NOT CORRECT. WILL PUT INTEGER/NUMBER
     ''' CaseLabel : NUMBER '''
+    reverse_output.append(p.slice)
 
 def p_LoopStmt(p):
     ''' LoopStmt : RepeatStmt
     | WhileStmt '''
+    reverse_output.append(p.slice)
 
 def p_RepeatStmt(p):
     ''' RepeatStmt : REPEAT Statement UNTIL Expression SEMICOLON '''
+    reverse_output.append(p.slice)
 
 def p_WhileStmt(p):
     ''' WhileStmt : WHILE Expression DO Statement SEMICOLON '''
+    reverse_output.append(p.slice)
 
 def p_Expression(p):
     ''' Expression : SimpleExpression RelSimpleStar '''
+    reverse_output.append(p.slice)
 
 def p_RelSimpleStar(p):
     ''' RelSimpleStar : RelOp SimpleExpression RelSimpleStar
     | '''
+    reverse_output.append(p.slice)
 
 def p_SimpleExpression(p):
     ''' SimpleExpression : PLUS Term AddTermStar
     | MINUS Term AddTermStar 
     | Term AddTermStar '''
+    reverse_output.append(p.slice)
 
 def p_AddTermStar(p):
     ''' AddTermStar : AddOp Term AddTermStar
     | '''
+    reverse_output.append(p.slice)
 
 def p_Term(p):
     ''' Term : Factor MulFacStar '''
+    reverse_output.append(p.slice)
 
 def p_MulFacStar(p):
     ''' MulFacStar : MulOp Factor MulFacStar
     | '''
+    reverse_output.append(p.slice)
 
 def p_Factor(p):
     ''' Factor : Designator 
@@ -125,6 +151,7 @@ def p_Factor(p):
     | INHERITED
     | TypeID LPAREN Expression RPAREN
     | LPAREN LambFunc RPAREN '''
+    reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
 def p_Type(p):
@@ -135,55 +162,68 @@ def p_Type(p):
     | ProcedureType 
     | Array 
     | ID'''
+    reverse_output.append(p.slice)
 
 def p_SimpleType(p):
     ''' SimpleType : OrdinalType
     | RealType '''
+    reverse_output.append(p.slice)
 
 def p_PointerType(p):
     ''' PointerType : POWER ID '''
+    reverse_output.append(p.slice)
 
 def p_StringType(p):
     ''' StringType : STRING '''
+    reverse_output.append(p.slice)
 
 def p_ProcedureType(p):
     ''' ProcedureType : ProcedureHeading
     | FuncHeading
     '''
+    reverse_output.append(p.slice)
 
 def p_TypeArgs(p):
     ''' TypeArgs : LANGLE TypeID RANGLE
     | LANGLE STRING RANGLE '''
+    reverse_output.append(p.slice)
 
 def p_TypeID(p):
     ''' TypeID : INTEGER
     | REAL
     | CHAR '''
+    reverse_output.append(p.slice)
 
 def p_OrdinalType(p):
     ''' OrdinalType : INTEGER'''
+    reverse_output.append(p.slice)
 
 def p_RealType(p):
     ''' RealType : DOUBLE'''
+    reverse_output.append(p.slice)
 
 # Added without the keyword TYPE for classes and objects
 def p_TypeSection(p):
     ''' TypeSection : TYPE ColonTypeDecl 
     | ColonTypeDecl'''
+    reverse_output.append(p.slice)
 
 def p_ColonTypeDecl(p):
     ''' ColonTypeDecl : ColonTypeDecl TypeDecl SEMICOLON 
     | '''
+    reverse_output.append(p.slice)
 
 def p_TypeDecl(p):
     ''' TypeDecl : ID EQUALS Type
     | ID EQUALS RestrictedType
     | ID EQUALS TYPE Type
     | ID EQUALS TYPE RestrictedType '''
+    reverse_output.append(p.slice)
 
 def p_RestrictedType(p):
     ''' RestrictedType : ObjectType
     | ClassType '''
+    reverse_output.append(p.slice)
 
 def p_RelOp(p):
     ''' RelOp : LANGLE
@@ -192,12 +232,14 @@ def p_RelOp(p):
     | LEQ
     | NOTEQUALS
     | EQUALS'''
+    reverse_output.append(p.slice)
 
 def p_AddOp(p):
     ''' AddOp : PLUS
     | MINUS
     | OR
     | XOR '''
+    reverse_output.append(p.slice)
 
 def p_MulOp(p):
     ''' MulOp : MULTIPLY
@@ -207,125 +249,157 @@ def p_MulOp(p):
     | AND
     | SHL
     | SHR '''
+    reverse_output.append(p.slice)
 
 def p_CommaExpression(p):
     ''' CommaExpression : CommaExpression COMMA Expression
     | '''
+    reverse_output.append(p.slice)
 
 def p_ExprList(p):
     ''' ExprList : Expression CommaExpression'''
+    reverse_output.append(p.slice)
 
 def p_Designator(p):
     ''' Designator : ID DesSubEleStar'''
+    reverse_output.append(p.slice)
 
 def p_DesSubEleStar(p):
     ''' DesSubEleStar : DesSubEleStar DesignatorSubElem 
     | '''
+    reverse_output.append(p.slice)
 
 def p_DesignatorSubElem(p):
     ''' DesignatorSubElem : DOT ID
     | LSQUARE ExprList RSQUARE
     | POWER SEMICOLON '''
+    reverse_output.append(p.slice)
 
 # Added without keyword CONSTANT for classes and objects
 def p_ConstSection(p):
     ''' ConstSection : CONSTANT ColonConstDecl
     | '''
+    reverse_output.append(p.slice)
 
 def p_ColonConstDecl(p):
     ''' ColonConstDecl : ColonConstDecl ConstDecl SEMICOLON
     | '''
+    reverse_output.append(p.slice)
 
 def p_ConstDecl(p):
     ''' ConstDecl : ID EQUALS ConstExpr
     | ID COLON TypeID EQUALS TypedConst '''
+    reverse_output.append(p.slice)
 
 def p_TypedConst(p):
     ''' TypedConst : ConstExpr
     | ArrayConst '''
+    reverse_output.append(p.slice)
 
 def p_Array(p):
-    ''' Array : ARRAY LSQUARE ONE DOTDOT OrdinalType RSQUARE OF TypeArray '''
+    ''' Array : ARRAY LSQUARE RANGE RSQUARE OF TypeArray '''
+    reverse_output.append(p.slice)
 
 def p_TypeArray(p):
     ''' TypeArray : TypeID
     | PointerType '''
+    reverse_output.append(p.slice)
 
 def p_ArrayConst(p):
     ''' ArrayConst : LPAREN TypedConst CommaTypedConst RPAREN '''
+    reverse_output.append(p.slice)
 
 def p_CommaTypedConst(p):
     ''' CommaTypedConst : CommaTypedConst COMMA TypedConst 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ConstExpr(p):
     ''' ConstExpr : '''
+    reverse_output.append(p.slice)
 
 
 def p_IdentList(p):
     ''' IdentList : ID TypeArgs CommaIDTypeArgs
     | ID CommaIDTypeArgs'''
+    reverse_output.append(p.slice)
 
 def p_CommaIDTypeArgs(p):
     ''' CommaIDTypeArgs : CommaIDTypeArgs COMMA ID TypeArgs
     | CommaIDTypeArgs COMMA ID                 
     | '''
+    reverse_output.append(p.slice)
 
 # Added VarSection without starting with the keyword VAR for classes and objects
 def p_VarSection(p):
     ''' VarSection : VAR ColonVarDecl 
     | ColonVarDecl'''
+    reverse_output.append(p.slice)
 
 def p_ColonVarDecl(p):
     ''' ColonVarDecl : VarDecl SEMICOLON ColonVarDecl
     | '''
+    reverse_output.append(p.slice)
 
 def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
+    reverse_output.append(p.slice)
 
 def p_ProcedureDeclSection(p):
     ''' ProcedureDeclSection : ProcedureDecl
     | FuncDecl
     | ConstrucDecl
     | LambFuncDecl '''
+    reverse_output.append(p.slice)
 
 # Don't need to add SEMICOLON after Block
 def p_ConstrucDecl(p):
     ''' ConstrucDecl : ConstrucHeading SEMICOLON Block '''
+    reverse_output.append(p.slice)
 
 def p_ConstrucHeading(p):
     ''' ConstrucHeading : CONSTRUCTOR ID FormalParams '''
+    reverse_output.append(p.slice)
 
 def p_FuncDecl(p):
     ''' FuncDecl : FuncHeading SEMICOLON Block '''
+    reverse_output.append(p.slice)
 
 def p_FuncHeading(p):
     ''' FuncHeading : FUNCTION ID LPAREN FormalParams RPAREN'''
+    reverse_output.append(p.slice)
 
 def p_FuncHeadingSemicolon(p):
     ''' FuncHeadingSemicolon : FUNCTION ID LPAREN FormalParams RPAREN SEMICOLON'''
+    reverse_output.append(p.slice)
 
 def p_FormalParams(p):
     ''' FormalParams : IdentList 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ProcedureDecl(p):
     ''' ProcedureDecl : ProcedureHeading SEMICOLON Block '''
+    reverse_output.append(p.slice)
 
 #replaced ID by designator for dealing with Object.Function
 def p_ProcedureHeading(p):
     ''' ProcedureHeading : PROCEDURE Designator FormalParams '''
+    reverse_output.append(p.slice)
 
 def p_ProcedureHeadingSemicolon(p):
     ''' ProcedureHeadingSemicolon : PROCEDURE Designator FormalParams SEMICOLON '''
+    reverse_output.append(p.slice)
 
 ### ---------------- LAMBDA DEFS -------------- ###
 
 def p_LambFuncDecl(p):
     ''' LambFuncDecl : ID COLON SimpleExpression '''
+    reverse_output.append(p.slice)
 
 def p_LambFunc(p):
     ''' LambFunc : ID LPAREN ConstExpr RPAREN '''
+    reverse_output.append(p.slice)
 
 ### ------------------------------------------- ###
 
@@ -334,39 +408,48 @@ def p_LambFunc(p):
 
 def p_ObjectType(p):
     ''' ObjectType : OBJECT ObjectHeritage ObjectBody END'''
+    reverse_output.append(p.slice)
 
 def p_ObjectHeritage(p):
     ''' ObjectHeritage : LPAREN IdentList RPAREN
     | '''
+    reverse_output.append(p.slice)
 
 # The problem here is that the first Identifier list is being identified as that in VarSection rather than type section
 def p_ObjectBody(p): 
     ''' ObjectBody : ObjectBody ObjectVis ObjectVarSection ObjectTypeSection ObjectConstSection ObjectMethodList
     | '''
+    reverse_output.append(p.slice)
     
 def p_ObjectVis(p):
     ''' ObjectVis : PUBLIC
     | '''
+    reverse_output.append(p.slice)
 
 def p_ObjectVarSection(p):
     ''' ObjectVarSection : VarSection 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ObjectTypeSection(p):
     ''' ObjectTypeSection : TypeSection 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ObjectConstSection(p):
     ''' ObjectConstSection : ConstSection 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ObjectMethodList(p):
     ''' ObjectMethodList : ObjectMethodHeading 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ObjectMethodHeading(p):
     ''' ObjectMethodHeading : ProcedureHeadingSemicolon
     | FuncHeadingSemicolon '''
+    reverse_output.append(p.slice)
 
 ### ------------------------------------------- ###
 
@@ -374,38 +457,47 @@ def p_ObjectMethodHeading(p):
 
 def p_ClassType(p):
     ''' ClassType : CLASS ClassHeritage ClassBody END'''
+    reverse_output.append(p.slice)
 
 def p_ClassHeritage(p):
     ''' ClassHeritage : LPAREN IdentList RPAREN
     | '''
+    reverse_output.append(p.slice)
 
 def p_ClassBody(p):
     ''' ClassBody : ClassBody ClassVis ClassTypeSection ClassConstSection ClassVarSection ClassMethodList
     | '''
+    reverse_output.append(p.slice)
     
 def p_ClassVis(p):
     ''' ClassVis : PUBLIC
     | '''
+    reverse_output.append(p.slice)
 
 def p_ClassTypeSection(p):
     ''' ClassTypeSection : TypeSection 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ClassConstSection(p):
     ''' ClassConstSection : ConstSection 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ClassVarSection(p):
     ''' ClassVarSection : VarSection 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ClassMethodList(p):
     ''' ClassMethodList : ClassMethodHeading 
     | '''
+    reverse_output.append(p.slice)
 
 def p_ClassMethodHeading(p):
     ''' ClassMethodHeading : ProcedureHeadingSemicolon
     | FuncHeadingSemicolon '''
+    reverse_output.append(p.slice)
 
 ### ---------------------------------------- ###
 
