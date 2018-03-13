@@ -533,8 +533,19 @@ def p_ClassMethodHeading(p):
 ### -------------------------------- ###
 
 def p_error(p):
-    print "Syntax Error at Line: %d, Pos: %d"%(p.lineno,p.lexpos)
+    print ("Syntax Error at Line: %d, Pos: %d"%(p.lineno,p.lexpos))
     # Add formatters later here, to fetch line number and position
+
+def printpretty():
+    output = [i for i in reverse_output[::-1]]
+    for rule in output:
+        print (str(rule[0]),'>>>>>',end = ' ')
+        for symbol in rule[1:]:
+            if str(type(symbol)) == "<class 'ply.lex.LexToken'>":
+                print (symbol.value,end = ' ')
+            else:
+                print (str(symbol),end = ' ')
+        print()
 
 
 def main():
@@ -542,7 +553,9 @@ def main():
 
     # Do the things that we want to here
     inputfile = open(sys.argv[1],'r').read()
-    yacc.parse(inputfile, debug = 1)
+    yacc.parse(inputfile, debug = 0)
+
+    printpretty()
 
 if __name__ == '__main__':
     main()
