@@ -536,17 +536,39 @@ def p_error(p):
     print ("Syntax Error at Line: %d, Pos: %d"%(p.lineno,p.lexpos))
     # Add formatters later here, to fetch line number and position
 
-def printpretty():
+def printpretty(filename):
     output = [i for i in reverse_output[::-1]]
+
+    f = open(filename+".html","w+") 
+    f.write("<!DOCTYPE HTML> \n <html> \n \t<head> \n \t\t<title>Rightmost Derivation</title> \n \t<head> \n \t<body>\n")
+
+    runningRule = ""
+    pre = ""
+    post = ""
+    
     for rule in output:
-        print (str(rule[0]),'>>>>>',end = ' ')
+        if runningRule != "":
+            for i in range(len(runningRule),-1,-1):
+                if runningRule[i:i+len(str(rule[0]))] == str(rule[0]):
+                    break
+            pre = runningRule[0:i]
+            post = runningRule[i+len(str(rule[0])):]
+
+        #print "############## " + str(type(pre)) + " ############## " + str(type(runningRule)) + " ###############"
+        f.write("\t\t" + "<br>" + pre + "<b>" + str(rule[0]) + "</b>" + post + ' >>>>>> ')
+        runningRule = pre
+        f.write(pre + "<u>")
         for symbol in rule[1:]:
             if str(type(symbol)) == "<class 'ply.lex.LexToken'>":
-                print (symbol.value,end = ' ')
+                runningRule = runningRule + symbol.value + ' '
+                f.write(symbol.value + ' ')
             else:
-                print (str(symbol),end = ' ')
-        print()
-
+                runningRule = runningRule + str(symbol) + ' '
+                f.write(str(symbol) + ' ')
+                
+        runningRule = runningRule + post
+        f.write("</u>" + post + "\n")
+    f.write("\t</body> \n </html>") 
 
 def main():
     parser = yacc.yacc()
@@ -555,7 +577,8 @@ def main():
     inputfile = open(sys.argv[1],'r').read()
     yacc.parse(inputfile, debug = 0)
 
-    printpretty()
+    filename = sys.argv[1].split("/")[2]
+    printpretty(filename.split(".")[0])
 
 if __name__ == '__main__':
     main()
