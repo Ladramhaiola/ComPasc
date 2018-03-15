@@ -24,8 +24,7 @@ def p_Program(p):
     reverse_output.append(p.slice)
 
 def p_Block(p):
-    ''' Block : CompoundStmt
-    | DeclSection CompoundStmt'''
+    ''' Block : DeclSection CompoundStmt'''
     reverse_output.append(p.slice)
 
 def p_DeclSection(p):
@@ -75,8 +74,8 @@ def p_ConditionalStmt(p):
     reverse_output.append(p.slice)
 
 def p_IfStmt(p):
-    ''' IfStmt : IF Expression THEN CompoundStmt
-    | IF Expression THEN CompoundStmt ELSE CompoundStmt '''
+    ''' IfStmt : IF Expression THEN CompoundStmt ELSE CompoundStmt
+    | IF Expression THEN CompoundStmt '''
     reverse_output.append(p.slice)
 
 def p_CaseStmt(p):
@@ -211,7 +210,7 @@ def p_TypeSection(p):
 
 def p_ColonTypeDecl(p):
     ''' ColonTypeDecl : ColonTypeDecl TypeDecl SEMICOLON 
-    | '''
+    | TypeDecl SEMICOLON'''
     reverse_output.append(p.slice)
 
 def p_TypeDecl(p):
@@ -278,13 +277,13 @@ def p_DesignatorSubElem(p):
 
 # Added without keyword CONSTANT for classes and objects
 def p_ConstSection(p):
-    ''' ConstSection : CONSTANT ColonConstDecl
-    | '''
+    ''' ConstSection : CONSTANT ColonConstDecl '''
     reverse_output.append(p.slice)
 
+#Making this left recursive helps to remove a shift-reduce conflict
 def p_ColonConstDecl(p):
-    ''' ColonConstDecl : ConstDecl SEMICOLON ColonConstDecl
-    | '''
+    ''' ColonConstDecl : ColonConstDecl ConstDecl SEMICOLON
+    | ConstDecl SEMICOLON'''
     reverse_output.append(p.slice)
 
 def p_ConstDecl(p):
@@ -356,8 +355,8 @@ def p_VarSection(p):
     reverse_output.append(p.slice)
 
 def p_ColonVarDecl(p):
-    ''' ColonVarDecl : VarDecl SEMICOLON ColonVarDecl
-    | '''
+    ''' ColonVarDecl : ColonVarDecl VarDecl SEMICOLON
+    | VarDecl SEMICOLON'''
     reverse_output.append(p.slice)
 
 def p_VarDecl(p):
@@ -367,8 +366,7 @@ def p_VarDecl(p):
 def p_ProcedureDeclSection(p):
     ''' ProcedureDeclSection : ProcedureDecl
     | FuncDecl
-    | ConstrucDecl
-    | LambFuncDecl '''
+    | ConstrucDecl '''
     reverse_output.append(p.slice)
 
 # Don't need to add SEMICOLON after Block
@@ -451,15 +449,18 @@ def p_ObjectVis(p):
     reverse_output.append(p.slice)
 
 def p_ObjectVarSection(p):
-    ''' ObjectVarSection : ColonVarDecl '''
+    ''' ObjectVarSection : ColonVarDecl 
+    | '''
     reverse_output.append(p.slice)
 
 def p_ObjectTypeSection(p):
-    ''' ObjectTypeSection : ColonTypeDecl '''
+    ''' ObjectTypeSection : ColonTypeDecl 
+    | '''
     reverse_output.append(p.slice)
 
 def p_ObjectConstSection(p):
-    ''' ObjectConstSection : ColonConstDecl '''
+    ''' ObjectConstSection : ColonConstDecl 
+    | '''
     reverse_output.append(p.slice)
 
 def p_ObjectMethodList(p):
@@ -497,15 +498,18 @@ def p_ClassVis(p):
     reverse_output.append(p.slice)
 
 def p_ClassTypeSection(p):
-    ''' ClassTypeSection : ColonTypeDecl '''
+    ''' ClassTypeSection : ColonTypeDecl 
+    | '''
     reverse_output.append(p.slice)
 
 def p_ClassConstSection(p):
-    ''' ClassConstSection : ColonConstDecl '''
+    ''' ClassConstSection : ColonConstDecl 
+    | '''
     reverse_output.append(p.slice)
 
 def p_ClassVarSection(p):
-    ''' ClassVarSection : ColonVarDecl '''
+    ''' ClassVarSection : ColonVarDecl 
+    | '''
     reverse_output.append(p.slice)
 
 def p_ClassMethodList(p):
