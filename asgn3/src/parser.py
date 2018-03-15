@@ -559,7 +559,7 @@ def printpretty(filename):
             post = runningRule[i+len(str(rule[0])):]
 
         #print "############## " + str(type(pre)) + " ############## " + str(type(runningRule)) + " ###############"
-        f.write("\t\t" + "<br>" + pre + "<b>" + str(rule[0]) + "</b>" + post + ' >>>>>> ')
+        f.write("\t\t" + "<br>" + pre + "<b>" + str(rule[0]) + "</b>" + post + ' &rarr;	')
         runningRule = pre
         f.write(pre + "<u>")
         for symbol in rule[1:]:
@@ -571,7 +571,7 @@ def printpretty(filename):
                 f.write(str(symbol) + ' ')
                 
         runningRule = runningRule + post
-        f.write("</u>" + post + "\n")
+        f.write("</u>" + post + "\n\n")
     f.write("\t</body> \n </html>") 
 
 def main():
