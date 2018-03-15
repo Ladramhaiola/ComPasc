@@ -126,7 +126,8 @@ def p_WhileStmt(p):
     reverse_output.append(p.slice)
 
 def p_Expression(p):
-    ''' Expression : SimpleExpression RelSimpleStar '''
+    ''' Expression : SimpleExpression RelSimpleStar 
+    | LambFunc'''
     reverse_output.append(p.slice)
 
 def p_RelSimpleStar(p):
@@ -427,13 +428,13 @@ def p_ProcedureHeadingSemicolon(p):
 
 ### ---------------- LAMBDA DEFS -------------- ###
 
-def p_LambFuncDecl(p):
-    ''' LambFuncDecl : ID COLON SimpleExpression '''
+def p_LambFunc(p):
+    ''' LambFunc : LAMBDA ID COLON SimpleExpression '''
     reverse_output.append(p.slice)
 
-def p_LambFunc(p):
-    ''' LambFunc : ID LPAREN ConstExpr RPAREN '''
-    reverse_output.append(p.slice)
+# def p_LambFunc(p):
+#     ''' LambFunc : ID LPAREN ConstExpr RPAREN '''
+#     reverse_output.append(p.slice)
 
 ### ------------------------------------------- ###
 
