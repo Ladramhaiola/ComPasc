@@ -179,8 +179,7 @@ def p_Type(p):
     reverse_output.append(p.slice)
 
 def p_SimpleType(p):
-    ''' SimpleType : INTEGER
-    | RealType '''
+    ''' SimpleType : DOUBLE '''
     reverse_output.append(p.slice)
 
 def p_PointerType(p):
@@ -212,9 +211,9 @@ def p_TypeID(p):
 #     ''' OrdinalType : INTEGER'''
 #     reverse_output.append(p.slice)
 
-def p_RealType(p):
-    ''' RealType : DOUBLE'''
-    reverse_output.append(p.slice)
+# def p_RealType(p):
+    # ''' RealType : DOUBLE'''
+    # reverse_output.append(p.slice)
 
 # Added without the keyword TYPE for classes and objects
 def p_TypeSection(p):
