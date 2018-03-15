@@ -14,6 +14,19 @@ from lexer import *
 ### ------------------------------- ###
 reverse_output = []
 
+precedence = (
+    ('nonassoc','ELSETOK'),
+    ('nonassoc','ELSE'),
+    ('nonassoc','IDTOK'),
+    ('nonassoc','ID'),
+    ('nonassoc','ENDTOK'),
+    ('nonassoc','END'),
+    ('nonassoc', 'TOK'),
+    ('nonassoc','PROCEDURE'),
+    ('nonassoc','FUNCTION'),
+    ('nonassoc','CONSTRUCTOR')
+)
+
 def p_Goal(p):
     ''' Goal : Program '''
     reverse_output.append(p.slice)
@@ -75,7 +88,7 @@ def p_ConditionalStmt(p):
 
 def p_IfStmt(p):
     ''' IfStmt : IF Expression THEN CompoundStmt ELSE CompoundStmt
-    | IF Expression THEN CompoundStmt '''
+    | IF Expression THEN CompoundStmt %prec ELSETOK '''
     reverse_output.append(p.slice)
 
 def p_CaseStmt(p):
@@ -150,8 +163,7 @@ def p_Factor(p):
     | NOT Factor
     | INHERITED Designator
     | INHERITED
-    | TypeID LPAREN Expression RPAREN
-    | LPAREN LambFunc RPAREN '''
+    | TypeID LPAREN Expression RPAREN '''
     reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
@@ -429,7 +441,7 @@ def p_LambFunc(p):
 ### ---------------- OBJECT DEFS -------------- ###
 
 def p_ObjectType(p):
-    ''' ObjectType : OBJECT ObjectHeritage ObjectBody END'''
+    ''' ObjectType : OBJECT ObjectHeritage ObjectVis ObjectBody END'''
     reverse_output.append(p.slice)
 
 def p_ObjectHeritage(p):
@@ -439,7 +451,7 @@ def p_ObjectHeritage(p):
 
 # The problem here is that the first Identifier list is being identified as that in VarSection rather than type section
 def p_ObjectBody(p): 
-    ''' ObjectBody : ObjectBody ObjectVis ObjectVarSection ObjectTypeSection ObjectConstSection ObjectMethodList
+    ''' ObjectBody : ObjectBody ObjectTypeSection ObjectVarSection ObjectConstSection ObjectMethodList
     | '''
     reverse_output.append(p.slice)
     
@@ -449,23 +461,23 @@ def p_ObjectVis(p):
     reverse_output.append(p.slice)
 
 def p_ObjectVarSection(p):
-    ''' ObjectVarSection : ColonVarDecl 
+    ''' ObjectVarSection : ColonVarDecl %prec IDTOK
     | '''
     reverse_output.append(p.slice)
 
 def p_ObjectTypeSection(p):
-    ''' ObjectTypeSection : ColonTypeDecl 
-    | '''
+    ''' ObjectTypeSection : ColonTypeDecl %prec IDTOK
+    | %prec ENDTOK '''
     reverse_output.append(p.slice)
 
 def p_ObjectConstSection(p):
-    ''' ObjectConstSection : ColonConstDecl 
+    ''' ObjectConstSection : ColonConstDecl %prec IDTOK
     | '''
     reverse_output.append(p.slice)
 
 def p_ObjectMethodList(p):
     ''' ObjectMethodList : ObjectMethodHeading 
-    | '''
+    | %prec TOK '''
     reverse_output.append(p.slice)
 
 def p_ObjectMethodHeading(p):
@@ -479,7 +491,7 @@ def p_ObjectMethodHeading(p):
 ### --------------------- CLASS DEFS ------------ ###
 
 def p_ClassType(p):
-    ''' ClassType : CLASS ClassHeritage ClassBody END'''
+    ''' ClassType : CLASS ClassHeritage ClassVis ClassBody END'''
     reverse_output.append(p.slice)
 
 def p_ClassHeritage(p):
@@ -488,7 +500,7 @@ def p_ClassHeritage(p):
     reverse_output.append(p.slice)
 
 def p_ClassBody(p):
-    ''' ClassBody : ClassBody ClassVis ClassTypeSection ClassConstSection ClassVarSection ClassMethodList
+    ''' ClassBody : ClassBody ClassTypeSection ClassConstSection ClassVarSection ClassMethodList
     | '''
     reverse_output.append(p.slice)
     
@@ -498,23 +510,23 @@ def p_ClassVis(p):
     reverse_output.append(p.slice)
 
 def p_ClassTypeSection(p):
-    ''' ClassTypeSection : ColonTypeDecl 
-    | '''
+    ''' ClassTypeSection : ColonTypeDecl %prec IDTOK
+    | %prec ENDTOK '''
     reverse_output.append(p.slice)
 
 def p_ClassConstSection(p):
-    ''' ClassConstSection : ColonConstDecl 
+    ''' ClassConstSection : ColonConstDecl %prec IDTOK
     | '''
     reverse_output.append(p.slice)
 
 def p_ClassVarSection(p):
-    ''' ClassVarSection : ColonVarDecl 
+    ''' ClassVarSection : ColonVarDecl %prec IDTOK
     | '''
     reverse_output.append(p.slice)
 
 def p_ClassMethodList(p):
     ''' ClassMethodList : ClassMethodHeading 
-    | '''
+    | %prec TOK '''
     reverse_output.append(p.slice)
 
 def p_ClassMethodHeading(p):
@@ -559,7 +571,7 @@ def printpretty(filename):
             post = runningRule[i+len(str(rule[0])):]
 
         #print "############## " + str(type(pre)) + " ############## " + str(type(runningRule)) + " ###############"
-        f.write("\t\t" + "<br>" + pre + "<b>" + str(rule[0]) + "</b>" + post + ' &rarr;	')
+        f.write("\t\t" + "<br>" + pre + "<b>" + str(rule[0]) + "</b>" + post + ' >>>>>> ')
         runningRule = pre
         f.write(pre + "<u>")
         for symbol in rule[1:]:
@@ -571,7 +583,7 @@ def printpretty(filename):
                 f.write(str(symbol) + ' ')
                 
         runningRule = runningRule + post
-        f.write("</u>" + post + "\n\n")
+        f.write("</u>" + post + "\n")
     f.write("\t</body> \n </html>") 
 
 def main():
