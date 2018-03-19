@@ -18,22 +18,19 @@ tokens = [
     'LSQUARE',                                          #LEFT SQUARE BRACKET '['
     'RSQUARE',
     'DOT',
-    'DOTDOT',
     'COMMA',
-    'INVERTCOMMA',                                      # '\''     
-    'INVERTDOUBLECOMMA',                                # '\"'
+    #'INVERTCOMMA',                                      # '\''     
+    #'INVERTDOUBLECOMMA',                                # '\"'
     'LPAREN',                                           #LEFT PARENTHESES '('
     'RPAREN',
     'COLON',
     'SEMICOLON',                                        # ';'
     'POWER',                                            # '^'
-    'ATRATE',                                           # '@'
-    'LCURLY',                                           # '{'
-    'RCURLY',
+    #'ATRATE',                                           # '@'
     #'DOLLAR',                                          # will have to check whether to remove or keep these (DOLLAR and HASH)
     #'HASH',
-    'AMPERSAND',
-    'PERCENT',
+    # 'AMPERSAND',
+    # 'PERCENT',
     'DOUBLESTAR',                                       # used for calculating powers '**'
     #'CINPUT',                                          # '<<' used for input in C
     #'COUTPUT',                                         # '>>' probably this and the upper symbol are not to tbe used in pascal
@@ -41,12 +38,10 @@ tokens = [
     'ASSIGNTO',                                         # ':=' (used in assignment statements)
     'LEQ',                                    # '<='
     'GEQ',                                 # '>='
-    'DOUBLESLASH',                                      # '//'  
+    #'DOUBLESLASH',                                      # '//'  
     #Identifiers and constants
-    'RANGE',
     'NUMBER',
-    'CHARACTER',                                      
-    'UNDERSCORE',
+    # 'CHARACTER',                                      
     'ID',
     'USERSTRING',
     'COMMENT',
