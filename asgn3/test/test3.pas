@@ -53,13 +53,14 @@ begin
    while i < length do
    begin
       j := 1;
-      while j < width do
+      while j < self.width do
       begin
          write(' * ');
          j := j + 1;
       end;
       //writeln;
       i := i + 1;
+      break;
    end;
 end;
 

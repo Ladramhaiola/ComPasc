@@ -27,12 +27,10 @@ tokens = [
     'SEMICOLON',                                        # ';'
     'POWER',                                            # '^'
     #'ATRATE',                                           # '@'
-    'LCURLY',                                           # '{'
-    'RCURLY',
     #'DOLLAR',                                          # will have to check whether to remove or keep these (DOLLAR and HASH)
     #'HASH',
-    'AMPERSAND',
-    'PERCENT',
+    # 'AMPERSAND',
+    # 'PERCENT',
     'DOUBLESTAR',                                       # used for calculating powers '**'
     #'CINPUT',                                          # '<<' used for input in C
     #'COUTPUT',                                         # '>>' probably this and the upper symbol are not to tbe used in pascal
@@ -43,8 +41,7 @@ tokens = [
     #'DOUBLESLASH',                                      # '//'  
     #Identifiers and constants
     'NUMBER',
-    'CHARACTER',                                      
-    'UNDERSCORE',
+    # 'CHARACTER',                                      
     'ID',
     'USERSTRING',
     'COMMENT',

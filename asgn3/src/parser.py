@@ -71,7 +71,9 @@ def p_SimpleStatement(p):
     | Designator LPAREN ExprList RPAREN
     | Designator ASSIGNTO Expression
     | INHERITED
-    | LPAREN Expression RPAREN'''
+    | LPAREN Expression RPAREN
+    | BREAK
+    | CONTINUE'''
     reverse_output.append(p.slice)
 
 def p_StructStmt(p):
@@ -260,7 +262,8 @@ def p_MulOp(p):
     | MOD
     | AND
     | SHL
-    | SHR '''
+    | SHR 
+    | DOUBLESTAR '''
     reverse_output.append(p.slice)
 
 def p_CommaExpression(p):

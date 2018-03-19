@@ -37,10 +37,10 @@ def build (debug=True):
     t_SEMICOLON = r'\;'
     t_POWER = r'\^'
     #t_ATRATE = r'\@'
-    t_LCURLY = r'\{'
-    t_RCURLY = r'\}'
-    t_AMPERSAND = r'\&'
-    t_PERCENT = r'\%'
+    # t_LCURLY = r'\{'
+    # t_RCURLY = r'\}'
+    # t_AMPERSAND = r'\&'
+    # t_PERCENT = r'\%'
     t_DOUBLESTAR = r'\*\*'
 
     t_ASSIGNTO = r'\:\='
@@ -61,9 +61,9 @@ def build (debug=True):
         return t
 
     # define character
-    def t_CHARACTER(t):
-        r"(\'([^\\\'])\')|(\"([^\\\"])\")"
-        return t
+    # def t_CHARACTER(t):
+        # r"(\'([^\\\'])\')|(\"([^\\\"])\")"
+        # return t
 
     # define string
     def t_USERSTRING(t): 
