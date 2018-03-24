@@ -1,6 +1,5 @@
 import pprint
 
-
 class SymTable (object):
     '''
     SymbolTable built after parsing
@@ -31,6 +30,7 @@ class SymTable (object):
         return self.scopelist[-1]['ScopeName'] # even if it contains only one scope, this command helps
 
     def Check_identifier(self, identifier, index):
+
         if index == -1 :
             return None # exhausted everything
         t_scope = self.scopelist[index]
@@ -41,15 +41,17 @@ class SymTable (object):
             return self.Check_identifier(identifier, index-1) # go one level up
 
     def AddScope (self, scopeName, Type):
+
         curr_scope = self.scopelist[-1]
         temp_scope = {
-            'Scope' : curr_scope['ScopeName']+ '.'+ scopeName, # main.scope
+            'Scope' : curr_scope['ScopeName']+ '.' + scopeName, # main.scope
             'ParentScope' : curr_scope['ScopeName'],
             'Type' : Type, # Type of scope
             'ReturnType' : 'undefined', # default value
             'Func' : {},
             'Ident' : {},
         }
+
         self.scopelist.append(temp_scope)
 
     def Define(self, v, typ, varfunc):
@@ -57,6 +59,7 @@ class SymTable (object):
             args:
                 symbol: an object of class SymTable entry
         '''
+
         curr_scope = self.scopelist[-1]
         e = None
         if (varfunc == "var"):
@@ -78,8 +81,22 @@ class SymTable (object):
         '''
         return self.Check_identifier(identifier, len(self.scopelist) - 1);
 
+
     def Del_scope(self, scopeName):
         del self.scopelist[-1]
+
+
+    def getTemp(self):
+        self.tNo += 1
+        newTemp = "t" + str(self.tNo) 
+        return newTemp
+
+
+    def newScopeName(self):
+        self.scopeNo += 1
+        newScope = "s" + str(self.scopeNo) 
+        return newScope
+
 
 class SymTableEntry(object):
     '''
