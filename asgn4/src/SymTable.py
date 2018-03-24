@@ -1,6 +1,5 @@
 import pprint
 
-
 class SymTable (object):
     '''
     SymbolTable built after parsing
@@ -45,6 +44,7 @@ class SymTable (object):
             args:
                 symbol: an object of class SymTable entry
         '''
+
         curr_scope = self.scopelist[-1]
         e = None
         if (varfunc == "var"):
@@ -79,7 +79,17 @@ class SymTable (object):
 
     def endScope(self, scopeName):
         self.currScope = self.table[self.currScope]['ParentScope']
-        
+
+    def getTemp(self):
+        self.tNo += 1
+        newTemp = "t" + str(self.tNo) 
+        return newTemp
+
+    def newScopeName(self):
+        self.scopeNo += 1
+        newScope = "s" + str(self.scopeNo) 
+        return newScope
+
 class SymTableEntry(object):
     '''
     Create a symbol table entry
