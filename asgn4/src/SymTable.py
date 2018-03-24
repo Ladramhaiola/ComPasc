@@ -1,4 +1,5 @@
 import pprint
+import sys
 
 class SymTable (object):
     '''
@@ -40,24 +41,25 @@ class SymTable (object):
         self.table[scopeName] = temp_scope
 
     def Define(self, v, typ, varfunc):
-        '''
-            args:
-                symbol: an object of class SymTable entry
-        '''
-
-        curr_scope = self.scopelist[-1]
+        
+        curr_scope = self.table[self.currScope]
         e = None
-        if (varfunc == "var"):
-            if (v not in curr_scope['Ident']):
-                e = SymTableEntry (v, typ, "var")
-                curr_scope['Ident'][v] = e
+
+        if self.getScope(v) != self.currScope:
+
+            if (varfunc == "var"):
+                if (v not in curr_scope['Ident']):
+                    e = SymTableEntry (v, typ, "var")
+                    curr_scope['Ident'][v] = e
+            else:
+                if (v not in curr_scope['Func']):
+                    e = SymTableEntry (v, typ, "func")
+                    curr_scope['Func'][v] = e
+
         else:
-            if (v not in curr_scope['Func']):
-                e = SymTableEntry (v, typ, "func")
-                curr_scope['Func'][v] = e
-        # else:
-            # print ('Symbol already exists!')
-        return e
+            sys.exit(v + "is already initialised in this scope")
+
+        return e.name
 
     def getScope(self, identifier):
         scope = self.currScope
