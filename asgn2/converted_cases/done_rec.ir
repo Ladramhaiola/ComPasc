@@ -13,4 +13,4 @@
 13, -, g.3, g.2, 1
 14, +, g, g.3, 0
 15, JMP, ,myfunc,
-16, RETURN, , ,
+16, RETURN, , , myfunc
