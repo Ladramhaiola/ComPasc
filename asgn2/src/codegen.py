@@ -47,12 +47,14 @@ class CodeGenerator():
         
 
     def deallocRegs (self):
-        for reg in self.varAllocate.usedRegisters:
-            v = self.registerToSymbol[reg]
-            self.movToMem(reg,v)
-            self.varAllocate.usedRegisters.remove(reg)
-            self.varAllocate.unusedRegisters.append(reg)
-
+        for reg in self.Registers:
+            if self.registerToSymbol[reg] != '':
+                v = self.registerToSymbol[reg]
+                self.movToMem(reg,v)
+                self.varAllocate.usedRegisters.remove(reg)
+                self.varAllocate.unusedRegisters.append(reg)
+       # print(self.registerToSymbol)
+        
 
     def RepresentsInt(self,s):
         try: 
@@ -386,7 +388,7 @@ class CodeGenerator():
         self.asm_code[self.curr_func].append('\t\t#printF starts here')
         ascode = ''
 
-        print(self.registerToSymbol)
+        #print(self.registerToSymbol)
         for i,reg in enumerate(changedRegisters):
         	v = self.registerToSymbol[reg]
 	        if (v != ''):
@@ -715,8 +717,8 @@ class CodeGenerator():
             for i in range(start-1,end):
                 # i is the index into self.code
 
-                print(self.registerToSymbol)
-                print(self.code[i])
+                #print(self.registerToSymbol)
+                #print(self.code[i])
                 lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
                 # print lhs.name
                 ln = int(lineno)
@@ -747,6 +749,7 @@ class CodeGenerator():
 
                 # DONE HOPEFULLY
                 elif op == 'LABEL':
+                    #print(self.code[i])
                     self.check_dealloc(ln,blockIndex)
                     self.handle_label (lhs, op1, const1)
 
