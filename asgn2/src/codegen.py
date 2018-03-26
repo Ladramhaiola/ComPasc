@@ -401,6 +401,9 @@ class CodeGenerator():
 	        if (v != ''):
 	            ascode += "\n\t\tmovl " + "%" + reg + "," + v
 
+        if self.symbolToRegister[x] != '':
+            x = "%"+self.symbolToRegister[x]
+            
         # central code 
         ascode += "\n\t\tmovl $0, %eax"
         ascode += "\n\t\tmovl " + x + ",%esi"
@@ -711,14 +714,18 @@ class CodeGenerator():
 
         # op1, op2 are symbol table objects
 
-        self.asm_code['text'].append('\n.text\n\t.global main\n\tmain:')
-
+        self.asm_code['text'].append('\n.text\n\t.global main\n')
+        
         for key in self.functionBlocks.keys():
 
             # key, according to the function names
             # print key
+                
             self.function_change(key)
 
+            if key == 'main':
+                self.asm_code[self.curr_func].append("\tmain:")
+            
             start, end = self.functionBlocks[key]
 
             for i in range(start-1,end):
@@ -781,6 +788,7 @@ class CodeGenerator():
                     self.handle_storeref (ln, lhs, op1, op2, const1, const2)
 
                 elif op == 'PRINT':
+                    self.check_dealloc(ln,blockIndex)
                     self.handle_print (ln,op1,const1)
                     self.check_dealloc(ln,blockIndex)
 
