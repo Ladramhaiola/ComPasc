@@ -20,7 +20,7 @@ def divideToFunctions (ac3code):
 	flag = 0
 	for i in range(len(ac3code)):
 		codeline = ac3code[i]
-		# print (codeline)
+		#print (codeline)
 		if (codeline[1] == 'LABEL' and codeline[2] == 'FUNC'):
 			if (flag == 0):
 				FB['_start'] = [1,i]
@@ -46,7 +46,7 @@ def main():
 	ac3.addTo3AC(content)
 
 	FB = divideToFunctions(ac3.code)
-	# print (FB)
+	#print (FB)
 
 	regAlloc = varAllocateRegister(SymTab,ac3)
 

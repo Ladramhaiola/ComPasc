@@ -331,26 +331,33 @@ class CodeGenerator():
         #     # Setting setNewLine is required whenever we enter a line into code
         #     self.asm_code[self.curr_func].append(l_code)
 
-        if (statTyp == 'BA_2C'):
+        if(statTyp == 'BA_2C' or statTyp == 'BA_1C_R'):
 
-            ascode += "\t\tmovl $" + const1 + "%eax"
-            ascode += "\n\t\tcdq"
-            ascode += "\n\t\tidivl $" + const2
-
-            # After this the quotient is stored in eax and the remainder in edx
+            if self.registerToSymbol['ecx'] != '':
+                self.movToMem('ecx',self.registerToSymbol['ecx'])
             
-        elif (statTyp == 'BA_1C_R'):
+            if (statTyp == 'BA_2C'):
 
-            if loc_op1 != "eax":
-                l_code = "\t\tmovl " + Loc_op1 + "%eax"
-                self.asm_code[self.curr_func].append(l_code)
-            ascode += "\t\tcdq"
-            ascode += "\n\t\tidivl $" + const2
+                ascode += "\t\tmovl $" + const1 + ", %eax"
+                ascode += "\n\t\tcdq"
+                ascode += "\n\t\tmovl $" + const2 + ", %ecx"
+                ascode += "\n\t\tidivl %ecx"
+
+                # After this the quotient is stored in eax and the remainder in edx
+            
+            elif (statTyp == 'BA_1C_R'):
+
+                if loc_op1 != "eax":
+                    l_code = "\t\tmovl " + Loc_op1 + ", %eax"
+                    self.asm_code[self.curr_func].append(l_code)
+                ascode += "\t\tcdq"
+                ascode += "\n\t\tmovl $" + const2 + ", %ecx"
+                ascode += "\n\t\tidivl %ecx"
             
         else:
 
             if loc_op1 != "eax":
-                l_code = "\t\tmovl " + Loc_op1 + "%eax"
+                l_code = "\t\tmovl " + Loc_op1 + ", %eax"
                 self.asm_code[self.curr_func].append(l_code)
             ascode += "\t\tcdq"
             ascode += "\n\t\tidivl " + Loc_op2
@@ -749,7 +756,7 @@ class CodeGenerator():
 
                 # DONE HOPEFULLY
                 elif op == 'LABEL':
-                    #print(self.code[i])
+                    #print("#",self.code[i])
                     self.check_dealloc(ln,blockIndex)
                     self.handle_label (lhs, op1, const1)
 
