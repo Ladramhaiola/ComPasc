@@ -386,6 +386,7 @@ class CodeGenerator():
         self.asm_code[self.curr_func].append('\t\t#printF starts here')
         ascode = ''
 
+        print(self.registerToSymbol)
         for i,reg in enumerate(changedRegisters):
         	v = self.registerToSymbol[reg]
 	        if (v != ''):
@@ -465,11 +466,11 @@ class CodeGenerator():
                 Loc_op2 = loc_op2
 
         if op1 == None and op2 == None:
-            ascode = "\t\tcmpl $" + const1 + ",$ " + const2
+            ascode = "\t\tcmpl $" + const1 + ", $" + const2
         elif op1 == None and op2 != None:
-            ascode = "\t\tcmpl $" + const1 + ",% " + loc_op2
+            ascode = "\t\tcmpl $" + const1 + ", %" + loc_op2
         elif op1 != None and op2 == None:
-            ascode = "\t\tcmpl " + Loc_op1 + ",$ " + const2
+            ascode = "\t\tcmpl $" + const2 + ", " + Loc_op1
         else:
             if loc_op1 not in self.Registers and loc_op2 not in self.Registers:
                 loc, msg = self.varAllocate.getReg(self.varAllocate.line2Block(lineno), lineno, True)
@@ -714,6 +715,8 @@ class CodeGenerator():
             for i in range(start-1,end):
                 # i is the index into self.code
 
+                print(self.registerToSymbol)
+                print(self.code[i])
                 lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
                 # print lhs.name
                 ln = int(lineno)

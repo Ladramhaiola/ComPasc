@@ -38,7 +38,8 @@ def divideToFunctions (ac3code):
 def main():
 	file = sys.argv[1]
 	content = reader(file)
-
+        #print (content)
+        
     # Construct the Symbol Table ?
 	SymTab = SymTable()
 	ac3 = ThreeAddrCode(SymTab)

@@ -1,4 +1,4 @@
-main ()
+\main ()
 {
   const char * restrict D.2055;
   int i;

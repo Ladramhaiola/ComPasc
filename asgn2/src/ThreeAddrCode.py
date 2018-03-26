@@ -62,9 +62,9 @@ class ThreeAddrCode:
             temp[1] = operator
 
             if (operator in self.jump_list):
-                temp[5] = lhs
+                temp[5] = op1
             elif (operator == 'LABEL'):
-                temp[2] = lhs
+                temp[2] = op1
                 if (lhs == 'FUNC'):
                     temp[3] = self.symTabOp (op1, 'int', 'func')
                 else:
