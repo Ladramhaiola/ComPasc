@@ -1,0 +1,17 @@
+1, JMP, myfunc, ,
+2, LABEL, FUNC, myfunc, 
+3, +, g0, g, 0
+4, CMP, ,g0, 0
+5, JNE, , D2047
+6, LABEL, , D2046
+7, RETURN, , ,
+8, LABEL, , D2047
+9, +, g1, g, 0
+10, 
+11, 
+12, PRINT, , g1, 
+13, +, g2, g, 0
+14, -, g3, g2, 1
+15, +, g, g3, 0
+16, JMP, myfunc, ,
+17, RETURN, , ,
