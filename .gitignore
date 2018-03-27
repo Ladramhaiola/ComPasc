@@ -5,6 +5,8 @@ __pycache__/
 *.py~
 *.swp
 *.pyc
+*.jpg
+EffortSheet.pdf
 
 # C extensions
 *.so

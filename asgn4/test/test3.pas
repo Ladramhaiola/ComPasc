@@ -15,23 +15,6 @@ type
       procedure draw;
 end;
 
-   Square = object  
-   public
-      length, width: integer; 
-      
-      constructor init(l, w: integer);
-      
-      procedure setlength(l: integer);
-      function getlength(): integer;  
-      
-      procedure setwidth(w: integer);  
-      function getwidth(): integer;  
-      
-      procedure draw;
-end;
-
-type
-   
 var
    r1: Rectangle;
    pr1: ^Rectangle;

@@ -172,6 +172,7 @@ def p_Factor(p):
     | INHERITED Designator
     | INHERITED
     | TypeID LPAREN Expression RPAREN '''
+    print p[1]
     reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
