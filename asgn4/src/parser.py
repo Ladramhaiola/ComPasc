@@ -65,8 +65,6 @@ def p_Statement(p):
     ''' Statement : SimpleStatement SEMICOLON
     | StructStmt '''
     reverse_output.append(p.slice)
-    print "P[0]: ",p[0]
-    print "P[1]: ",p[1]
 
 def p_SimpleStatement(p):
     ''' SimpleStatement : Designator
@@ -169,8 +167,6 @@ def p_Factor(p):
     | INHERITED Designator
     | INHERITED
     | TypeID LPAREN Expression RPAREN '''
-    #print p[1]
-    reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
 def p_Type(p):
@@ -347,7 +343,15 @@ def p_ConstExpr(p):
 def p_IdentList(p):
     ''' IdentList : ID TypeArgs CommaIDTypeArgs
     | ID CommaIDTypeArgs'''
-    print("Yoooo",p[2])
+
+    if len(p) == 3:
+        if p[2] == None:
+            p[0] = []
+        else:
+            p[0] = p[2]
+
+        p[0].append(p[1])
+
     reverse_output.append(p.slice)
 
 def p_CommaIDTypeArgs(p):
@@ -360,7 +364,7 @@ def p_CommaIDTypeArgs(p):
             p[0] = []
         else:
             p[0] = p[3]
-        p[0] = p[0].append(p[2])
+        p[0].append(p[2])
     reverse_output.append(p.slice)
 
 #ParamIdentList and ParamIdent are added for handling Formal Parameters for function or procedure declaration
@@ -387,6 +391,9 @@ def p_ColonVarDecl(p):
 
 def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
+    p[0] = {}
+    for elem in p[1]:
+        tac.emit('+',elem,'0','0')
     reverse_output.append(p.slice)
 
 def p_ProcedureDeclSection(p):
@@ -604,9 +611,24 @@ def printpretty(filename):
 def main():
     parser = yacc.yacc()
 
+<<<<<<< HEAD
     # Do the things that we want to here
     inputfile = open(sys.argv[1],'r').read()
     yacc.parse(inputfile, debug = 1)
+=======
+parser = yacc.yacc()
+
+symTab = SymTable()
+tac = ThreeAddrCode(symTab)
+
+# Do the things that we want to here
+inputfile = open(sys.argv[1],'r').read()
+yacc.parse(inputfile, debug = 0)
+
+tac.display_code()
+
+# filename = sys.argv[1].split("/")[1]
+>>>>>>> 61f7736dd01c92dabf637ad0f9f43d444462faa1
 
     filename = sys.argv[1].split("/")[1]
     printpretty(filename.split(".")[0])
