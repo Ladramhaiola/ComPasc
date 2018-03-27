@@ -22,25 +22,19 @@ op = ['+','-','*','/','MOD','OR','AND','SHL','SHR']
 ## Comparisons
 
 ```
-Linenumber, cmp, *EMPTY*, VAR_1, VAR_2
+Linenumber, CMP, *EMPTY*, VAR_1, VAR_2
 ```
 This directly maps with the cmp instruction present in x86.
 
 
-## Unconditional Jump
-
-``` 
-Linenumber, jmp, *EMPTY* , TARGET, *EMPTY*
-```
-
-## Conditional Jumps
+## Jumps
 
 ```
 Linenumber, jcondition, *EMPTY*, TARGET, *EMPTY*
 ```
 where
 ```
-jcondition = [je,jne,jz,jg,jl,jge,jle]
+jcondition = [JMP,JE,JNE,JZ,JG,JL,JGE,JLE]
 ```
 
 
@@ -48,18 +42,19 @@ jcondition = [je,jne,jz,jg,jl,jge,jle]
 - Load from mem
 for cases like: x = a[i]
 ```
-Linenumber,"loadref", LHS, Array_start, Index_to_access
+Linenumber,"LOADREF", LHS, Array_start, Index_to_access
 ```
 
 - Store to mem
 for cases like a[i] = x
 ```
-Linenumber,"storeref", Array_start, Index_to_access, To_store_from
+Linenumber,"STOREREF", Array_start, Index_to_access, To_store_from
 ```
 
 ## Labels
+If Function Label, put FUNC in third argument
 ```
-Linenumber, "label", *EMPTY*, Label_Name, *EMPTY*
+Linenumber, "LABEL", *EMPTY*/FUNC, Label_Name, *EMPTY*
 ```
 
 ## Input and Output
@@ -69,15 +64,16 @@ Linenumber, "SCAN", *lhs*, *EMPTY*, *EMPTY*
 ```
 - Print
 ```
-Linenumber, "print", *EMPTY*, MESSAGE, *EMPTY* 
+Linenumber, "PRINT", *EMPTY*, MESSAGE, *EMPTY* 
 ```
 
 ## Functions
 We'll follow cdecl standard function param pushing
 parse from right to left, so that param 1 is top of the stack
+In the return label, if the return is of function Func_Name, enter Func_Name as last argument
 ```
-Linenumber, "Param", *EMPTY* , ARG2, *EMPTY*
-Linenumber, "call", *EMPTY*, Function_name, *EMPTY*
-Linenumber, "return", *EMPTY*, *EMPTY*, *EMPTY*
-Linenumber, "returnval", *EMPTY*, VALUE, **EMPTY**
+Linenumber, "PARAM", *EMPTY* , ARG2, *EMPTY*
+Linenumber, "CALL", *EMPTY*, Function_name, *EMPTY*
+Linenumber, "RETURN", *EMPTY*, *EMPTY*, *EMPTY*/Func_Name
+Linenumber, "RETURNVAL", *EMPTY*, VALUE, **EMPTY**
 ```
