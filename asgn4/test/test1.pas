@@ -3,6 +3,8 @@ VAR
 x, y : INTEGER; 
 height, width : INTEGER; 
 c: CHAR;
+CONSTANT
+x = 5;
 //procedure Draw;
 BEGIN
    MyMessage := 'Hello world!';

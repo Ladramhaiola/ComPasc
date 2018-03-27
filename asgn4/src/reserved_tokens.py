@@ -10,7 +10,7 @@ reserved = {
     'begin':'BEGIN',
     'break':'BREAK',
     'case':'CASE',
-    'const':'CONSTANT',
+    'constant':'CONSTANT',
     'constructor':'CONSTRUCTOR',
     'continue':'CONTINUE',
     'div':'DIV',

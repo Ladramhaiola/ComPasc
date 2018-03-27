@@ -310,6 +310,10 @@ def p_ColonConstDecl(p):
 def p_ConstDecl(p):
     ''' ConstDecl : ID EQUALS ConstExpr
     | ID COLON TypeID EQUALS TypedConst '''
+
+    if len(p) == 4:
+        tac.emit('+',p[1],p[3],'0')
+        
     reverse_output.append(p.slice)
 
 def p_TypedConst(p):
@@ -344,6 +348,7 @@ def p_CommaTypedConst(p):
 
 def p_ConstExpr(p):
     ''' ConstExpr : NUMBER'''
+    p[0] = p[1]
     reverse_output.append(p.slice)
 
 #the identList for procedure definition and var declaration is not the same
@@ -403,8 +408,7 @@ def p_VarDecl(p):
         # tac.emit('+',elem,'0','0')
 
         symTab.symTabOp(elem,p[3].lower(),'VAR')
-        
-    symTab.PrintSymTable()
+    
     reverse_output.append(p.slice)
 
 def p_ProcedureDeclSection(p):
