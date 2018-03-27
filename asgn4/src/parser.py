@@ -39,9 +39,6 @@ def p_Program(p):
 def p_Block(p):
     ''' Block : DeclSection CompoundStmt'''
     reverse_output.append(p.slice)
-    print "P[0]: ",p[0]
-    print "P[1]: ",p[1]
-    print "P[2]: ",p[2]
 
 def p_DeclSection(p):
     ''' DeclSection : DeclSection WhichSection
@@ -172,7 +169,7 @@ def p_Factor(p):
     | INHERITED Designator
     | INHERITED
     | TypeID LPAREN Expression RPAREN '''
-    print p[1]
+    #print p[1]
     reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
@@ -350,14 +347,20 @@ def p_ConstExpr(p):
 def p_IdentList(p):
     ''' IdentList : ID TypeArgs CommaIDTypeArgs
     | ID CommaIDTypeArgs'''
+    print("Yoooo",p[2])
     reverse_output.append(p.slice)
 
 def p_CommaIDTypeArgs(p):
     ''' CommaIDTypeArgs : COMMA ID TypeArgs CommaIDTypeArgs
     | COMMA ID CommaIDTypeArgs                 
     | '''
+    
     if len(p) == 4:
-        print("###",p[2])
+        if p[3] == None:
+            p[0] = []
+        else:
+            p[0] = p[3]
+        p[0] = p[0].append(p[2])
     reverse_output.append(p.slice)
 
 #ParamIdentList and ParamIdent are added for handling Formal Parameters for function or procedure declaration
@@ -603,7 +606,7 @@ def main():
 
     # Do the things that we want to here
     inputfile = open(sys.argv[1],'r').read()
-    yacc.parse(inputfile, debug = 0)
+    yacc.parse(inputfile, debug = 1)
 
     filename = sys.argv[1].split("/")[1]
     printpretty(filename.split(".")[0])
