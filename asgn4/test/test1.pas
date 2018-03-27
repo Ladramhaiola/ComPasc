@@ -7,7 +7,8 @@ CONSTANT
 x = 5;
 //procedure Draw;
 BEGIN
-   MyMessage := 'Hello world!';
-   x:=0.14;
+   x:=14;
+   y:=21;
+   c:=y-x+y;
    WRITELN(MyMessage);
 END;

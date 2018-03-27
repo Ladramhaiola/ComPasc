@@ -103,7 +103,7 @@ class ThreeAddrCode:
 
         for i,code in enumerate(self.code):
 
-            # print (code)
+            print (code)
             op, lhs, op1, op2 = code
             print (str(i) + ", " + op + ", " + lhs + ", " + op1 + ", " + op2)
         print ("=========================================")

@@ -20,6 +20,7 @@ class SymTable (object):
             }
         }
         self.currScope = 'Main'
+        self.tNo = -1
         # add itself, at least! Index 0 has highest, 1 is inside 0, 2 is inside 1 ...
         # Current scope is always at index [-1]
 

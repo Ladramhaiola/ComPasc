@@ -76,6 +76,10 @@ def p_SimpleStatement(p):
     | LPAREN Expression RPAREN
     | BREAK
     | CONTINUE'''
+
+    if p[2] == ':=':
+        tac.emit('+',p[1]['place'],p[3]['place'],'0')
+        
     reverse_output.append(p.slice)
 
 def p_StructStmt(p):
@@ -132,6 +136,15 @@ def p_WhileStmt(p):
 def p_Expression(p):
     ''' Expression : SimpleExpression RelSimpleStar 
     | LambFunc'''
+
+    if len(p) == 3:
+        p[0] = {}
+        
+        if type(p[1]) is dict:
+            p[0]['place'] = p[1]['place']
+        else:
+            p[0]['place'] = p[1]
+            
     reverse_output.append(p.slice)
 
 def p_RelSimpleStar(p):
@@ -140,23 +153,78 @@ def p_RelSimpleStar(p):
     reverse_output.append(p.slice)
 
 def p_SimpleExpression(p):
-    ''' SimpleExpression : PLUS Term AddTermStar
-    | MINUS Term AddTermStar 
-    | Term AddTermStar '''
+    ''' SimpleExpression : Term AddTermStar
+    | MINUS Term AddTermStar '''
+
+    if len(p) == 3 and p[2] != {}:
+        print("---------------------",p[1],'---------------',p[2],'----------------------')
+        p[0]={}
+        lhs = symTab.getTemp()
+        tac.emit(p[2]['previousOp'],lhs,p[1]['place'],p[2]['place'])
+        p[0]['place'] = lhs
+
+    elif len(p) == 4 and p[3] != {}:
+        p[0]={}
+        lhs = symTab.getTemp()
+        tac.emit(p[3]['previousOp'],lhs,p[2]['place'],p[3]['place'])
+        p[0]['place'] = lhs
+        tac.emit('MINUS',lhs,'0',lhs)
+
+    else:
+        p[0] = p[1]
+        
     reverse_output.append(p.slice)
 
 def p_AddTermStar(p):
     ''' AddTermStar : AddOp Term AddTermStar
     | '''
+
+    if len(p) == 1:
+        p[0] = {}
+
+    else:
+        p[0] = {}
+        p[0]['place'] = p[2]['place']
+        p[0]['previousOp'] = p[1]
+
+        if p[3] != {}:
+            lhs = symTab.getTemp()
+            tac.emit(p[3]['previousOp'],lhs,p[2]['place'],p[3]['place'])
+            p[0]['place'] = lhs
+        
     reverse_output.append(p.slice)
 
 def p_Term(p):
     ''' Term : Factor MulFacStar '''
+    
+    if p[2] != {}:
+        p[0] = {}
+        lhs = symTab.getTemp()
+        tac.emit(p[2]['previousOp'],lhs,p[1]['place'],p[2]['place'])
+        p[0]['place'] = lhs
+
+    else:
+        p[0] = p[1]['place']
+        
     reverse_output.append(p.slice)
 
 def p_MulFacStar(p):
     ''' MulFacStar : MulOp Factor MulFacStar
     | '''
+
+    if len(p) == 1:
+        p[0] = {}
+
+    else:
+        p[0]['place'] = p[2]['place']
+        p[0]['previousOp'] = p[1]
+        print(p[1])
+
+        if p[3] != {}:
+            lhs = symTab.getTemp()
+            tac.emit(p[3]['previousOp'],lhs,p[2]['place'],p[3]['place'])
+            p[0]['place'] = lhs
+            
     reverse_output.append(p.slice)
 
 def p_Factor(p):
@@ -170,6 +238,15 @@ def p_Factor(p):
     | INHERITED
     | TypeID LPAREN Expression RPAREN '''
 
+    p[0] = {}
+
+    if type(p[1]) is dict:
+        p[0]['place'] = p[1]['place']
+    else:
+        p[0]['place'] = p[1]
+
+    reverse_output.append(p.slice)
+
 # Added ID as a form of type for handling objects and classes
 def p_Type(p):
     ''' Type : TypeID
@@ -178,6 +255,7 @@ def p_Type(p):
     | ProcedureType 
     | Array 
     | ID'''
+
     p[0] = p[1]
     reverse_output.append(p.slice)
 
@@ -259,6 +337,7 @@ def p_AddOp(p):
     | MINUS
     | OR
     | XOR '''
+    p[0] = p[1]
     reverse_output.append(p.slice)
 
 def p_MulOp(p):
@@ -270,6 +349,8 @@ def p_MulOp(p):
     | SHL
     | SHR 
     | DOUBLESTAR '''
+
+    p[0] = p[1]
     reverse_output.append(p.slice)
 
 def p_CommaExpression(p):
@@ -283,11 +364,20 @@ def p_ExprList(p):
 
 def p_Designator(p):
     ''' Designator : ID DesSubEleStar'''
+
+    if p[2] == {}:
+        p[0] = {}
+        p[0]['place'] = p[1]
+
     reverse_output.append(p.slice)
 
 def p_DesSubEleStar(p):
     ''' DesSubEleStar : DesSubEleStar DesignatorSubElem 
     | '''
+    
+    if len(p) == 1:
+        p[0] = {}
+
     reverse_output.append(p.slice)
 
 def p_DesignatorSubElem(p):
@@ -630,6 +720,6 @@ tac = ThreeAddrCode()
 
 # Do the things that we want to here
 inputfile = open(sys.argv[1],'r').read()
-yacc.parse(inputfile, debug = 0)
+yacc.parse(inputfile, debug = 1)
 
 tac.display_code()
