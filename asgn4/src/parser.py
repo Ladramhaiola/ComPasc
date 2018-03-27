@@ -3,6 +3,8 @@ import sys
 import ply.lex as lex
 from tokens import *
 from lexer import *
+from SymTable import SymTable
+from ThreeAddrCode import ThreeAddrCode
 
 ### ------------ ISSUES ----------- ###
 
@@ -39,9 +41,9 @@ def p_Program(p):
 def p_Block(p):
     ''' Block : DeclSection CompoundStmt'''
     reverse_output.append(p.slice)
-    print "P[0]: ",p[0]
-    print "P[1]: ",p[1]
-    print "P[2]: ",p[2]
+    # print "P[0]: ",p[0]
+    # print "P[1]: ",p[1]
+    # print "P[2]: ",p[2]
 
 def p_DeclSection(p):
     ''' DeclSection : DeclSection WhichSection
@@ -68,8 +70,8 @@ def p_Statement(p):
     ''' Statement : SimpleStatement SEMICOLON
     | StructStmt '''
     reverse_output.append(p.slice)
-    print "P[0]: ",p[0]
-    print "P[1]: ",p[1]
+    # print "P[0]: ",p[0]
+    # print "P[1]: ",p[1]
 
 def p_SimpleStatement(p):
     ''' SimpleStatement : Designator
@@ -596,15 +598,20 @@ def printpretty(filename):
         f.write("</u>" + post + "\n")
     f.write("\t</body> \n </html>") 
 
-def main():
-    parser = yacc.yacc()
 
-    # Do the things that we want to here
-    inputfile = open(sys.argv[1],'r').read()
-    yacc.parse(inputfile, debug = 0)
+parser = yacc.yacc()
 
-    filename = sys.argv[1].split("/")[1]
-    printpretty(filename.split(".")[0])
+symTab = SymTable()
+tac = ThreeAddrCode(symTab)
 
-if __name__ == '__main__':
-    main()
+# Do the things that we want to here
+inputfile = open(sys.argv[1],'r').read()
+yacc.parse(inputfile, debug = 1)
+
+tac.display_code()
+
+# filename = sys.argv[1].split("/")[1]
+
+# Custom function for printing, required in asgn3
+# printpretty(filename.split(".")[0])
+

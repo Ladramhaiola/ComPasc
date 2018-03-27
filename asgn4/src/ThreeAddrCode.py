@@ -110,43 +110,28 @@ class ThreeAddrCode:
             
             self.code.append(temp) # Storing it to the global code store
 
+    def emit(self,op,lhs,op1,op2):
+        '''
+            Writes the proper 3AC code: removes strings from symbol table entries
+        '''
+
 
     def display_code(self):
         '''
             For pretty printing the 3AC code stored here
-            WARNING: Still not complete yet. self.code won't work. has objects refering to symbol table
+            WARNING: Still not complete yet. self.code won't work. Has objects refering to symbol table
+
+            The point of this to finally emit all the code generated, in the way desired.
         '''
 
         print ("=========================================")
         print ('      Displaying three-address-code      ')
         print ("=========================================")
 
-        for code in self.code:
-            # print (code)
-            lineno, op, op3, op1, op2 = code
+        for i,code in enumerate(self.code):
 
-            if op == '=':
-                print (lineno, '\t', op3, '<-', op1)
-            if op == '+':
-                print (lineno, '\t', op3, '<-', op1, op, op2)
-            if op == '-':
-                print (lineno, '\t', op3, '<-', op1, op, op2)
-            if op == '*':
-                print (lineno, '\t', op3, '<-', op1, op, op2)
-            if op == '/':
-                print (lineno, '\t', op3, '<-', op1, op, op2)
-            if op == '**':
-                print (lineno, '\t', op3, '<-', op1, op, op2)
-            if op == 'ret':
-                print (lineno, '\t', op)
-            if op == 'goto':
-                # op3 holds the line number to go to
-                print (lineno, '\t', op, op3)
-            if op == 'if':
-                # op3 is the comparison condition
-                print (lineno, '\t', op, op1, op3, op2)
-            if op == 'label':
-                # op3 is function name
-                print (lineno, '\t', op, op3)
+            # print (code)
+            op, lhs, op1, op2 = code
+            print (i + ", " + op + ", " + lhs + ", " + op1 + ", " + op2)
         print ("=========================================")
 
