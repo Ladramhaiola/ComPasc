@@ -7,42 +7,15 @@ class ThreeAddrCode:
         Class holding the three address code, links with symbol table
     '''
 
-    def __init__(self, symTable):
+    def __init__(self):
         '''
             args:
                 symTable: symbol table constructed after parsing
         '''
         self.code = []
-        self.symTable = symTable
         self.jump_list = ["JMP","JL","JG","JGE","JLE","JNE","JE","JZ"]
         self.binary_list = ["+","-","*","/","MOD","OR","AND","SHL","SHR","CMP"]
         self.operator_list = ["UNARY","=","LOADREF","STOREREF","CALL","LABEL","PARAM","RETURN","RETRUNVAL","PRINT","SCAN"]
-
-    def RepresentsNum(self,s):
-        '''
-        Checks if the given entry is a number entry.
-        '''
-        try: 
-            float(s)
-            return True
-        except ValueError:
-            return False
-
-    def symTabOp (self, x, typ, varfunc = 'VAR'):
-        '''
-        args:
-            x: If it is a constant, then return nothing as the object to be appended to 3Ac line.
-               Else, define it in the table, and return the symbolTable entry
-
-        '''
-        xEntry = None
-        if (self.RepresentsNum(x) == True):
-            return None
-        if (x != ''):
-            xEntry = self.symTable.Lookup(x)
-        if (xEntry == None and x != ''):
-            xEntry = self.symTable.Define(x, typ, varfunc)
-        return xEntry
 
     def addTo3AC (self, listCode):
         '''

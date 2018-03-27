@@ -3,6 +3,8 @@ import sys
 import ply.lex as lex
 from tokens import *
 from lexer import *
+from SymTable import SymTable
+from ThreeAddrCode import ThreeAddrCode
 
 ### ------------ ISSUES ----------- ###
 
@@ -400,9 +402,9 @@ def p_VarDecl(p):
 
         # tac.emit('+',elem,'0','0')
 
-        tac.symTabOp(elem,p[3].lower(),'VAR')
+        symTab.symTabOp(elem,p[3].lower(),'VAR')
         
-    tac.symTable.PrintSymTable()
+    symTab.PrintSymTable()
     reverse_output.append(p.slice)
 
 def p_ProcedureDeclSection(p):
@@ -620,7 +622,7 @@ def printpretty(filename):
 parser = yacc.yacc()
 
 symTab = SymTable()
-tac = ThreeAddrCode(symTab)
+tac = ThreeAddrCode()
 
 # Do the things that we want to here
 inputfile = open(sys.argv[1],'r').read()

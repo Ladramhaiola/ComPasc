@@ -40,6 +40,34 @@ class SymTable (object):
         }
         self.table[scopeName] = temp_scope
 
+
+    def RepresentsNum(self,s):
+        '''
+        Checks if the given entry is a number entry.
+        '''
+        try: 
+            float(s)
+            return True
+        except ValueError:
+            return False
+
+    def symTabOp (self, x, typ, varfunc = 'VAR'):
+        '''
+        args:
+            x: If it is a constant, then return nothing as the object to be appended to 3Ac line.
+               Else, define it in the table, and return the symbolTable entry
+
+        '''
+        xEntry = None
+        if (self.RepresentsNum(x) == True):
+            return None
+        if (x != ''):
+            xEntry = self.Lookup(x)
+        if (xEntry == None and x != ''):
+            xEntry = self.Define(x, typ, varfunc)
+        return xEntry
+
+
     def Define(self, v, typ, varfunc):
         
         curr_scope = self.table[self.currScope]
@@ -47,13 +75,13 @@ class SymTable (object):
 
         if self.getScope(v) != self.currScope:
 
-            if (varfunc == "var"):
+            if (varfunc == "VAR"):
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, "var")
+                    e = SymTableEntry (v, typ, "VAR")
                     curr_scope['Ident'][v] = e
             else:
                 if (v not in curr_scope['Func']):
-                    e = SymTableEntry (v, typ, "func")
+                    e = SymTableEntry (v, typ, "FUNC")
                     curr_scope['Func'][v] = e
 
         else:
