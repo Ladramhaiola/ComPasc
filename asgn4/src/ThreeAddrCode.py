@@ -114,7 +114,7 @@ class ThreeAddrCode:
         '''
             Writes the proper 3AC code: removes strings from symbol table entries
         '''
-
+        
 
     def display_code(self):
         '''
