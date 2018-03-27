@@ -28,7 +28,7 @@ class ThreeAddrCode:
         except ValueError:
             return False
 
-    def symTabOp (self, x, typ = 'int', varfunc = 'var'):
+    def symTabOp (self, x, typ, varfunc = 'VAR'):
         '''
         args:
             x: If it is a constant, then return nothing as the object to be appended to 3Ac line.

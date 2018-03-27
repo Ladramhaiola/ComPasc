@@ -179,41 +179,45 @@ def p_Factor(p):
 # Added ID as a form of type for handling objects and classes
 def p_Type(p):
     ''' Type : TypeID
-    | SimpleType
     | PointerType
     | StringType
     | ProcedureType 
     | Array 
     | ID'''
-    reverse_output.append(p.slice)
-
-def p_SimpleType(p):
-    ''' SimpleType : DOUBLE '''
+    p[0] = p[1]
     reverse_output.append(p.slice)
 
 def p_PointerType(p):
     ''' PointerType : POWER ID '''
+
+    p[0] = 'POINTER'
     reverse_output.append(p.slice)
 
 def p_StringType(p):
     ''' StringType : STRING '''
+
+    p[0] = p[1]
     reverse_output.append(p.slice)
 
 def p_ProcedureType(p):
     ''' ProcedureType : ProcedureHeading
     | FuncHeading
     '''
+
     reverse_output.append(p.slice)
 
 def p_TypeArgs(p):
     ''' TypeArgs : LPAREN TypeID RPAREN
     | LPAREN STRING RPAREN '''
+
     reverse_output.append(p.slice)
 
 def p_TypeID(p):
     ''' TypeID : INTEGER
-    | REAL
+    | DOUBLE
     | CHAR '''
+
+    p[0] = p[1]
     reverse_output.append(p.slice)
 
 # def p_OrdinalType(p):
@@ -225,6 +229,7 @@ def p_TypeID(p):
     # reverse_output.append(p.slice)
 
 # Added without the keyword TYPE for classes and objects
+
 def p_TypeSection(p):
     ''' TypeSection : TYPE ColonTypeDecl '''
     reverse_output.append(p.slice)
@@ -399,9 +404,13 @@ def p_ColonVarDecl(p):
 
 def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
-    p[0] = {}
     for elem in p[1]:
-        tac.emit('+',elem,'0','0')
+
+        # tac.emit('+',elem,'0','0')
+
+        tac.symTabOp(elem,p[3].lower(),'VAR')
+        
+    tac.symTable.PrintSymTable()
     reverse_output.append(p.slice)
 
 def p_ProcedureDeclSection(p):
