@@ -44,7 +44,6 @@ reserved = {
     #adding absent tokens
     'integer':'INTEGER',
     'string':'STRING',
-    'real':'REAL',
     'char':'CHAR',
     'double':'DOUBLE',
     'lambda':'LAMBDA',
