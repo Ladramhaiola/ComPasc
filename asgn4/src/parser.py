@@ -174,7 +174,6 @@ def p_Factor(p):
     | INHERITED Designator
     | INHERITED
     | TypeID LPAREN Expression RPAREN '''
-    print p[1]
     reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
@@ -352,6 +351,15 @@ def p_ConstExpr(p):
 def p_IdentList(p):
     ''' IdentList : ID TypeArgs CommaIDTypeArgs
     | ID CommaIDTypeArgs'''
+
+    if len(p) == 3:
+        if p[2] == None:
+            p[0] = []
+        else:
+            p[0] = p[2]
+
+        p[0].append(p[1])
+    # print "Identlist: ",p[0]
     reverse_output.append(p.slice)
 
 def p_CommaIDTypeArgs(p):
@@ -364,7 +372,7 @@ def p_CommaIDTypeArgs(p):
             p[0] = []
         else:
             p[0] = p[3]
-        p[0] = p[0].append(p[2])
+        p[0].append(p[2])
     reverse_output.append(p.slice)
 
 #ParamIdentList and ParamIdent are added for handling Formal Parameters for function or procedure declaration
@@ -391,6 +399,9 @@ def p_ColonVarDecl(p):
 
 def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
+    p[0] = {}
+    for elem in p[1]:
+        tac.emit('+',elem,'0','0')
     reverse_output.append(p.slice)
 
 def p_ProcedureDeclSection(p):
@@ -613,7 +624,7 @@ tac = ThreeAddrCode(symTab)
 
 # Do the things that we want to here
 inputfile = open(sys.argv[1],'r').read()
-yacc.parse(inputfile, debug = 1)
+yacc.parse(inputfile, debug = 0)
 
 tac.display_code()
 

@@ -114,6 +114,7 @@ class ThreeAddrCode:
         '''
             Writes the proper 3AC code: removes strings from symbol table entries
         '''
+        self.code.append([op,lhs,op1,op2])
 
 
     def display_code(self):
@@ -132,6 +133,6 @@ class ThreeAddrCode:
 
             # print (code)
             op, lhs, op1, op2 = code
-            print (i + ", " + op + ", " + lhs + ", " + op1 + ", " + op2)
+            print (str(i) + ", " + op + ", " + lhs + ", " + op1 + ", " + op2)
         print ("=========================================")
 
