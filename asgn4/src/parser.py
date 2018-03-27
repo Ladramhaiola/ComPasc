@@ -358,6 +358,13 @@ def p_CommaIDTypeArgs(p):
     ''' CommaIDTypeArgs : COMMA ID TypeArgs CommaIDTypeArgs
     | COMMA ID CommaIDTypeArgs                 
     | '''
+
+    if len(p) == 4:
+        if p[3] == None:
+            p[0] = []
+        else:
+            p[0] = p[3]
+        p[0] = p[0].append(p[2])
     reverse_output.append(p.slice)
 
 #ParamIdentList and ParamIdent are added for handling Formal Parameters for function or procedure declaration
