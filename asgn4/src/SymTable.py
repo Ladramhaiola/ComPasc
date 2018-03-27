@@ -92,7 +92,7 @@ class SymTable (object):
     def getScope(self, identifier):
         scope = self.currScope
         while scope != None:
-            if identifier in self.table[scope]['Ident']:
+            if identifier in self.table[scope]['Ident'].keys():
                 return scope
             else:
                 scope = self.table[scope]['ParentScope']
@@ -103,9 +103,9 @@ class SymTable (object):
         scope = self.getScope(identifier)
 
         if scope == None:
-            return False
+            return None
         else:
-            return True
+            return self.table[scope]['Ident'][identifier]
 
     def endScope(self, scopeName):
         self.currScope = self.table[self.currScope]['ParentScope']
