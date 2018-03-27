@@ -137,6 +137,7 @@ def p_Expression(p):
     ''' Expression : SimpleExpression RelSimpleStar 
     | LambFunc'''
 
+    # Expression has dictionary attribute
     if len(p) == 3:
         p[0] = {}
         
@@ -157,13 +158,17 @@ def p_SimpleExpression(p):
     | MINUS Term AddTermStar '''
 
     if len(p) == 3 and p[2] != {}:
-        print("---------------------",p[1],'---------------',p[2],'----------------------')
+        # print("---------------------",p[1],'---------------',p[2],'----------------------')
+
+        # Dictionary
         p[0]={}
         lhs = symTab.getTemp()
         tac.emit(p[2]['previousOp'],lhs,p[1]['place'],p[2]['place'])
         p[0]['place'] = lhs
 
     elif len(p) == 4 and p[3] != {}:
+
+        # Dictionary
         p[0]={}
         lhs = symTab.getTemp()
         tac.emit(p[3]['previousOp'],lhs,p[2]['place'],p[3]['place'])
@@ -171,6 +176,7 @@ def p_SimpleExpression(p):
         tac.emit('MINUS',lhs,'0',lhs)
 
     else:
+        # Shit here?
         p[0] = p[1]
         
     reverse_output.append(p.slice)
@@ -179,6 +185,7 @@ def p_AddTermStar(p):
     ''' AddTermStar : AddOp Term AddTermStar
     | '''
 
+    # p[0] is dictionary here
     if len(p) == 1:
         p[0] = {}
 
@@ -204,7 +211,9 @@ def p_Term(p):
         p[0]['place'] = lhs
 
     else:
-        p[0] = p[1]['place']
+        # String here
+        # p[0] = p[1]['place']
+        p[0] = p[1]
         
     reverse_output.append(p.slice)
 
@@ -212,6 +221,7 @@ def p_MulFacStar(p):
     ''' MulFacStar : MulOp Factor MulFacStar
     | '''
 
+    # Dictionary
     if len(p) == 1:
         p[0] = {}
 
@@ -720,6 +730,6 @@ tac = ThreeAddrCode()
 
 # Do the things that we want to here
 inputfile = open(sys.argv[1],'r').read()
-yacc.parse(inputfile, debug = 1)
+yacc.parse(inputfile, debug = 0)
 
 tac.display_code()
