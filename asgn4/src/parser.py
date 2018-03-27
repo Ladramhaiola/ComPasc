@@ -617,14 +617,6 @@ def printpretty(filename):
         f.write("</u>" + post + "\n")
     f.write("\t</body> \n </html>") 
 
-def main():
-    parser = yacc.yacc()
-
-<<<<<<< HEAD
-    # Do the things that we want to here
-    inputfile = open(sys.argv[1],'r').read()
-    yacc.parse(inputfile, debug = 1)
-=======
 parser = yacc.yacc()
 
 symTab = SymTable()
@@ -635,12 +627,3 @@ inputfile = open(sys.argv[1],'r').read()
 yacc.parse(inputfile, debug = 0)
 
 tac.display_code()
-
-# filename = sys.argv[1].split("/")[1]
->>>>>>> 61f7736dd01c92dabf637ad0f9f43d444462faa1
-
-    filename = sys.argv[1].split("/")[1]
-    printpretty(filename.split(".")[0])
-
-if __name__ == '__main__':
-    main()
