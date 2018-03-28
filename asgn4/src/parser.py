@@ -17,6 +17,7 @@ from ThreeAddrCode import ThreeAddrCode
 reverse_output = []
 
 precedence = (
+    ('left','PLUS','MINUS'),
     ('nonassoc','ELSETOK'),
     ('nonassoc','ELSE'),
     ('nonassoc','IDTOK'),
@@ -157,27 +158,32 @@ def p_SimpleExpression(p):
     ''' SimpleExpression : Term AddTermStar
     | MINUS Term AddTermStar '''
 
-    if len(p) == 3 and p[2] != {}:
-        # print("---------------------",p[1],'---------------',p[2],'----------------------')
-
-        # Dictionary
+    if len(p) == 3:
+        starIndex = 2
+        termIndex = 1
+    else:
+        starIndex = 3
+        termIndex = 2
+    
+    if p[starIndex] != {}:
         p[0]={}
-        lhs = symTab.getTemp()
-        tac.emit(p[2]['previousOp'],lhs,p[1]['place'],p[2]['place'])
+        p[0]['ExprList'] = p[starIndex]['ExprList']
+        p[0]['ExprList'].append([p[starIndex]['previousOp'],p[termIndex]['place'],p[starIndex]['place']])
+        #reversing the list for left associativity 
+        p[0]['ExprList'] = p[0]['ExprList'][::-1]
+        #expr is of the form [op,op1,op2]
+        for i,expr in enumerate(p[0]['ExprList']):
+            lhs = symTab.getTemp()
+            tac.emit(expr[0],lhs,expr[1],expr[2])
+            if i != len(p[0]['ExprList'])-1:
+                p[0]['ExprList'][i+1][1] = lhs
         p[0]['place'] = lhs
-
-    elif len(p) == 4 and p[3] != {}:
-
-        # Dictionary
-        p[0]={}
-        lhs = symTab.getTemp()
-        tac.emit(p[3]['previousOp'],lhs,p[2]['place'],p[3]['place'])
-        p[0]['place'] = lhs
-        tac.emit('MINUS',lhs,'0',lhs)
 
     else:
-        # Shit here?
         p[0] = p[1]
+
+    if len(p) == 4:
+        tac.emit('-',p[0]['place'],'0',p[0]['place'])
         
     reverse_output.append(p.slice)
 
@@ -193,11 +199,11 @@ def p_AddTermStar(p):
         p[0] = {}
         p[0]['place'] = p[2]['place']
         p[0]['previousOp'] = p[1]
+        p[0]['ExprList'] = []
 
-        if p[3] != {}:
-            lhs = symTab.getTemp()
-            tac.emit(p[3]['previousOp'],lhs,p[2]['place'],p[3]['place'])
-            p[0]['place'] = lhs
+        if p[3]!={}:
+            p[0]['ExprList'] = p[3]['ExprList']
+            p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
         
     reverse_output.append(p.slice)
 
@@ -730,6 +736,6 @@ tac = ThreeAddrCode()
 
 # Do the things that we want to here
 inputfile = open(sys.argv[1],'r').read()
-yacc.parse(inputfile, debug = 0)
+yacc.parse(inputfile, debug = 1)
 
 tac.display_code()
