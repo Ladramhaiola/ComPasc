@@ -105,6 +105,6 @@ class ThreeAddrCode:
 
             # print (code)
             op, lhs, op1, op2 = code
-            print (str(i) + ", " + op + ", " + lhs + ", " + op1 + ", " + op2)
+            print (str(i+1) + ", " + op + ", " + lhs + ", " + op1 + ", " + op2)
         print ("=========================================")
 
