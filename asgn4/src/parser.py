@@ -15,6 +15,7 @@ from ThreeAddrCode import ThreeAddrCode
 
 ### ------------------------------- ###
 reverse_output = []
+gstack = []
 
 precedence = (
     ('nonassoc','ELSETOK'),
@@ -58,7 +59,7 @@ def handleTerm(p, termIndex=1, starIndex=2):
     #expr is of the form [op,op1,op2]
     for i,expr in enumerate(p[0]['ExprList']):
         lhs = symTab.getTemp()
-        print expr
+        # print expr
         tac.emit(expr[0],lhs,expr[1],expr[2])
         if i != len(p[0]['ExprList'])-1:
             p[0]['ExprList'][i+1][1] = lhs
@@ -168,23 +169,67 @@ def p_IfMark4(p):
 ## ------------ IF DEFS END ------ ###
 
 def p_CaseStmt(p):
-    ''' CaseStmt : CASE Expression OF CaseSelector ColonCaseSelector END
-    | CASE Expression OF CaseSelector ColonCaseSelector ELSE CompoundStmt SEMICOLON END '''
+    ''' CaseStmt : CASE CaseMark1 Expression OF CaseSelector ColonCaseSelector CaseTest END SEMICOLON
+    | CASE CaseMark1 Expression OF CaseSelector ColonCaseSelector ELSE CompoundStmt END SEMICOLON'''
     reverse_output.append(p.slice)
 
+def p_CaseMark1(p):
+    ''' CaseMark1 : '''
+    temp = symTab.getLabel()
+    tac.emit('JMP','',temp,'')
+    p[0] = temp
+
+def p_CaseTest(p):
+    ''' CaseTest : '''
+    
+    tac.emit('LABEL','',p[-5],'')
+    
+    # For first CaseSelector
+    tac.emit('CMP','',p[-4]['place'],p[-2]['value'])
+    tac.emit('JE','',p[-2]['label'],'')
+
+    
+    for key in p[-1]['map'].keys():
+        tac.emit('CMP','',p[-4]['place'],key)
+        tac.emit('JE','',p[-1]['map'][key],'')
+
+    tac.emit('LABEL','',p[-1]['next'],'')
+
+    # gstack.pop()
+
+
 def p_ColonCaseSelector(p):
-    ''' ColonCaseSelector : ColonCaseSelector SEMICOLON CaseSelector 
+    ''' ColonCaseSelector : ColonCaseSelector CaseSelector
     | '''
+
+    if len(p) == 1:
+        lab = symTab.getLabel()
+        p[0] = {}
+        p[0]['next'] = lab
+        # gstack.append(lab)
+        p[0]['map'] = {}
+        tac.emit('JMP','',p[0]['next'],'')
+    else:
+        p[0] = p[1]
+        p[0]['map'][p[2]['value']] = p[2]['label']
+        tac.emit('JMP','',p[1]['next'],'')
+
     reverse_output.append(p.slice)
 
 def p_CaseSelector(p):
     ''' CaseSelector : CaseLabel COLON Statement '''
+    p[0] = p[1]
+    # tac.emit('JMP','',gstack[-1],'')
     reverse_output.append(p.slice)
 
 
 def p_CaseLabel(p):
-    # THIS IS NOT CORRECT. WILL PUT INTEGER/NUMBER
     ''' CaseLabel : NUMBER '''
+    lab = symTab.getLabel()
+    tac.emit('LABEL','',lab,'')
+    p[0] = {}
+    p[0]['label'] = lab
+    p[0]['value'] = p[1]
     reverse_output.append(p.slice)
 
 def p_LoopStmt(p):
