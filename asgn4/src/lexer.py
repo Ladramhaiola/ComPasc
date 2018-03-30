@@ -91,7 +91,7 @@ def build (debug=True):
 
     # define comment
     def t_COMMENT(t):
-        r"{[^}]*} | \/[\/]+.* | (\*+.*\*)" # first is multi-line, then is single-line
+        r"{[^}]*} | \/[\/]+.* " # first is multi-line, then is single-line
 
     ### Following is borrowed from PLY tutorial
 
