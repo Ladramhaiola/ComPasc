@@ -139,18 +139,46 @@ def p_Expression(p):
 
     # Expression has dictionary attribute
     if len(p) == 3:
-        p[0] = {}
-        
-        if type(p[1]) is dict:
-            p[0]['place'] = p[1]['place']
+
+        if p[2] != {}:
+
+            p[0]={}
+            p[0]['ExprList'] = p[2]['ExprList']
+            p[0]['ExprList'].append([p[2]['previousOp'],p[1]['place'],p[2]['place']])
+            #reversing the list for left associativity 
+            p[0]['ExprList'] = p[0]['ExprList'][::-1]
+            #expr is of the form [op,op1,op2]
+            for i,expr in enumerate(p[0]['ExprList']):
+                lhs = symTab.getTemp()
+                print expr
+                tac.emit(expr[0],lhs,expr[1],expr[2])
+                if i != len(p[0]['ExprList'])-1:
+                    p[0]['ExprList'][i+1][1] = lhs
+            p[0]['place'] = lhs
+
         else:
-            p[0]['place'] = p[1]
+
+            p[0] = p[1]
             
     reverse_output.append(p.slice)
 
 def p_RelSimpleStar(p):
     ''' RelSimpleStar : RelOp SimpleExpression RelSimpleStar
     | '''
+
+    if len(p) == 1:
+        p[0] = {}
+
+    else:
+        p[0] = {}
+        p[0]['place'] = p[2]['place']
+        p[0]['previousOp'] = p[1]
+        p[0]['ExprList'] = []
+
+        if p[3]!={}:
+            p[0]['ExprList'] = p[3]['ExprList']
+            p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
+            
     reverse_output.append(p.slice)
 
 def p_SimpleExpression(p):
@@ -351,6 +379,8 @@ def p_RelOp(p):
     | LEQ
     | NOTEQUALS
     | EQUALS'''
+
+    p[0] = p[1]
     reverse_output.append(p.slice)
 
 def p_AddOp(p):

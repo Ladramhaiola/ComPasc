@@ -11,6 +11,6 @@ BEGIN
    y:=21;
    z:=11;
    a:=z+x-y;
-   c:=a-y-z*y*a+x;
+   c:=a-y-z*y/a+x<y-a>=a;
    WRITELN(MyMessage);
 END;
