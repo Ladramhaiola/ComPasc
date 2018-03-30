@@ -14,4 +14,12 @@ BEGIN
    y:=21;
    z:=11;
    a1[6]:=a1[6]-y;
+   IF a1[6]<z THEN
+      BEGIN
+	 a1[7] := z;
+      END;
+   ELSE
+      BEGIN
+	 z := a1[6];
+      END;
 END;
