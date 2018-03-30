@@ -137,7 +137,7 @@ def p_ConditionalStmt(p):
     reverse_output.append(p.slice)
 
 def p_IfStmt(p):
-    ''' IfStmt : IF Expression THEN IfMark1 CompoundStmt IfMark3 ELSE CompoundStmt IfMark4
+    ''' IfStmt : IF Expression THEN IfMark1 CompoundStmt ELSE IfMark3 CompoundStmt IfMark4
     | IF Expression THEN IfMark1 CompoundStmt IfMark2 %prec ELSETOK '''
     reverse_output.append(p.slice)
 
@@ -156,14 +156,14 @@ def p_IfMark2(p):
 def p_IfMark3(p):
     ''' IfMark3 :  '''
     l1 = symTab.getLabel()
-    label = p[-2]
+    label = p[-3]
     tac.emit('JMP','',l1,'')
     tac.emit('LABEL','',label,'')
     p[0] = l1
 
 def p_IfMark4(p):
-    ''' IfMark4: '''
-    tac.emit('LABEL','',p[-3],'')
+    ''' IfMark4 : '''
+    tac.emit('LABEL','',p[-2],'')
 ## ------------ IF DEFS END ------ ###
 
 def p_CaseStmt(p):
