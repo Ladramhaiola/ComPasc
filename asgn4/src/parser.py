@@ -40,7 +40,7 @@ def updateStar(p):
         p[0]['ExprList'] = p[3]['ExprList']
         p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
 
-def updateTerm(p, termIndex=1, starIndex=2):
+def handleTerm(p, termIndex=1, starIndex=2):
 
     p[0]={}
     p[0]['ExprList'] = p[starIndex]['ExprList']
@@ -168,7 +168,7 @@ def p_Expression(p):
     if len(p) == 3:
 
         if p[2] != {}:
-            updateTerm(p)
+            handleTerm(p)
 
         else:
             p[0] = p[1]
@@ -199,7 +199,7 @@ def p_SimpleExpression(p):
         termIndex = 2
     
     if p[starIndex] != {}:
-        updateTerm(p, termIndex, starIndex)
+        handleTerm(p, termIndex, starIndex)
 
     else:
         p[0] = p[1]
@@ -226,7 +226,7 @@ def p_Term(p):
     ''' Term : Factor MulFacStar '''
     
     if p[2] != {}:
-        updateTerm(p)
+        handleTerm(p)
 
     else:
         p[0] = p[1]
