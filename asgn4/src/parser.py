@@ -48,7 +48,7 @@ def updateStar(p):
         p[0]['ExprList'] = p[3]['ExprList']
         p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
 
-def handleTerm(p, termIndex=1, starIndex=2):
+def handleTerm(p, termIndex=1, starIndex=2, whetherRelational=False):
 
     p[0]={}
     p[0]['ExprList'] = p[starIndex]['ExprList']
@@ -57,8 +57,7 @@ def handleTerm(p, termIndex=1, starIndex=2):
     p[0]['ExprList'] = p[0]['ExprList'][::-1]
     #expr is of the form [op,op1,op2]
     for i,expr in enumerate(p[0]['ExprList']):
-        lhs = symTab.getTemp()
-        print expr
+        lhs = symTab.getTemp()        
         tac.emit(expr[0],lhs,expr[1],expr[2])
         if i != len(p[0]['ExprList'])-1:
             p[0]['ExprList'][i+1][1] = lhs
@@ -230,7 +229,7 @@ def p_Expression(p):
     if len(p) == 3:
 
         if p[2] != {}:
-            handleTerm(p)
+            handleTerm(p,1,2,True)
 
         else:
             p[0] = p[1]
