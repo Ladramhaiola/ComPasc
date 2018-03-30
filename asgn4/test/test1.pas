@@ -5,12 +5,13 @@ height, width : INTEGER;
 c: CHAR;
 CONSTANT
 x = 5;
+y = 10;
+TYPE
+a1 = ARRAY[x..y] OF INTEGER;
 //procedure Draw;
 BEGIN
    x:=14;
    y:=21;
    z:=11;
-   a:=z+x-y;
-   c:=a-y-z*y/a+x<y-a>=a;
-   WRITELN(MyMessage);
+   a1[6]:=a1[6]-y;
 END;
