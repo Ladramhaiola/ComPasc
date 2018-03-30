@@ -137,9 +137,34 @@ def p_ConditionalStmt(p):
     reverse_output.append(p.slice)
 
 def p_IfStmt(p):
-    ''' IfStmt : IF Expression THEN CompoundStmt ELSE CompoundStmt
-    | IF Expression THEN CompoundStmt %prec ELSETOK '''
+    ''' IfStmt : IF Expression THEN IfMark1 CompoundStmt IfMark3 ELSE CompoundStmt IfMark4
+    | IF Expression THEN IfMark1 CompoundStmt IfMark2 %prec ELSETOK '''
     reverse_output.append(p.slice)
+
+## ------------ IF DEFS ----------- ##
+def p_IfMark1(p):
+    ''' IfMark1 : '''
+    l1 = symTab.getLabel()
+    tac.emit('JZ','',l1,'')
+    p[0] = l1
+
+def p_IfMark2(p):
+    ''' IfMark2 :  '''
+    label = p[-2]
+    tac.emit('LABEL','',label,'')
+
+def p_IfMark3(p):
+    ''' IfMark3 :  '''
+    l1 = symTab.getLabel()
+    label = p[-2]
+    tac.emit('JMP','',l1,'')
+    tac.emit('LABEL','',label,'')
+    p[0] = l1
+
+def p_IfMark4(p):
+    ''' IfMark4: '''
+    tac.emit('LABEL','',p[-3],'')
+## ------------ IF DEFS END ------ ###
 
 def p_CaseStmt(p):
     ''' CaseStmt : CASE Expression OF CaseSelector ColonCaseSelector END
@@ -281,7 +306,7 @@ def p_Factor(p):
         p[0]['place'] = p[1]
         p[0]['isArray'] = False
 
-    print(p[0])
+    # print(p[0])
     reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
