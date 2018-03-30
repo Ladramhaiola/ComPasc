@@ -141,24 +141,28 @@ def p_IfStmt(p):
     | IF Expression THEN CompoundStmt %prec ELSETOK '''
     reverse_output.append(p.slice)
 
+#testMark is for the function test as in Sir's slides
 def p_CaseStmt(p):
     ''' CaseStmt : CASE Expression OF CaseSelector ColonCaseSelector END
-    | CASE Expression OF CaseSelector ColonCaseSelector ELSE CompoundStmt SEMICOLON END '''
+    | CASE Expression OF CaseSelector ColonCaseSelector ELSE CompoundStmt END '''
     reverse_output.append(p.slice)
 
 def p_ColonCaseSelector(p):
-    ''' ColonCaseSelector : ColonCaseSelector SEMICOLON CaseSelector 
+    ''' ColonCaseSelector : SEMICOLON CaseSelector ColonCaseSelector 
     | '''
     reverse_output.append(p.slice)
 
 def p_CaseSelector(p):
-    ''' CaseSelector : CaseLabel COLON Statement '''
+    ''' CaseSelector : CaseLabel COLON Statement'''
+    
     reverse_output.append(p.slice)
 
 
 def p_CaseLabel(p):
     # THIS IS NOT CORRECT. WILL PUT INTEGER/NUMBER
     ''' CaseLabel : NUMBER '''
+
+    p[0] = p[1]
     reverse_output.append(p.slice)
 
 def p_LoopStmt(p):
