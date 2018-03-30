@@ -192,7 +192,7 @@ def p_IfMark4(p):
 #testMark is for the function test as in Sir's slides
 def p_CaseStmt(p):
     ''' CaseStmt : CASE CaseMark1 Expression OF CaseSelector ColonCaseSelector CaseTest END SEMICOLON
-    | CASE CaseMark1 Expression OF CaseSelector ColonCaseSelector ELSE CompoundStmt END SEMICOLON'''
+    | CASE CaseMark1 Expression OF CaseSelector ColonCaseSelector CaseTest2 ELSE CaseMark2 CompoundStmt CaseMark3 END SEMICOLON'''
     reverse_output.append(p.slice)
 
 def p_CaseMark1(p):
@@ -200,6 +200,37 @@ def p_CaseMark1(p):
     temp = symTab.getLabel()
     tac.emit('JMP','',temp,'')
     p[0] = temp
+
+def p_CaseMark2(p):
+    ''' CaseMark2 : '''
+    tac.emit('LABEL','',p[-2],'')
+
+def p_CaseMark3(p):
+    ''' CaseMark3 :  '''
+    tac.emit('LABEL','',p[-5]['next'],'')
+
+
+def p_CaseTest2(p):
+    ''' CaseTest2 : '''
+    
+    tac.emit('LABEL','',p[-5],'')
+    
+    # For first CaseSelector
+    tac.emit('CMP','',p[-4]['place'],p[-2]['value'])
+    tac.emit('JE','',p[-2]['label'],'')
+
+    
+    # Testing the value which matches, and then jumping
+    for key in p[-1]['map'].keys():
+        tac.emit('CMP','',p[-4]['place'],key)
+        tac.emit('JE','',p[-1]['map'][key],'')
+
+    # Unconditionally jump to the ELSE label
+    temp = symTab.getLabel()
+    tac.emit('JMP','',temp,'')
+    p[0] = temp
+
+
 
 def p_CaseTest(p):
     ''' CaseTest : '''
@@ -211,13 +242,12 @@ def p_CaseTest(p):
     tac.emit('JE','',p[-2]['label'],'')
 
     
+    # Testing the value which matches, and then jumping
     for key in p[-1]['map'].keys():
         tac.emit('CMP','',p[-4]['place'],key)
         tac.emit('JE','',p[-1]['map'][key],'')
 
     tac.emit('LABEL','',p[-1]['next'],'')
-
-    # gstack.pop()
 
 
 def p_ColonCaseSelector(p):
