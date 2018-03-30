@@ -23,8 +23,14 @@ BEGIN
 	 {z := a1[6];}
       {END;}
 
-    WHILE x < 5 DO
-    BEGIN
-        x := x + 1;
-    END;
+    {WHILE x < 5 DO}
+    {BEGIN}
+        {x := x + 1;}
+    {END;}
+   CASE x OF
+    1: x:= x + 1;
+    2: x:= x + 2;
+    3: x:= x + 3;
+   END;
+
 END;
