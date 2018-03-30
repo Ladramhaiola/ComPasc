@@ -115,7 +115,12 @@ def p_SimpleStatement(p):
     | CONTINUE'''
 
     if p[2] == ':=':
-        tac.emit('+',p[1]['place'],p[3]['place'],'0')
+
+        if p[1]['isArray']:
+            tac.emit('STOREREF',p[1]['place'],p[1]['ArrayIndex'],p[3]['place'])
+            
+        else:
+            tac.emit('+',p[1]['place'],p[3]['place'],'0')
         
     reverse_output.append(p.slice)
 
@@ -240,6 +245,7 @@ def p_Term(p):
 
     else:
         p[0] = p[1]
+        resolveRHSArray(p[1])
         
     reverse_output.append(p.slice)
 
@@ -270,8 +276,7 @@ def p_Factor(p):
     p[0] = {}
 
     if type(p[1]) is dict:
-        p[0]['place'] = p[1]['place']
-        p[0]['isArray'] = p[1]['isArray']
+        p[0] = p[1]
     else:
         p[0]['place'] = p[1]
         p[0]['isArray'] = False
@@ -399,14 +404,8 @@ def p_ExprList(p):
 def p_Designator(p):
     ''' Designator : ID DesSubEleStar'''
 
-    if p[2] == {}:
-        p[0] = {}
-        p[0]['place'] = p[1]
-
-        if p[2] != {}:
-            p[0] = p[2]
-        else:
-            p[0]['isArray'] = False
+    p[0] = p[2]
+    p[0]['place'] = p[1]
 
     reverse_output.append(p.slice)
 
@@ -416,6 +415,7 @@ def p_DesSubEleStar(p):
     
     if len(p) == 1:
         p[0] = {}
+        p[0]['isArray'] = False
     else:
         p[0] = p[2]
 
@@ -433,6 +433,7 @@ def p_DesignatorSubElem(p):
         p[0]['ArrayIndex'] = p[2]['place']
     else:
         p[0] = {}
+        p[0]['isArray'] = False
         
     reverse_output.append(p.slice)
 
