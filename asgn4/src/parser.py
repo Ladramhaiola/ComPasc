@@ -49,7 +49,7 @@ def updateStar(p):
         p[0]['ExprList'] = p[3]['ExprList']
         p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
 
-def handleTerm(p, termIndex=1, starIndex=2):
+def handleTerm(p, termIndex=1, starIndex=2, whetherRelational=False):
 
     p[0]={}
     p[0]['ExprList'] = p[starIndex]['ExprList']
@@ -59,8 +59,29 @@ def handleTerm(p, termIndex=1, starIndex=2):
     #expr is of the form [op,op1,op2]
     for i,expr in enumerate(p[0]['ExprList']):
         lhs = symTab.getTemp()
-        # print expr
-        tac.emit(expr[0],lhs,expr[1],expr[2])
+        if whetherRelational:
+            l1 = symTab.getLabel()
+            l2 = symTab.getLabel()
+            tac.emit('CMP','',expr[1],expr[2])
+            if expr[0] == '<':
+                tac.emit('JGE','',l1,'')
+            elif expr[0] == '>':
+                tac.emit('JLE','',l1,'')
+            elif expr[0] == '>=':
+                tac.emit('JL','',l1,'')
+            elif expr[0] == '<=':
+                tac.emit('JG','',l1,'')
+            elif expr[0] == '<>':
+                tac.emit('JE','',l1,'')
+            else :
+                tac.emit('JNE','',l1,'')
+            tac.emit('+',lhs,'1','0')
+            tac.emit('JMP','',l2,'')
+            tac.emit('LABEL','',l1,'')
+            tac.emit('+',lhs,'0','0')
+            tac.emit('LABEL','',l2,'')
+        else:
+            tac.emit(expr[0],lhs,expr[1],expr[2])
         if i != len(p[0]['ExprList'])-1:
             p[0]['ExprList'][i+1][1] = lhs
     p[0]['place'] = lhs
@@ -168,6 +189,7 @@ def p_IfMark4(p):
     tac.emit('LABEL','',p[-2],'')
 ## ------------ IF DEFS END ------ ###
 
+#testMark is for the function test as in Sir's slides
 def p_CaseStmt(p):
     ''' CaseStmt : CASE CaseMark1 Expression OF CaseSelector ColonCaseSelector CaseTest END SEMICOLON
     | CASE CaseMark1 Expression OF CaseSelector ColonCaseSelector ELSE CompoundStmt END SEMICOLON'''
@@ -230,6 +252,7 @@ def p_CaseLabel(p):
     p[0] = {}
     p[0]['label'] = lab
     p[0]['value'] = p[1]
+    # p[0] = p[1]
     reverse_output.append(p.slice)
 
 def p_LoopStmt(p):
@@ -271,7 +294,7 @@ def p_Expression(p):
     if len(p) == 3:
 
         if p[2] != {}:
-            handleTerm(p)
+            handleTerm(p,1,2,True)
 
         else:
             p[0] = p[1]
