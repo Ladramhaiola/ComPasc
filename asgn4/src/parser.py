@@ -145,7 +145,8 @@ def p_IfStmt(p):
 def p_IfMark1(p):
     ''' IfMark1 : '''
     l1 = symTab.getLabel()
-    tac.emit('JZ','',l1,'')
+    tac.emit('CMP','',p[-2]['place'],'0')
+    tac.emit('JE','',l1,'')
     p[0] = l1
 
 def p_IfMark2(p):
@@ -197,8 +198,25 @@ def p_RepeatStmt(p):
 
 #No need of semicolon after WhileStmt because CompoundStmt will handle it
 def p_WhileStmt(p):
-    ''' WhileStmt : WHILE Expression DO CompoundStmt '''
+    ''' WhileStmt : WHILE WhileMark1 Expression DO WhileMark2 CompoundStmt WhileMark3'''
     reverse_output.append(p.slice)
+
+def p_WhileMark1(p):
+    ''' WhileMark1 :  '''
+    l1 = symTab.getLabel()
+    l2 = symTab.getLabel()
+    tac.emit('LABEL','',l1,'')
+    p[0] = [l1,l2]
+
+def p_WhileMark2(p):
+    ''' WhileMark2 :  '''
+    tac.emit('CMP','',p[-2]['place'],'0')
+    tac.emit('JE','',p[-3][1],'') # Jump to l2, that is exit
+
+def p_WhileMark3(p):
+    ''' WhileMark3 :  '''
+    tac.emit('JMP','',p[-5][0],'') # Go back to l1
+    tac.emit('LABEL','',p[-5][1],'') # l2, This is exit
 
 def p_Expression(p):
     ''' Expression : SimpleExpression RelSimpleStar 
