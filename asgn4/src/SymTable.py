@@ -21,6 +21,7 @@ class SymTable (object):
         }
         self.currScope = 'Main'
         self.tNo = -1
+        self.lNo = -1
         # add itself, at least! Index 0 has highest, 1 is inside 0, 2 is inside 1 ...
         # Current scope is always at index [-1]
 
@@ -116,6 +117,11 @@ class SymTable (object):
         newTemp = "t" + str(self.tNo) 
         return newTemp
 
+    def getLabel(self):
+        self.lNo += 1
+        newTemp = "l" + str(self.lNo) 
+        return newTemp
+    
     def newScopeName(self):
         self.scopeNo += 1
         newScope = "s" + str(self.scopeNo) 
