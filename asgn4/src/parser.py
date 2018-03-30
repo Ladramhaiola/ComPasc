@@ -29,13 +29,21 @@ precedence = (
     ('nonassoc','CONSTRUCTOR')
 )
 
+#factor should be a dictionary with attributes 'place' and 'isArray'
+def resolveRHSArray(factor):
+    if factor['isArray']:
+        lhs = symTab.getTemp()
+        tac.emit('LOADREF', lhs, factor['place'], factor['ArrayIndex'])
+        factor['place'] = lhs
+
 def updateStar(p):
 
     p[0] = {}
     p[0]['place'] = p[2]['place']
     p[0]['previousOp'] = p[1]
     p[0]['ExprList'] = []
-
+    resolveRHSArray(p[2])
+    
     if p[3]!={}:
         p[0]['ExprList'] = p[3]['ExprList']
         p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
@@ -55,6 +63,8 @@ def handleTerm(p, termIndex=1, starIndex=2):
         if i != len(p[0]['ExprList'])-1:
             p[0]['ExprList'][i+1][1] = lhs
     p[0]['place'] = lhs
+    #I'm making this False because array will be handled in MulFacStar (no need to handle it for term)
+    p[0]['isArray'] = False
         
 def p_Goal(p):
     ''' Goal : Program '''
@@ -261,9 +271,12 @@ def p_Factor(p):
 
     if type(p[1]) is dict:
         p[0]['place'] = p[1]['place']
+        p[0]['isArray'] = p[1]['isArray']
     else:
         p[0]['place'] = p[1]
+        p[0]['isArray'] = False
 
+    print(p[0])
     reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
@@ -390,6 +403,11 @@ def p_Designator(p):
         p[0] = {}
         p[0]['place'] = p[1]
 
+        if p[2] != {}:
+            p[0] = p[2]
+        else:
+            p[0]['isArray'] = False
+
     reverse_output.append(p.slice)
 
 def p_DesSubEleStar(p):
@@ -398,13 +416,24 @@ def p_DesSubEleStar(p):
     
     if len(p) == 1:
         p[0] = {}
+    else:
+        p[0] = p[2]
 
     reverse_output.append(p.slice)
 
+#replaced ExprList by Expression for simplicity
 def p_DesignatorSubElem(p):
     ''' DesignatorSubElem : DOT ID
-    | LSQUARE ExprList RSQUARE
+    | LSQUARE Expression RSQUARE
     | POWER '''
+
+    if len(p) == 4:
+        p[0] = {}
+        p[0]['isArray'] = True
+        p[0]['ArrayIndex'] = p[2]['place']
+    else:
+        p[0] = {}
+        
     reverse_output.append(p.slice)
 
 # Added without keyword CONSTANT for classes and objects

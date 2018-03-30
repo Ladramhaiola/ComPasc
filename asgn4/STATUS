@@ -8,4 +8,5 @@ Doubts:
 
 1. What do we have to do in type section?
 2. Handling 'Factor' in all it's cases.
-3. Handling arrays in RHS.
+3. Handling arrays in RHS.(Done, need to test)
+4. Is there use of doublestar? (*..* is comments)
