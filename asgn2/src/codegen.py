@@ -635,7 +635,7 @@ class CodeGenerator():
         loc_op1, msg = self.varAllocate.getReg(blockIndex, lineno, True)
         Loc_op1 = "%" + loc_op1
 
-        if (self.registerToSymbol[loc_op1] != "" and op1.name != self.registerToSymbol[loc_op1]):
+        if (self.registerToSymbol[loc_op1] != "" and op1 != None and op1.name != self.registerToSymbol[loc_op1]):
             self.asm_code[self.curr_func].append("# loc_op1: " + loc_op1)
             s_code = '\t\tmovl ' + Loc_op1 + "," + self.registerToSymbol[loc_op1]
             self.symbolToRegister[self.registerToSymbol[loc_op1]] = ""
