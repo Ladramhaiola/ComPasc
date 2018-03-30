@@ -58,7 +58,29 @@ def handleTerm(p, termIndex=1, starIndex=2, whetherRelational=False):
     #expr is of the form [op,op1,op2]
     for i,expr in enumerate(p[0]['ExprList']):
         lhs = symTab.getTemp()        
-        tac.emit(expr[0],lhs,expr[1],expr[2])
+        if whetherRelational:
+            l1 = symTab.getLabel()
+            l2 = symTab.getLabel()
+            tac.emit('CMP','',expr[1],expr[2])
+            if expr[0] == '<':
+                tac.emit('JGE','',l1,'')
+            elif expr[0] == '>':
+                tac.emit('JLE','',l1,'')
+            elif expr[0] == '>=':
+                tac.emit('JL','',l1,'')
+            elif expr[0] == '<=':
+                tac.emit('JG','',l1,'')
+            elif expr[0] == '<>':
+                tac.emit('JE','',l1,'')
+            else :
+                tac.emit('JNE','',l1,'')
+            tac.emit('+',lhs,'1','0')
+            tac.emit('JMP','',l2,'')
+            tac.emit('LABEL','',l1,'')
+            tac.emit('+',lhs,'0','0')
+            tac.emit('LABEL','',l2,'')
+        else:
+            tac.emit(expr[0],lhs,expr[1],expr[2])
         if i != len(p[0]['ExprList'])-1:
             p[0]['ExprList'][i+1][1] = lhs
     p[0]['place'] = lhs
