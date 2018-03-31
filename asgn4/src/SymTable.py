@@ -22,8 +22,7 @@ class SymTable (object):
         self.currScope = 'Main'
         self.tNo = -1
         self.lNo = -1
-        # add itself, at least! Index 0 has highest, 1 is inside 0, 2 is inside 1 ...
-        # Current scope is always at index [-1]
+        self.scopeNo = -1
 
     def PrintSymTable(self):
         pprint.pprint(self.table)
@@ -32,7 +31,7 @@ class SymTable (object):
         return self.currScope 
 
     def AddScope (self, Type):
-        scopeName = self.newScopeName
+        scopeName = self.newScopeName()
         temp_scope = {
             'ParentScope' : self.currScope,
             'Type' : Type, # Type of scope
@@ -41,6 +40,7 @@ class SymTable (object):
             'Ident' : {},
         }
         self.table[scopeName] = temp_scope
+        self.currScope = scopeName
 
 
     def RepresentsNum(self,s):
@@ -76,8 +76,10 @@ class SymTable (object):
         e = None
 
         if self.getScope(v) != self.currScope:
+        # If the current scope is not same as the scope where this variable already exists
 
             if (varfunc == "VAR"):
+                print "Defining var: ",v
                 if (v not in curr_scope['Ident']):
                     e = SymTableEntry (v, typ, "VAR")
                     curr_scope['Ident'][v] = e
@@ -87,7 +89,7 @@ class SymTable (object):
                     curr_scope['Func'][v] = e
 
         else:
-            sys.exit(v + "is already initialised in this scope")
+            sys.exit(v + " is already initialised in this scope")
 
         return e.name
 

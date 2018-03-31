@@ -156,7 +156,7 @@ def p_IfStmt(p):
     | IF Expression THEN IfMark1 CompoundStmt IfMark2 %prec ELSETOK '''
     reverse_output.append(p.slice)
 
-## ------------ IF DEFS ----------- ##
+## --------------------------------- IF DEFS ----------------------- ###
 def p_IfMark1(p):
     ''' IfMark1 : '''
     l1 = symTab.getLabel()
@@ -180,7 +180,7 @@ def p_IfMark3(p):
 def p_IfMark4(p):
     ''' IfMark4 : '''
     tac.emit('LABEL','',p[-2],'')
-## ------------ IF DEFS END ------ ###
+## ------------------------ IF DEFS END ------------------------------ ###
 
 #testMark is for the function test as in Sir's slides
 def p_CaseStmt(p):
@@ -276,7 +276,7 @@ def p_CaseLabel(p):
     # p[0] = p[1]
     reverse_output.append(p.slice)
 
-### --------------------------- CASE DEFS END ------------------------ ###
+### ----------------------------------- CASE DEFS END ------------------------------ ###
 
 def p_LoopStmt(p):
     ''' LoopStmt : RepeatStmt
@@ -478,16 +478,6 @@ def p_TypeID(p):
     p[0] = p[1]
     reverse_output.append(p.slice)
 
-# def p_OrdinalType(p):
-#     ''' OrdinalType : INTEGER'''
-#     reverse_output.append(p.slice)
-
-# def p_RealType(p):
-    # ''' RealType : DOUBLE'''
-    # reverse_output.append(p.slice)
-
-# Added without the keyword TYPE for classes and objects
-
 def p_TypeSection(p):
     ''' TypeSection : TYPE ColonTypeDecl '''
     reverse_output.append(p.slice)
@@ -670,15 +660,29 @@ def p_CommaIDTypeArgs(p):
     reverse_output.append(p.slice)
 
 #ParamIdentList and ParamIdent are added for handling Formal Parameters for function or procedure declaration
+
 def p_ParamIdentList(p):
     ''' ParamIdentList : ParamIdent SEMICOLON ParamIdentList
     | ParamIdent
     | '''
+    if len(p) == 1:
+        p[0] = []
+    elif len(p) == 2:
+        p[0] = []
+        p[0].append(p[1])
+    elif len(p) == 4:
+        p[0] = p[3]
+        p[0].append(p[1])
+        
     reverse_output.append(p.slice)
 
 def p_ParamIdent(p):
     ''' ParamIdent : IdentList COLON Type
     | IdentList '''
+    if len(p) == 4:
+        p[0] = [p[1],p[3]]
+    else:
+        p[0] = [p[1]]
     reverse_output.append(p.slice)
     
 # Added VarSection without starting with the keyword VAR for classes and objects
@@ -693,10 +697,8 @@ def p_ColonVarDecl(p):
 
 def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
+
     for elem in p[1]:
-
-        # tac.emit('+',elem,'0','0')
-
         symTab.symTabOp(elem,p[3].lower(),'VAR')
     
     reverse_output.append(p.slice)
@@ -726,6 +728,7 @@ def p_FuncDecl(p):
 
 def p_FuncHeading(p):
     ''' FuncHeading : FUNCTION Designator FormalParams COLON Type '''
+    p[0] = p[2]
     reverse_output.append(p.slice)
 
 def p_FuncHeadingSemicolon(p):
@@ -736,15 +739,38 @@ def p_FuncHeadingSemicolon(p):
 def p_FormalParams(p):
     ''' FormalParams : LPAREN ParamIdentList RPAREN
     | '''
+    p[0] = p[2]
+
+    # p[2] is a list of lists. p[2][0] will have two elements: p[2][0][0]: id's, p[2][0][1]: types
+
     reverse_output.append(p.slice)
 
 def p_ProcedureDecl(p):
-    ''' ProcedureDecl : ProcedureHeading SEMICOLON Block '''
+    ''' ProcedureDecl : ProcedureHeading SEMICOLON Block PMark1'''
     reverse_output.append(p.slice)
+
+def p_PMark1(p):
+    ''' PMark1 : '''
+    symTab.endScope(symTab.currScope)
 
 #replaced ID by designator for dealing with Object.Function
 def p_ProcedureHeading(p):
     ''' ProcedureHeading : PROCEDURE Designator FormalParams '''
+
+    # Declare new scope here
+    symTab.AddScope('procedure') # procedure indicates type here
+    symTab.table[symTab.currScope]['ReturnType'] = None
+
+    # Add the variables into symbol Table
+    param_list = p[3]
+    for item in param_list:
+        idents = item[0]
+        id_type = item[1]
+        for ids in idents:
+            # print "ID is: ",ids
+            # print "Type is: ",id_type
+            a = symTab.Define(ids,id_type,'VAR')
+
     reverse_output.append(p.slice)
 
 def p_ProcedureHeadingSemicolon(p):
@@ -921,5 +947,6 @@ tac = ThreeAddrCode()
 # Do the things that we want to here
 inputfile = open(sys.argv[1],'r').read()
 yacc.parse(inputfile, debug = 1)
+symTab.PrintSymTable()
 
 tac.display_code()
