@@ -6,16 +6,9 @@ from lexer import *
 from SymTable import SymTable
 from ThreeAddrCode import ThreeAddrCode
 
-### ------------ ISSUES ----------- ###
-
-# Ambiguity checking?
-# Remove the Lexer error that Goutham said
 # Use of Pointer Type Statement in Grammar? Since we are not working with pointers[?]
-# Do we need to expand rules like Identifier, which is a token? NO
 
-### ------------------------------- ###
 reverse_output = []
-gstack = []
 
 precedence = (
     ('nonassoc','ELSETOK'),
@@ -230,8 +223,6 @@ def p_CaseTest2(p):
     tac.emit('JMP','',temp,'')
     p[0] = temp
 
-
-
 def p_CaseTest(p):
     ''' CaseTest : '''
     
@@ -285,14 +276,29 @@ def p_CaseLabel(p):
     # p[0] = p[1]
     reverse_output.append(p.slice)
 
+### --------------------------- CASE DEFS END ------------------------ ###
+
 def p_LoopStmt(p):
     ''' LoopStmt : RepeatStmt
     | WhileStmt '''
     reverse_output.append(p.slice)
 
 def p_RepeatStmt(p):
-    ''' RepeatStmt : REPEAT Statement UNTIL Expression SEMICOLON '''
+    ''' RepeatStmt : REPEAT RepMark1 Statement UNTIL Expression RepMark2 SEMICOLON '''
     reverse_output.append(p.slice)
+
+def p_RepMark1(p):
+    ''' RepMark1 : '''
+    l1 = symTab.getLabel()
+    tac.emit('LABEL','',l1,'')
+    p[0] = l1
+
+def p_RepMark2(p):
+    ''' RepMark2 : '''
+    tac.emit('CMP','',p[-1]['place'],'1')
+    tac.emit('JE','',p[-4],'')
+
+### ------------------------ REP DEFS END --------------------------- ###
 
 #No need of semicolon after WhileStmt because CompoundStmt will handle it
 def p_WhileStmt(p):
@@ -315,6 +321,8 @@ def p_WhileMark3(p):
     ''' WhileMark3 :  '''
     tac.emit('JMP','',p[-5][0],'') # Go back to l1
     tac.emit('LABEL','',p[-5][1],'') # l2, This is exit
+
+### -------------------- WHILE DEFS END --------------------------- ###
 
 def p_Expression(p):
     ''' Expression : SimpleExpression RelSimpleStar 
