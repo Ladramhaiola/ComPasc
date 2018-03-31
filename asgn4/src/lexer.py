@@ -149,12 +149,12 @@ while 1:
         if (tok.type == 'ID' or tok.type == 'STRING' or tok.type == 'CHARACTER' or tok.type == 'NUMBER'):
             tok_lexeme_dict[tok.type].append(tok.value)
         
-print ('     Token \t Occurances\t Lexemes')
-print ('-------------------------------------------')
-for key, count in tok_count_dict.items(): 
-    if (key == 'ID' or key == 'STRING' or key == 'CHARACTER' or key == 'NUMBER'):
-        print ('%12s  %12s %12s' % (key, count, tok_lexeme_dict[key][0]))
-        for i in range (1,len(tok_lexeme_dict[key])):
-            print ('\t \t \t   %12s' % (tok_lexeme_dict[key][i]))
-    else:
-        print ('%12s  %12s %12s' % (key, count, tok_lexeme_dict[key][0]))
+# print ('     Token \t Occurances\t Lexemes')
+# print ('-------------------------------------------')
+# for key, count in tok_count_dict.items(): 
+    # if (key == 'ID' or key == 'STRING' or key == 'CHARACTER' or key == 'NUMBER'):
+        # print ('%12s  %12s %12s' % (key, count, tok_lexeme_dict[key][0]))
+        # for i in range (1,len(tok_lexeme_dict[key])):
+            # print ('\t \t \t   %12s' % (tok_lexeme_dict[key][i]))
+    # else:
+        # print ('%12s  %12s %12s' % (key, count, tok_lexeme_dict[key][0]))

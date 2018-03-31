@@ -3,6 +3,7 @@ Done:
 1. Variable declaration (entry into symbol table)
 2. Constant Declaration (in const section).
 3. Arithematic and Boolean expressions.
+4. For the else part in CASE statement, we have the constraint that it should be compound
 
 Doubts:
 
