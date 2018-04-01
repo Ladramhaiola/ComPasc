@@ -3,7 +3,6 @@ import sys
 
 class SymTable (object):
     '''
-    SymbolTable built after parsing
     Some changes made keeping in mind the link : https://www.tutorialspoint.com/compiler_design/compiler_design_symbol_table.htm 
     '''
 
@@ -70,7 +69,7 @@ class SymTable (object):
         return xEntry
 
 
-    def Define(self, v, typ, varfunc):
+    def Define(self, v, typ, varfunc, params = ''):
         
         curr_scope = self.table[self.currScope]
         e = None
@@ -81,11 +80,12 @@ class SymTable (object):
             if (varfunc == "VAR"):
                 print "Defining var: ",v
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, "VAR")
+                    e = SymTableEntry (v, typ, 'variable', params)
                     curr_scope['Ident'][v] = e
             else:
                 if (v not in curr_scope['Func']):
-                    e = SymTableEntry (v, typ, "FUNC")
+                    # If function, then: v - name, typ - return type, category = function
+                    e = SymTableEntry (v, typ, 'function', params)
                     curr_scope['Func'][v] = e
 
         else:
@@ -93,48 +93,58 @@ class SymTable (object):
 
         return e.name
 
-    def getScope(self, identifier):
+
+    def getScope(self, identifier, idFunc = 'Ident'):
+
         scope = self.currScope
         while scope != None:
-            if identifier in self.table[scope]['Ident'].keys():
+            if identifier in self.table[scope][idFunc].keys():
                 return scope
             else:
                 scope = self.table[scope]['ParentScope']
 
         return None
-                
-    def Lookup(self, identifier):
-        scope = self.getScope(identifier)
+
+
+    def Lookup(self, name, idFunc):
+
+        scope = self.getScope(name, idFunc)
 
         if scope == None:
             return None
         else:
-            return self.table[scope]['Ident'][identifier]
+            return self.table[scope][idFunc][name]
 
-    def endScope(self, scopeName):
+
+    def endScope(self):
         self.currScope = self.table[self.currScope]['ParentScope']
+
 
     def getTemp(self):
         self.tNo += 1
         newTemp = "t" + str(self.tNo) 
         return newTemp
 
+
     def getLabel(self):
         self.lNo += 1
         newTemp = "l" + str(self.lNo) 
         return newTemp
-    
+
+
     def newScopeName(self):
         self.scopeNo += 1
         newScope = "s" + str(self.scopeNo) 
         return newScope
 
+
 class SymTableEntry(object):
     '''
     Create a symbol table entry
     '''
-    def __init__(self,name,typ,varfunc = "var", memsize = 4):
+    def __init__(self,name, typ, category = "variable", params = ''):
         self.name = name
-        self.varfunc = varfunc # either var, function, class or object
+        self.cat = category # either var, function, class or object
         self.typ = typ # for var: int, char, double | for function: typ is return type
-        self.memsize = memsize # number of elements in the array
+        self.params = params # For function, this is a list of param types
+        self.num_params = len(self.params)
