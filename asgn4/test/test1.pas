@@ -1,18 +1,27 @@
 PROGRAM Greeting;
+
 VAR 
 x, y, z, a: INTEGER; 
 height, width : INTEGER; 
 c: CHAR;
+
 CONSTANT
 x = 1;
 y = 6;
+
 TYPE
 a1 = ARRAY[x..y] OF INTEGER;
-//procedure Draw;
+
+procedure Print(x: INTEGER;y: INTEGER);
 BEGIN
-   x:=14;
-   y:=21;
-   z:=11;
+    x := x + y;
+END;
+
+BEGIN
+   x:=3;
+   Print(x,y);
+   {y:=21;}
+   {z:=11;}
    {a1[6]:=a1[6]-y;}
    {IF a1[6]<z THEN}
       {BEGIN}
@@ -27,10 +36,17 @@ BEGIN
     {BEGIN}
         {x := x + 1;}
     {END;}
-   CASE x OF
-    1: x:= x + 1;
-    2: x:= x + 2;
-    3: x:= x + 3;
-   END;
+   {REPEAT}
+        {x := x + 1;}
+    {UNTIL x<9;}
 
+   {CASE x OF}
+    {1: x:= x + 1;}
+    {2: x:= x + 2;}
+    {3: x:= x + 3;}
+    {ELSE }
+    {BEGIN}
+        {x:= x + 5;}
+    {END;}
+   {END;}
 END;
