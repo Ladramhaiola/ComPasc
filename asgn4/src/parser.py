@@ -129,14 +129,53 @@ def p_SimpleStatement(p):
     | BREAK
     | CONTINUE'''
 
+    # This is for handling cases where assignment happens
     if p[2] == ':=':
 
         if p[1]['isArray']:
             tac.emit('STOREREF',p[1]['place'],p[1]['ArrayIndex'],p[3]['place'])
-            
         else:
             tac.emit('+',p[1]['place'],p[3]['place'],'0')
-        
+
+    # This is for handling a function CALL
+    if len(p) == 5:
+
+	name = symTab.Lookup(p[1]['place'],'Func')
+        # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
+
+	if name != None:
+            if name.cat == 'function':
+                arg_count = 0
+                if p[3] != None:
+                    # p[3] is a list of dicts
+                    arg_count = len(p[3])
+
+                if name.num_params == arg_count:
+                    if arg_count > 0:
+			for argument in p[3]:
+                            # argument is a dict
+                            tac.emit('PARAM','',argument['place'],'' )
+
+		    # if name.typ != 'void':
+                            # t = symTab.maketemp(name['type'], symbol_table.curr_table)
+                            # p[0]['value'] = t
+                            # p[0]['code'] += ['call, ' + p[1] + ', ' + str(arg_cnt) + ', ' + t]
+                    # else:
+                            # p[0]['code'] += ['call, ' + p[1] + ', ' + str(arg_cnt)]
+                    tac.emit('CALL','',p[1]['place'],'')
+                else:
+                    print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
+                    print "Compilation Terminated"
+                    exit()
+            else:
+                print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined as a function"
+                print "Compilation Terminated"
+                exit()
+        else:
+            print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined"
+            print "Compilation Terminated"
+            exit()
+
     reverse_output.append(p.slice)
 
 def p_StructStmt(p):
@@ -326,7 +365,7 @@ def p_WhileMark3(p):
 
 def p_Expression(p):
     ''' Expression : SimpleExpression RelSimpleStar 
-    | LambFunc'''
+    | LambFunc '''
 
     # Expression has dictionary attribute
     if len(p) == 3:
@@ -338,6 +377,10 @@ def p_Expression(p):
             p[0] = p[1]
             
     reverse_output.append(p.slice)
+
+# def p_InvocationExpression(p):
+    # ''' InvocationExpression : ID LPAREN IdentList RPAREN'''
+    # reverse_output.append(p.slice)
 
 def p_RelSimpleStar(p):
     ''' RelSimpleStar : RelOp SimpleExpression RelSimpleStar
@@ -532,12 +575,23 @@ def p_MulOp(p):
     reverse_output.append(p.slice)
 
 def p_CommaExpression(p):
-    ''' CommaExpression : CommaExpression COMMA Expression
+    ''' CommaExpression : COMMA Expression CommaExpression
     | '''
+    if len(p) == 1:
+        p[0] = []
+    else:
+        p[0] = p[3]
+        p[0].append(p[2])
+        # pass
     reverse_output.append(p.slice)
 
 def p_ExprList(p):
-    ''' ExprList : Expression CommaExpression'''
+    ''' ExprList : Expression CommaExpression 
+    | '''
+    if len(p) == 3:
+        p[0] = p[2]
+        p[0].append(p[1])
+    print p[0]
     reverse_output.append(p.slice)
 
 def p_Designator(p):
@@ -699,7 +753,7 @@ def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
 
     for elem in p[1]:
-        symTab.symTabOp(elem,p[3].lower(),'VAR')
+        symTab.Define(elem,p[3].lower(),'VAR')
     
     reverse_output.append(p.slice)
 
@@ -746,30 +800,45 @@ def p_FormalParams(p):
     reverse_output.append(p.slice)
 
 def p_ProcedureDecl(p):
-    ''' ProcedureDecl : ProcedureHeading SEMICOLON Block PMark1'''
+    ''' ProcedureDecl : ProcedureHeading SEMICOLON Block PMark2'''
     reverse_output.append(p.slice)
 
 def p_PMark1(p):
     ''' PMark1 : '''
-    symTab.endScope(symTab.currScope)
+    tac.emit('LABEL','FUNC',p[-1]['place'],'')
+
+def p_PMark2(p):
+    ''' PMark2 : '''
+    symTab.endScope()
+    tac.emit('RETURN','','',p[-3]['place'])
 
 #replaced ID by designator for dealing with Object.Function
 def p_ProcedureHeading(p):
-    ''' ProcedureHeading : PROCEDURE Designator FormalParams '''
+    ''' ProcedureHeading : PROCEDURE Designator PMark1 FormalParams '''
 
     # Declare new scope here
     symTab.AddScope('procedure') # procedure indicates type here
     symTab.table[symTab.currScope]['ReturnType'] = None
 
     # Add the variables into symbol Table
-    param_list = p[3]
+    param_list = p[4]
+    params = []
     for item in param_list:
         idents = item[0]
         id_type = item[1]
         for ids in idents:
             # print "ID is: ",ids
             # print "Type is: ",id_type
-            a = symTab.Define(ids,id_type,'VAR')
+            params.append(id_type)
+            symTab.Define(ids,id_type,'VAR')
+
+
+    save_scope = symTab.currScope # Save to revert back
+    symTab.endScope() # Go to the parent, and define this function as an entry in Func
+    to_insert = symTab.Define(p[2]['place'],'void','FUNC',params)
+    symTab.currScope = save_scope # Load back the current scope
+
+    p[0] = p[2] # Giving the designator to Procedure Heading
 
     reverse_output.append(p.slice)
 
