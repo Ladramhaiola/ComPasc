@@ -25,7 +25,7 @@
 - Misc:
 1. Our current IR requires all function code to be together at the end
 2. Handling Break and Continue Statements together with loop and for
-3. Designator Type Checks while assignment and each operation, like AddOp and MulOp
+3. Designator Type Checks while assignment and others operations, like AddOp and MulOp
 
 - Multi-dimensional arrays
 

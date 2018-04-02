@@ -9,12 +9,17 @@ CONSTANT
 x = 1;
 y = 6;
 
-TYPE
-a1 = ARRAY[x..y] OF INTEGER;
+{TYPE}
+{a1 = ARRAY[x..y] OF INTEGER;}
 
-procedure Print(x: INTEGER;y: INTEGER);
+{procedure Print(x: INTEGER;y: INTEGER);}
+{BEGIN}
+    {x := x + y;}
+{END;}
+
+FUNCTION Print(x: INTEGER;y: INTEGER): INTEGER;
 BEGIN
-    x := x + y;
+    Print := x + y;
 END;
 
 BEGIN

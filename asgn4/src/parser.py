@@ -154,7 +154,7 @@ def p_SimpleStatement(p):
         if scope_table['Type'] == 'function' and scope_table['ReturnType'] != None:
 
             # if the variable name matches the name of the function
-            if p[1]['place'] == scope_table['Name']:
+            if p[1]['place'] == scope_table['Name'] and p[1]['type'] == scope_table['ReturnType']:
                 scope_table['ReturnSet'] = True
 
     # This is for handling a function CALL
@@ -619,6 +619,13 @@ def p_Designator(p):
 
     p[0] = p[2]
     p[0]['place'] = p[1]
+    
+    if symTab.Lookup(p[1],'Ident') != None:
+        # We are only concerned about identifiers at the moment
+        p[0]['type'] = symTab.Lookup(p[1],'Ident').typ
+
+    else:
+        p[0]['type'] = 'undef'
 
     reverse_output.append(p.slice)
 
