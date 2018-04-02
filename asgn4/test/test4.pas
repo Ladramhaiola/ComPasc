@@ -2,6 +2,7 @@ PROGRAM Sort (input, output);
 
 CONST
 	MaxElts = 50;
+
 TYPE 
 	IntArrType = ARRAY [1..MaxElts] OF Integer;
 

@@ -92,6 +92,18 @@ def p_Program(p):
 
 def p_Block(p):
     ''' Block : DeclSection CompoundStmt'''
+
+    # Need to check here the ReturnType, if it is a function, that there exists a variable with same name, and same type
+    if symTab.table[symTab.currScope]['Type'] == 'function':
+        if symTab.table[symTab.currScope]['ReturnType'] != None:
+            if symTab.table[symTab.currScope]['ReturnSet'] == False:
+                print "ERROR: Line",p.lineno(1),",Function",symTab.table[symTab.currScope]['Name'],"is not returning as per convention."
+                print "Compilation Terminated"
+                exit()
+
+    if symTab.table[symTab.currScope]['Type'] == 'loop':
+        # For Kaartik to work here for Break and Continue. WARNING: in the loops semantics, AddScope has not been called till now.
+        pass
     reverse_output.append(p.slice)
 
 def p_DeclSection(p):
@@ -136,6 +148,14 @@ def p_SimpleStatement(p):
             tac.emit('STOREREF',p[1]['place'],p[1]['ArrayIndex'],p[3]['place'])
         else:
             tac.emit('+',p[1]['place'],p[3]['place'],'0')
+
+        scope_table = symTab.table[symTab.currScope]
+
+        if scope_table['Type'] == 'function' and scope_table['ReturnType'] != None:
+
+            # if the variable name matches the name of the function
+            if p[1]['place'] == scope_table['Name']:
+                scope_table['ReturnSet'] = True
 
     # This is for handling a function CALL
     if len(p) == 5:
@@ -777,12 +797,47 @@ def p_ConstrucHeadingSemicolon(p):
     reverse_output.append(p.slice)
 
 def p_FuncDecl(p):
-    ''' FuncDecl : FuncHeading SEMICOLON Block '''
+    ''' FuncDecl : FuncHeading SEMICOLON Block FMark2'''
     reverse_output.append(p.slice)
 
+def p_FMark2(p):
+    ''' FMark2 : '''
+    symTab.endScope()
+    tac.emit('RETURN','',p[-3]['place'],p[-3]['place'])
+
+def p_FMark1(p):
+    ''' FMark1 : '''
+    tac.emit('LABEL','FUNC',p[-1]['place'],'')
+
 def p_FuncHeading(p):
-    ''' FuncHeading : FUNCTION Designator FormalParams COLON Type '''
-    p[0] = p[2]
+    ''' FuncHeading : FUNCTION Designator FMark1 FormalParams COLON Type '''
+    # p[0] = p[2]
+
+    # Declare new scope here
+    symTab.AddScope(p[2]['place'],'function')
+    symTab.table[symTab.currScope]['ReturnType'] = p[6]
+    symTab.Define(p[2]['place'],p[6],'VAR') # Define a variable with same return type as function
+
+    # Add the variables into symbol Table
+    param_list = p[4]
+    params = []
+    for item in param_list:
+        idents = item[0]
+        id_type = item[1]
+        for ids in idents:
+            # print "ID is: ",ids
+            # print "Type is: ",id_type
+            params.append(id_type)
+            symTab.Define(ids,id_type,'VAR')
+
+
+    save_scope = symTab.currScope # Save to revert back
+    symTab.endScope() # Go to the parent, and define this function as an entry in Func
+    to_insert = symTab.Define(p[2]['place'],p[6],'FUNC',params)
+    symTab.currScope = save_scope # Load back the current scope
+
+    p[0] = p[2] # Giving the designator to Procedure Heading
+
     reverse_output.append(p.slice)
 
 def p_FuncHeadingSemicolon(p):
@@ -817,7 +872,7 @@ def p_ProcedureHeading(p):
     ''' ProcedureHeading : PROCEDURE Designator PMark1 FormalParams '''
 
     # Declare new scope here
-    symTab.AddScope('procedure') # procedure indicates type here
+    symTab.AddScope(p[2]['place'],'function')
     symTab.table[symTab.currScope]['ReturnType'] = None
 
     # Add the variables into symbol Table
@@ -852,11 +907,7 @@ def p_LambFunc(p):
     ''' LambFunc : LAMBDA ID COLON SimpleExpression '''
     reverse_output.append(p.slice)
 
-# def p_LambFunc(p):
-#     ''' LambFunc : ID LPAREN ConstExpr RPAREN '''
-#     reverse_output.append(p.slice)
 
-### ------------------------------------------- ###
 
 
 ### ---------------- OBJECT DEFS -------------- ###
