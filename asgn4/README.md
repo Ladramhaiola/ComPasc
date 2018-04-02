@@ -14,13 +14,18 @@
 
 # To Do
 - Functions:
-1. Param list
-2. Adding in Symbol Table check
-3. Label statement with Func
-4. Our current IR requires all function code to be together at the end
-5. Handling Break and Continue Statements together with loop and for
-6. Count the number of arguments a function has while in declaration
-7. Returns in Pascal are not straightforward. The name should be same as the function name
+|Feature | Status |
+| ------ | ------ |
+| Param list | :white_check_mark: |
+| Adding Func to Parent Scope | :white_check_mark: |
+| Add Func Label | :white_check_mark: |
+| Arg Count Consistency| :white_check_mark: |
+| Return variable consistency | :white_check_mark: |
+
+- Misc:
+1. Our current IR requires all function code to be together at the end
+2. Handling Break and Continue Statements together with loop and for
+3. Designator Type Checks while assignment and each operation, like AddOp and MulOp
 
 - Multi-dimensional arrays
 
