@@ -11,11 +11,13 @@ class SymTable (object):
         # default values
         self.table = {
             'Main': {
+                'Name': 'Main',
                 'ParentScope' : None,
                 'Type' : 'function', # This can be function or loop
-                'ReturnType' : 'undefined',
+                'ReturnType' : None,
                 'Func' : {},
-                'Ident' : {}
+                'Ident' : {},
+                'ReturnSet' : False
             }
         }
         self.currScope = 'Main'
@@ -29,14 +31,16 @@ class SymTable (object):
     def GetCurrentScopeName(self):
         return self.currScope 
 
-    def AddScope (self, Type):
+    def AddScope (self, name, Type):
         scopeName = self.newScopeName()
         temp_scope = {
+            'Name': name,
             'ParentScope' : self.currScope,
             'Type' : Type, # Type of scope
             'ReturnType' : 'undefined', # default value
             'Func' : {},
             'Ident' : {},
+            'ReturnSet': False
         }
         self.table[scopeName] = temp_scope
         self.currScope = scopeName
@@ -69,7 +73,7 @@ class SymTable (object):
         return xEntry
 
 
-    def Define(self, v, typ, varfunc, params = ''):
+    def Define(self, v, typ, cat, params = ''):
         
         curr_scope = self.table[self.currScope]
         e = None
@@ -77,7 +81,7 @@ class SymTable (object):
         if self.getScope(v) != self.currScope:
         # If the current scope is not same as the scope where this variable already exists
 
-            if (varfunc == "VAR"):
+            if (cat == "VAR"):
                 print "Defining var: ",v
                 if (v not in curr_scope['Ident']):
                     e = SymTableEntry (v, typ, 'variable', params)
@@ -144,7 +148,7 @@ class SymTableEntry(object):
     '''
     def __init__(self,name, typ, category = "variable", params = ''):
         self.name = name
-        self.cat = category # either var, function, class or object
         self.typ = typ # for var: int, char, double | for function: typ is return type
+        self.cat = category # either var, function, class or object
         self.params = params # For function, this is a list of param types
         self.num_params = len(self.params)
