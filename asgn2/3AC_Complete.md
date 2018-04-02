@@ -68,12 +68,12 @@ Linenumber, "PRINT", *EMPTY*, MESSAGE, *EMPTY*
 ```
 
 ## Functions
-We'll follow cdecl standard function param pushing
+We'll follow cdecl standard function param pushing [Link](https://www.cs.princeton.edu/courses/archive/spr11/cos217/lectures/15AssemblyFunctions.pdf)
 parse from right to left, so that param 1 is top of the stack
 In the return label, if the return is of function Func_Name, enter Func_Name as last argument
+In the return label, 4th argument is the value/variable to be returned
 ```
 Linenumber, "PARAM", *EMPTY* , ARG2, *EMPTY*
 Linenumber, "CALL", *EMPTY*, Function_name, *EMPTY*
-Linenumber, "RETURN", *EMPTY*, *EMPTY*, *EMPTY*/Func_Name
-Linenumber, "RETURNVAL", *EMPTY*, VALUE, **EMPTY**
+Linenumber, "RETURN", *EMPTY*, *EMPTY*/To_Return, Func_Name
 ```
