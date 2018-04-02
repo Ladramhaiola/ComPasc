@@ -13,8 +13,7 @@
 4. What is the point of VAR/FUNC while doing symTabOp?
 
 # To Do
-- Functions:
-|Feature | Status |
+|Function Features | Status |
 | ------ | ------ |
 | Param list | :white_check_mark: |
 | Adding Func to Parent Scope | :white_check_mark: |
@@ -23,9 +22,9 @@
 | Return variable consistency | :white_check_mark: |
 
 - Misc:
-1. Our current IR requires all function code to be together at the end
-2. Handling Break and Continue Statements together with loop and for
-3. Designator Type Checks while assignment and others operations, like AddOp and MulOp
+    1. Our current IR requires all function code to be together at the end
+    2. Handling Break and Continue Statements together with loop and for
+    3. Designator Type Checks while assignment and others operations, like AddOp and MulOp
 
 - Multi-dimensional arrays
 
