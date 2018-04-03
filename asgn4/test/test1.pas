@@ -5,10 +5,6 @@ x, y, z, a: INTEGER;
 height, width : INTEGER; 
 c: CHAR;
 
-CONSTANT
-x = 1;
-y = 6;
-
 {TYPE}
 {a1 = ARRAY[x..y] OF INTEGER;}
 
@@ -23,7 +19,8 @@ BEGIN
 END;
 
 BEGIN
-   x:=3;
+   x:=1;
+   y:=1;
    Print(x,y);
    {y:=21;}
    {z:=11;}
@@ -37,10 +34,22 @@ BEGIN
 	 {z := a1[6];}
       {END;}
 
-    {WHILE x < 5 DO}
-    {BEGIN}
-        {x := x + 1;}
-    {END;}
+    WHILE x < 5 DO
+    BEGIN
+       x := x + 1;
+       WHILE y < 5 DO
+       BEGIN
+	  y := y + 1;
+	  IF y=4 THEN
+	     BEGIN
+		BREAK;
+	     END;
+       END;
+       IF x=3 THEN
+       BEGIN
+	  CONTINUE;
+       END;	  
+    END;
    {REPEAT}
         {x := x + 1;}
     {UNTIL x<9;}

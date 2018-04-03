@@ -23,6 +23,10 @@ precedence = (
     ('nonassoc','CONSTRUCTOR')
 )
 
+#These are global variables which store the beginning (before expression) and end labels for loops (in sequence where last element is the labels for the innermost loop)
+loopBegin = []
+loopEnd = []
+
 #factor should be a dictionary with attributes 'place' and 'isArray'
 def resolveRHSArray(factor):
     if factor['isArray']:
@@ -141,8 +145,20 @@ def p_SimpleStatement(p):
     | BREAK
     | CONTINUE'''
 
+    if p[1] == 'BREAK':
+        if loopBegin == []:
+            print "Wrong use of BREAK. Enter within a loop"
+        else:
+            tac.emit("JMP",'',loopEnd[-1],'')
+
+    if p[1] == 'CONTINUE':
+        if loopBegin == []:
+            print "Wrong use of CONTINUE. Enter within a loop"
+        else:
+            tac.emit("JMP",'',loopBegin[-1],'')
+            
     # This is for handling cases where assignment happens
-    if p[2] == ':=':
+    if len(p) == 4 and p[2] == ':=':
 
         if p[1]['isArray']:
             tac.emit('STOREREF',p[1]['place'],p[1]['ArrayIndex'],p[3]['place'])
@@ -195,7 +211,7 @@ def p_SimpleStatement(p):
             print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined"
             print "Compilation Terminated"
             exit()
-
+            
     reverse_output.append(p.slice)
 
 def p_StructStmt(p):
@@ -362,6 +378,12 @@ def p_RepMark2(p):
 #No need of semicolon after WhileStmt because CompoundStmt will handle it
 def p_WhileStmt(p):
     ''' WhileStmt : WHILE WhileMark1 Expression DO WhileMark2 CompoundStmt WhileMark3'''
+
+    global loopBegin
+    global loopEnd
+    loopBegin = loopBegin[:-1]
+    loopEnd = loopEnd[:-1]
+
     reverse_output.append(p.slice)
 
 def p_WhileMark1(p):
@@ -371,6 +393,9 @@ def p_WhileMark1(p):
     tac.emit('LABEL','',l1,'')
     p[0] = [l1,l2]
 
+    loopBegin.append(l1)
+    loopEnd.append(l2)
+    
 def p_WhileMark2(p):
     ''' WhileMark2 :  '''
     tac.emit('CMP','',p[-2]['place'],'0')
