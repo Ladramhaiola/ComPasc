@@ -27,11 +27,41 @@ precedence = (
 loopBegin = []
 loopEnd = []
 
+#Getting the integer value of an Id (constant) or a number
+def getValue(Id):
+    entry = symTab.Lookup(Id,'Ident')
+    if entry == None:
+        return int(Id)
+    else:
+        if entry.cat != 'constant':
+            sys.exit("Error: Array range Ids (Id..Id) can either be numbers or constants")
+        else:
+            return int(entry.params)
+
 #factor should be a dictionary with attributes 'place' and 'isArray'
 def resolveRHSArray(factor):
     if factor['isArray']:
+
         lhs = symTab.getTemp()
-        tac.emit('LOADREF', lhs, factor['place'], factor['ArrayIndex'])
+
+        if factor['dimension'] == 1:
+            tac.emit('LOADREF', lhs, factor['place'], factor['ArrayIndex'])
+
+        else:
+            arrayEntry = symTab.Lookup(factor['place'],'Ident')
+            rowRange = arrayEntry.params[0]
+            colRange = arrayEntry.params[1]
+            # 1 is added to include y as column in x..y
+            numCols = colRange['end'] - colRange['start'] + 1
+            # Checking for valid array index
+            if int(factor['rowIndex']) not in range(rowRange['start'],rowRange['end']+1):
+                sys.exit("Array Index out of range")
+            if int(factor['columnIndex']) not in range(colRange['start'],colRange['end']+1):
+                sys.exit("Array Index out of range")
+
+            index = (int(factor['rowIndex'])-rowRange['start'])*numCols + int(factor['columnIndex'])
+            tac.emit('LOADREF', lhs, factor['place'], str(index))
+
         factor['place'] = lhs
 
 def updateStar(p):
@@ -160,12 +190,25 @@ def p_SimpleStatement(p):
     # This is for handling cases where assignment happens
     if len(p) == 4 and p[2] == ':=':
 
+        print symTab.Lookup('Rectangle','Ident')
         entry = symTab.Lookup(p[1]['place'],'Ident')
         if entry.cat == 'constant':
             sys.exit("ERROR : Trying to assign constant variable "+p[1]['place'])
             
         if p[1]['isArray']:
-            tac.emit('STOREREF',p[1]['place'],p[1]['ArrayIndex'],p[3]['place'])
+            if p[1]['dimension'] == 1:
+                index = p[1]['ArrayIndex']
+            else:
+                arrayEntry = symTab.Lookup(p[1]['place'],'Ident')
+                rowRange = arrayEntry.params[0]
+                colRange = arrayEntry.params[1]
+                numCols = colRange['end'] - colRange['start'] + 1
+                if int(p[1]['rowIndex']) not in range(rowRange['start'],rowRange['end']+1):
+                    sys.exit("Array Index out of range")
+                if int(p[1]['columnIndex']) not in range(colRange['start'],colRange['end']+1):
+                    sys.exit("Array Index out of range")
+                index = (int(p[1]['rowIndex'])-rowRange['start'])*numCols + int(p[1]['columnIndex'])
+            tac.emit('STOREREF', p[1]['place'], str(index), p[3]['place'])
         else:
             tac.emit('+',p[1]['place'],p[3]['place'],'0')
 
@@ -533,10 +576,11 @@ def p_Factor(p):
         p[0]['place'] = p[1]
         p[0]['isArray'] = False
 
-    # print(p[0])
+    #print(p[0])
     reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
+# Attribute for Type is a dictionary with key 'type' denoting the type string and in case of Array it also has the key 'ranges' specifying rowRanges and columnRanges
 def p_Type(p):
     ''' Type : TypeID
     | PointerType
@@ -545,7 +589,16 @@ def p_Type(p):
     | Array 
     | ID'''
 
-    p[0] = p[1]
+    p[0] = {}
+    p[0]['type'] = p[1]
+    
+    # This will happen only when Type is Array, else it will be string
+    if type(p[1]) == type({}):
+        p[0] = {}
+        p[0]['type'] = 'ARRAY'
+        p[0]['ranges'] = p[1]['ranges']
+        p[0]['dataType'] = p[1]['dataType']
+
     reverse_output.append(p.slice)
 
 def p_PointerType(p):
@@ -590,11 +643,16 @@ def p_ColonTypeDecl(p):
     | TypeDecl SEMICOLON'''
     reverse_output.append(p.slice)
 
+# What is the need of the last two?
 def p_TypeDecl(p):
     ''' TypeDecl : ID EQUALS Type
-    | ID EQUALS RestrictedType
-    | ID EQUALS TYPE Type
-    | ID EQUALS TYPE RestrictedType '''
+    | ID EQUALS RestrictedType '''
+    #| ID EQUALS TYPE Type
+    #| ID EQUALS TYPE RestrictedType '''
+    
+    if p[3]['type'] == 'ARRAY':
+        symTab.Define(p[1],p[3]['dataType'],'ARRAY',p[3]['ranges'])
+    
     reverse_output.append(p.slice)
 
 def p_RestrictedType(p):
@@ -659,11 +717,21 @@ def p_Designator(p):
 
     p[0] = p[2]
     p[0]['place'] = p[1]
+
+    if p[2]['isArray']:
+
+        entry = symTab.Lookup(p[1],'Ident')
+
+        if len(entry.params) > p[2]['dimension']:
+            sys.exit("Array index missing")
+
+        elif len(entry.params) < p[2]['dimension']:
+            sys.exit("Extra Array Index")
     
     if symTab.Lookup(p[1],'Ident') != None:
         # We are only concerned about identifiers at the moment
-        p[0]['type'] = symTab.Lookup(p[1],'Ident').typ
-
+        p[0]['type'] = symTab.Lookup(p[1],'Ident').typ 
+        
     else:
         p[0]['type'] = 'undef'
 
@@ -685,12 +753,22 @@ def p_DesSubEleStar(p):
 def p_DesignatorSubElem(p):
     ''' DesignatorSubElem : DOT ID
     | LSQUARE Expression RSQUARE
+    | LSQUARE Expression RSQUARE LSQUARE Expression RSQUARE
     | POWER '''
 
     if len(p) == 4:
         p[0] = {}
         p[0]['isArray'] = True
         p[0]['ArrayIndex'] = p[2]['place']
+        p[0]['dimension'] = 1
+
+    elif len(p) == 7:
+        p[0] = {}
+        p[0]['isArray'] = True
+        p[0]['rowIndex'] = p[2]['place']
+        p[0]['columnIndex'] = p[5]['place']
+        p[0]['dimension'] = 2
+
     else:
         p[0] = {}
         p[0]['isArray'] = False
@@ -714,9 +792,10 @@ def p_ConstDecl(p):
 
     if len(p) == 4:
         tac.emit('+',p[1],p[3],'0')
-        print symTab.Lookup(p[1],'Ident')
+        #print symTab.Lookup(p[1],'Ident')
         entry = symTab.Lookup(p[1],'Ident')
         entry.cat = 'constant'
+        entry.params = p[3]
         
     reverse_output.append(p.slice)
 
@@ -727,11 +806,23 @@ def p_TypedConst(p):
     
 def p_Array(p):
     ''' Array : ARRAY LSQUARE ArrayBetween RSQUARE OF TypeArray '''
+    p[0] = {}
+    p[0]['ranges'] = p[3]
+    p[0]['dataType'] = p[6]
     reverse_output.append(p.slice)
 
 def p_ArrayBetween(p):
     ''' ArrayBetween : ArrayRange COMMA ArrayRange
     | ArrayRange '''
+
+    p[0] = []
+
+    if len(p) == 4:
+        p[0].append(p[1])
+        p[0].append(p[3])
+    else:
+        p[0].append(p[1])
+    
     reverse_output.append(p.slice)
     
 def p_ArrayRange(p):
@@ -740,12 +831,17 @@ def p_ArrayRange(p):
     | ID DOT DOT ID
     | ID DOT DOT NUMBER '''
 
+    p[0] = {}
+    p[0]['start'] = getValue(p[1])
+    p[0]['end'] = getValue(p[4])
+    print p[0]
     
     reverse_output.append(p.slice)
 
 def p_TypeArray(p):
     ''' TypeArray : TypeID
     | PointerType '''
+    p[0] = p[1]
     reverse_output.append(p.slice)
 
 def p_ArrayConst(p):
@@ -811,7 +907,7 @@ def p_ParamIdent(p):
     ''' ParamIdent : IdentList COLON Type
     | IdentList '''
     if len(p) == 4:
-        p[0] = [p[1],p[3]]
+        p[0] = [p[1],p[3]['type']]
     else:
         p[0] = [p[1]]
     reverse_output.append(p.slice)
@@ -830,7 +926,7 @@ def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
 
     for elem in p[1]:
-        symTab.Define(elem,p[3].lower(),'VAR')
+        symTab.Define(elem,p[3]['type'].lower(),'VAR')
         print symTab.table
     
     reverse_output.append(p.slice)
@@ -873,8 +969,8 @@ def p_FuncHeading(p):
 
     # Declare new scope here
     symTab.AddScope(p[2]['place'],'function')
-    symTab.table[symTab.currScope]['ReturnType'] = p[6]
-    symTab.Define(p[2]['place'],p[6],'VAR') # Define a variable with same return type as function
+    symTab.table[symTab.currScope]['ReturnType'] = p[6]['type']
+    symTab.Define(p[2]['place'],p[6]['type'],'VAR') # Define a variable with same return type as function
 
     # Add the variables into symbol Table
     param_list = p[4]
@@ -891,7 +987,7 @@ def p_FuncHeading(p):
 
     save_scope = symTab.currScope # Save to revert back
     symTab.endScope() # Go to the parent, and define this function as an entry in Func
-    to_insert = symTab.Define(p[2]['place'],p[6],'FUNC',params)
+    to_insert = symTab.Define(p[2]['place'],p[6]['type'],'FUNC',params)
     symTab.currScope = save_scope # Load back the current scope
 
     p[0] = p[2] # Giving the designator to Procedure Heading

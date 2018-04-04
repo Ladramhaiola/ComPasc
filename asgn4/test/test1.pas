@@ -7,9 +7,10 @@ c: CHAR;
 
 CONSTANT
 x = 5;
+y = 6;
    
 TYPE
-a1 = ARRAY[x..y] OF INTEGER;
+   a1 = ARRAY[x..10,y..10] OF INTEGER;
 
 { procedure Print(x: INTEGER;y: INTEGER); }
 { BEGIN }
@@ -22,13 +23,7 @@ a1 = ARRAY[x..y] OF INTEGER;
 { END; }
 
 BEGIN
-   x:=1;
-   y:=1;
-   Print(x,y);
-   y:=21;
-   z:=11;
-   a1[6]:=a1[6]-y;
-
+   a1[6]:=a1[6][7]-z;
    
    { IF a1[6]<z THEN }
    {    BEGIN }

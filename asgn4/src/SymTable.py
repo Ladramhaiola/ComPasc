@@ -95,6 +95,13 @@ class SymTable (object):
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
+            elif (cat=="ARRAY"):
+                print "Defining array: ",v
+                if (v not in curr_scope['Ident']):
+                    e = SymTableEntry (v, typ, 'array', params)
+                    curr_scope['Ident'][v] = e
+                else:
+                    sys.exit(v + " is already initialised in this scope")
             else:
                 if (v not in curr_scope['Func']):
                     # If function, then: v - name, typ - return type, category = function
@@ -165,5 +172,5 @@ class SymTableEntry(object):
         self.name = name
         self.typ = typ # for var: int, char, double | for function: typ is return type
         self.cat = category # either variable, constant, function, class or object
-        self.params = params # For function, this is a list of param types
+        self.params = params # For function, this is a list of param types, for constant, this is value of the constant and for array this is the range of array rows and columns 
         self.num_params = len(self.params)

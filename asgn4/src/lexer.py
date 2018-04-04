@@ -55,9 +55,9 @@ def build (debug=True):
         t.type = reserved.get(t.value.lower(), 'ID')
         return t
 
-    # define number
+    # define number (removed the dot from number to help with arrays)
     def t_NUMBER(t):
-        r'[-]?[0-9]*\.?[0-9]+'
+        r'[-]?[0-9]*[0-9]+'
         
         return t
 
