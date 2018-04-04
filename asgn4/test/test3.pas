@@ -35,15 +35,15 @@ begin
    width :=w;
 end;
 
-function Rectangle.getlength(): integer;  
-begin
-   getlength := length;
-end;
+{ function Rectangle.getlength(): integer;   }
+{ begin }
+{    getlength := length; }
+{ end; }
 
-function Rectangle.getwidth(): integer;  
-begin
-   getwidth := width;
-end;
+{ function Rectangle.getwidth(): integer;   }
+{ begin }
+{    getwidth := width; }
+{ end; }
 
 procedure Rectangle.draw;
 var 
@@ -55,7 +55,6 @@ begin
       j := 1;
       while j < self.width do
       begin
-         write(' * ');
          j := j + 1;
       end;
       //writeln;

@@ -12,11 +12,12 @@ Var
 
 procedure DrawingObject.Draw;
   begin
-       writeln('Drawing an Object');
-       writeln(' x = ', x, ' y = ', y);  // object fields
-       writeln(' width = ', width);
-       writeln(' height = ', height);
-       writeln;
+       { writeln('Drawing an Object'); }
+       { writeln(' x = ', x, ' y = ', y);  // object fields }
+       { writeln(' width = ', width); }
+       { writeln(' height = ', height); }
+       { writeln; }
+     width := height;
 //    moveto (x, y);  // probably would need to include a platform dependent drawing unit to do actual drawing
 //    ... more code to actually draw a shape on the screen using the other parameters
   end;
@@ -27,8 +28,6 @@ begin
   Rectangle.y:= 100;
   Rectangle.width:= 40;
   Rectangle.height:= 40;
- 
-  writeln('x = ', Rectangle.x);
  
   Rectangle.Draw;  //  Calling the method (procedure)
  

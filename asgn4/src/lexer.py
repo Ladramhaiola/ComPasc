@@ -57,7 +57,7 @@ def build (debug=True):
 
     # define number
     def t_NUMBER(t):
-        r'[-+]?[0-9]*\.?[0-9]+'
+        r'[-]?[0-9]*\.?[0-9]+'
         
         return t
 

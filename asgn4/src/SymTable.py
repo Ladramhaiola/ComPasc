@@ -86,16 +86,31 @@ class SymTable (object):
                 if (v not in curr_scope['Ident']):
                     e = SymTableEntry (v, typ, 'variable', params)
                     curr_scope['Ident'][v] = e
+                else:
+                    sys.exit(v + " is already initialised in this scope")
+            elif (cat=="CONST"):
+                print "Defining constant: ",v
+                if (v not in curr_scope['Ident']):
+                    e = SymTableEntry (v, typ, 'constant', params)
+                    curr_scope['Ident'][v] = e
+                else:
+                    sys.exit(v + " is already initialised in this scope")
             else:
                 if (v not in curr_scope['Func']):
                     # If function, then: v - name, typ - return type, category = function
                     e = SymTableEntry (v, typ, 'function', params)
                     curr_scope['Func'][v] = e
+                else:
+                    sys.exit(v + " is already initialised in this scope")
 
         else:
             sys.exit(v + " is already initialised in this scope")
 
-        return e.name
+            
+        if e != None:
+            return e.name
+        else:
+            return None
 
 
     def getScope(self, identifier, idFunc = 'Ident'):
@@ -149,6 +164,6 @@ class SymTableEntry(object):
     def __init__(self,name, typ, category = "variable", params = ''):
         self.name = name
         self.typ = typ # for var: int, char, double | for function: typ is return type
-        self.cat = category # either var, function, class or object
+        self.cat = category # either variable, constant, function, class or object
         self.params = params # For function, this is a list of param types
         self.num_params = len(self.params)

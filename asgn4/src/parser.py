@@ -160,6 +160,10 @@ def p_SimpleStatement(p):
     # This is for handling cases where assignment happens
     if len(p) == 4 and p[2] == ':=':
 
+        entry = symTab.Lookup(p[1]['place'],'Ident')
+        if entry.cat == 'constant':
+            sys.exit("ERROR : Trying to assign constant variable "+p[1]['place'])
+            
         if p[1]['isArray']:
             tac.emit('STOREREF',p[1]['place'],p[1]['ArrayIndex'],p[3]['place'])
         else:
@@ -358,15 +362,26 @@ def p_LoopStmt(p):
     | WhileStmt '''
     reverse_output.append(p.slice)
 
+#Introducing a label at the end of repeat to do same thing as while for break/continue
 def p_RepeatStmt(p):
     ''' RepeatStmt : REPEAT RepMark1 Statement UNTIL Expression RepMark2 SEMICOLON '''
+
+    global loopBegin
+    global loopEnd
+    loopBegin = loopBegin[:-1]
+    loopEnd = loopEnd[:-1]
+
     reverse_output.append(p.slice)
 
 def p_RepMark1(p):
     ''' RepMark1 : '''
     l1 = symTab.getLabel()
+    l2 = symTab.getLabel()
     tac.emit('LABEL','',l1,'')
     p[0] = l1
+
+    loopBegin.append(l1)
+    loopEnd.append(l2)
 
 def p_RepMark2(p):
     ''' RepMark2 : '''
@@ -699,6 +714,9 @@ def p_ConstDecl(p):
 
     if len(p) == 4:
         tac.emit('+',p[1],p[3],'0')
+        print symTab.Lookup(p[1],'Ident')
+        entry = symTab.Lookup(p[1],'Ident')
+        entry.cat = 'constant'
         
     reverse_output.append(p.slice)
 
@@ -712,10 +730,17 @@ def p_Array(p):
     reverse_output.append(p.slice)
 
 def p_ArrayBetween(p):
-    ''' ArrayBetween : NUMBER DOT DOT NUMBER
+    ''' ArrayBetween : ArrayRange COMMA ArrayRange
+    | ArrayRange '''
+    reverse_output.append(p.slice)
+    
+def p_ArrayRange(p):
+    ''' ArrayRange : NUMBER DOT DOT NUMBER
     | NUMBER DOT DOT ID
     | ID DOT DOT ID
     | ID DOT DOT NUMBER '''
+
+    
     reverse_output.append(p.slice)
 
 def p_TypeArray(p):
@@ -806,6 +831,7 @@ def p_VarDecl(p):
 
     for elem in p[1]:
         symTab.Define(elem,p[3].lower(),'VAR')
+        print symTab.table
     
     reverse_output.append(p.slice)
 
@@ -880,8 +906,12 @@ def p_FuncHeadingSemicolon(p):
 def p_FormalParams(p):
     ''' FormalParams : LPAREN ParamIdentList RPAREN
     | '''
-    p[0] = p[2]
 
+    if len(p) == 4:
+        p[0] = p[2]
+    else:
+        p[0] = []
+        
     # p[2] is a list of lists. p[2][0] will have two elements: p[2][0][0]: id's, p[2][0][1]: types
 
     reverse_output.append(p.slice)

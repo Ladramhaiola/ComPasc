@@ -1,6 +1,6 @@
 PROGRAM Sort (input, output);
 
-CONST
+CONSTANT
 	MaxElts = 50;
 
 TYPE 
@@ -15,7 +15,7 @@ BEGIN
     size := 1;
     WHILE NOT eof DO 
     BEGIN
-		readln(a[size]);
+       a[size] := 1;
 	END;
 	IF NOT eof THEN
 	BEGIN
@@ -45,7 +45,6 @@ BEGIN
 	i := 1;
 	WHILE i < size DO
 	BEGIN
-	    writeln(arr[i]);
 	    i := i + 1;
     END;
 END;
