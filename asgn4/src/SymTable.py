@@ -174,3 +174,4 @@ class SymTableEntry(object):
         self.cat = category # either variable, constant, function, class or object
         self.params = params # For function, this is a list of param types, for constant, this is value of the constant and for array this is the range of array rows and columns 
         self.num_params = len(self.params)
+        self.assigned = False # This is for knowing whether a variable has been assigned before use or not (won't work for arrays)

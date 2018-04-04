@@ -23,7 +23,8 @@ TYPE
 { END; }
 
 BEGIN
-   a1[6]:=a1[6][7]-z;
+
+   a1[7][8]:=a1[6][7]-z;
    
    { IF a1[6]<z THEN }
    {    BEGIN }

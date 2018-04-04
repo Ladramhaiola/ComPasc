@@ -7,6 +7,8 @@ from SymTable import SymTable
 from ThreeAddrCode import ThreeAddrCode
 
 # Use of Pointer Type Statement in Grammar? Since we are not working with pointers[?]
+# Warning displayed when unassigned variable is used
+# Scope of functions?
 
 reverse_output = []
 
@@ -37,9 +39,14 @@ def getValue(Id):
             sys.exit("Error: Array range Ids (Id..Id) can either be numbers or constants")
         else:
             return int(entry.params)
-
-#factor should be a dictionary with attributes 'place' and 'isArray'
+        
 def resolveRHSArray(factor):
+
+    entry = symTab.Lookup(factor['place'],'Ident')
+
+    if entry != None and entry.cat == 'variable' and entry.assigned == False:
+        print "Warning : Variable " + factor['place'] + " used before assignment"
+        
     if factor['isArray']:
 
         lhs = symTab.getTemp()
@@ -48,9 +55,8 @@ def resolveRHSArray(factor):
             tac.emit('LOADREF', lhs, factor['place'], factor['ArrayIndex'])
 
         else:
-            arrayEntry = symTab.Lookup(factor['place'],'Ident')
-            rowRange = arrayEntry.params[0]
-            colRange = arrayEntry.params[1]
+            rowRange = entry.params[0]
+            colRange = entry.params[1]
             # 1 is added to include y as column in x..y
             numCols = colRange['end'] - colRange['start'] + 1
             # Checking for valid array index
@@ -63,7 +69,8 @@ def resolveRHSArray(factor):
             tac.emit('LOADREF', lhs, factor['place'], str(index))
 
         factor['place'] = lhs
-
+    
+        
 def updateStar(p):
 
     p[0] = {}
@@ -135,9 +142,6 @@ def p_Block(p):
                 print "Compilation Terminated"
                 exit()
 
-    if symTab.table[symTab.currScope]['Type'] == 'loop':
-        # For Kaartik to work here for Break and Continue. WARNING: in the loops semantics, AddScope has not been called till now.
-        pass
     reverse_output.append(p.slice)
 
 def p_DeclSection(p):
@@ -190,7 +194,6 @@ def p_SimpleStatement(p):
     # This is for handling cases where assignment happens
     if len(p) == 4 and p[2] == ':=':
 
-        print symTab.Lookup('Rectangle','Ident')
         entry = symTab.Lookup(p[1]['place'],'Ident')
         if entry.cat == 'constant':
             sys.exit("ERROR : Trying to assign constant variable "+p[1]['place'])
@@ -211,6 +214,10 @@ def p_SimpleStatement(p):
             tac.emit('STOREREF', p[1]['place'], str(index), p[3]['place'])
         else:
             tac.emit('+',p[1]['place'],p[3]['place'],'0')
+
+        # This is for knowing that a variable has been assigned    
+        if entry.cat == 'variable':
+            entry.assigned = True
 
         scope_table = symTab.table[symTab.currScope]
 
@@ -709,7 +716,6 @@ def p_ExprList(p):
     if len(p) == 3:
         p[0] = p[2]
         p[0].append(p[1])
-    print p[0]
     reverse_output.append(p.slice)
 
 def p_Designator(p):
@@ -733,7 +739,7 @@ def p_Designator(p):
         p[0]['type'] = symTab.Lookup(p[1],'Ident').typ 
         
     else:
-        p[0]['type'] = 'undef'
+        sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
     reverse_output.append(p.slice)
 
@@ -834,7 +840,6 @@ def p_ArrayRange(p):
     p[0] = {}
     p[0]['start'] = getValue(p[1])
     p[0]['end'] = getValue(p[4])
-    print p[0]
     
     reverse_output.append(p.slice)
 
@@ -927,7 +932,6 @@ def p_VarDecl(p):
 
     for elem in p[1]:
         symTab.Define(elem,p[3]['type'].lower(),'VAR')
-        print symTab.table
     
     reverse_output.append(p.slice)
 
