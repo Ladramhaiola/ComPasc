@@ -9,8 +9,7 @@
 
 1. What do we have to do in type section?
 2. Handling 'Factor' in all it's cases.
-3. Is there use of doublestar? (*..* is comments)
-4. What is the point of VAR/FUNC while doing symTabOp?
+3. What is the point of VAR/FUNC while doing symTabOp?
 
 # To Do
 |Function Features | Status |
@@ -23,10 +22,12 @@
 
 - Misc:
     1. Our current IR requires all function code to be together at the end
-    2. Handling Break and Continue Statements together with loop and for
-    3. Designator Type Checks while assignment and others operations, like AddOp and MulOp
+    2. Designator Type Checks while assignment and others operations, like AddOp and MulOp
+    3. Functon calls in Factor (return value to be assigned to a temporary)
+    4. Pointer Arithematic
+    5. Floats (in the end)
 
-- Multi-dimensional arrays
+- Multi-dimensional arrays (upto 2 have been handled)
 
 # Testing
 
