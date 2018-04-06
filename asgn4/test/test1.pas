@@ -8,9 +8,10 @@ c: CHAR;
 CONSTANT
 x = 5;
 y = 6;
+z = 7;
    
 TYPE
-   a1 = ARRAY[x..10,y..10] OF INTEGER;
+   a1 = ARRAY[x..10,y..10,z..10] OF INTEGER;
 
 { procedure Print(x: INTEGER;y: INTEGER); }
 { BEGIN }
@@ -24,7 +25,7 @@ TYPE
 
 BEGIN
 
-   a1[7][8]:=a1[6][7]-z;
+   a1[7,8,9]:=a1[6,7,8]-z;
    
    { IF a1[6]<z THEN }
    {    BEGIN }

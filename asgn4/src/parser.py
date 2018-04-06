@@ -43,33 +43,36 @@ def getValue(Id):
 def resolveRHSArray(factor):
 
     entry = symTab.Lookup(factor['place'],'Ident')
-
+    
     if entry != None and entry.cat == 'variable' and entry.assigned == False:
         print "Warning : Variable " + factor['place'] + " used before assignment"
         
     if factor['isArray']:
 
+        # this is temporary for array index calculation
+        indexTemp = symTab.getTemp()
+        # this is temporary for additional calculations
+        temp = symTab.getTemp()
         lhs = symTab.getTemp()
 
-        if factor['dimension'] == 1:
-            tac.emit('LOADREF', lhs, factor['place'], factor['ArrayIndex'])
+        tac.emit('+',indexTemp,'0','0')
 
-        else:
-            rowRange = entry.params[0]
-            colRange = entry.params[1]
-            # 1 is added to include y as column in x..y
-            numCols = colRange['end'] - colRange['start'] + 1
-            # Checking for valid array index
-            if int(factor['rowIndex']) not in range(rowRange['start'],rowRange['end']+1):
-                sys.exit("Array Index out of range")
-            if int(factor['columnIndex']) not in range(colRange['start'],colRange['end']+1):
-                sys.exit("Array Index out of range")
+        for i in range(len(entry.params)-1):
 
-            index = (int(factor['rowIndex'])-rowRange['start'])*numCols + int(factor['columnIndex'])
-            tac.emit('LOADREF', lhs, factor['place'], str(index))
+            currIndex = factor['ArrayIndices'][i]['place']
+            Range = entry.params[i]
+            tac.emit('-',temp,currIndex,str(Range['start']))
+            tac.emit('+',indexTemp,indexTemp,temp)
+            nextRange = entry.params[i+1]
+            # Look at (https://stackoverflow.com/questions/789913/array-offset-calculations-in-multi-dimensional-array-column-vs-row-major?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa) for this calculation
+            tac.emit('-',temp,str(nextRange['end']+1),str(nextRange['start']))
+            tac.emit('*',indexTemp,indexTemp,temp)
+
+        tac.emit('-',temp,factor['ArrayIndices'][-1]['place'],str(entry.params[-1]['start']))
+        tac.emit('+',indexTemp,indexTemp,temp)
+        tac.emit('LOADREF', lhs, factor['place'], indexTemp)
 
         factor['place'] = lhs
-    
         
 def updateStar(p):
 
@@ -199,19 +202,23 @@ def p_SimpleStatement(p):
             sys.exit("ERROR : Trying to assign constant variable "+p[1]['place'])
             
         if p[1]['isArray']:
-            if p[1]['dimension'] == 1:
-                index = p[1]['ArrayIndex']
-            else:
-                arrayEntry = symTab.Lookup(p[1]['place'],'Ident')
-                rowRange = arrayEntry.params[0]
-                colRange = arrayEntry.params[1]
-                numCols = colRange['end'] - colRange['start'] + 1
-                if int(p[1]['rowIndex']) not in range(rowRange['start'],rowRange['end']+1):
-                    sys.exit("Array Index out of range")
-                if int(p[1]['columnIndex']) not in range(colRange['start'],colRange['end']+1):
-                    sys.exit("Array Index out of range")
-                index = (int(p[1]['rowIndex'])-rowRange['start'])*numCols + int(p[1]['columnIndex'])
-            tac.emit('STOREREF', p[1]['place'], str(index), p[3]['place'])
+            
+            indexTemp = symTab.getTemp()
+            temp = symTab.getTemp()
+            tac.emit('+',indexTemp,'0','0')
+            for i in range(len(entry.params)-1):
+
+                currIndex = p[1]['ArrayIndices'][i]['place']
+                Range = entry.params[i]
+                tac.emit('-',temp,currIndex,str(Range['start']))
+                tac.emit('+',indexTemp,indexTemp,temp)
+                nextRange = entry.params[i+1]
+                tac.emit('-',temp,str(nextRange['end']+1),str(nextRange['start']))
+                tac.emit('*',indexTemp,indexTemp,temp)
+
+            tac.emit('-',temp,p[1]['ArrayIndices'][-1]['place'],str(entry.params[-1]['start']))
+            tac.emit('+',indexTemp,indexTemp,temp)
+            tac.emit('STOREREF', p[1]['place'], indexTemp, p[3]['place'])
         else:
             tac.emit('+',p[1]['place'],p[3]['place'],'0')
 
@@ -583,7 +590,7 @@ def p_Factor(p):
         p[0]['place'] = p[1]
         p[0]['isArray'] = False
 
-    #print(p[0])
+    print(p[0])
     reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
@@ -601,6 +608,7 @@ def p_Type(p):
     
     # This will happen only when Type is Array, else it will be string
     if type(p[1]) == type({}):
+
         p[0] = {}
         p[0]['type'] = 'ARRAY'
         p[0]['ranges'] = p[1]['ranges']
@@ -702,9 +710,12 @@ def p_MulOp(p):
 def p_CommaExpression(p):
     ''' CommaExpression : COMMA Expression CommaExpression
     | '''
+
     if len(p) == 1:
         p[0] = []
+
     else:
+
         p[0] = p[3]
         p[0].append(p[2])
         # pass
@@ -713,9 +724,14 @@ def p_CommaExpression(p):
 def p_ExprList(p):
     ''' ExprList : Expression CommaExpression 
     | '''
+
     if len(p) == 3:
+
         p[0] = p[2]
         p[0].append(p[1])
+        # The expressions were getting appended in the reverse order
+        p[0] = p[0][::-1]
+
     reverse_output.append(p.slice)
 
 def p_Designator(p):
@@ -743,37 +759,31 @@ def p_Designator(p):
 
     reverse_output.append(p.slice)
 
+# Removed recrsion from this
 def p_DesSubEleStar(p):
-    ''' DesSubEleStar : DesSubEleStar DesignatorSubElem 
+    ''' DesSubEleStar : DesignatorSubElem 
     | '''
     
     if len(p) == 1:
         p[0] = {}
         p[0]['isArray'] = False
     else:
-        p[0] = p[2]
+        p[0] = p[1]
 
     reverse_output.append(p.slice)
 
 #replaced ExprList by Expression for simplicity
 def p_DesignatorSubElem(p):
     ''' DesignatorSubElem : DOT ID
-    | LSQUARE Expression RSQUARE
-    | LSQUARE Expression RSQUARE LSQUARE Expression RSQUARE
+    | LSQUARE ExprList RSQUARE
     | POWER '''
 
     if len(p) == 4:
         p[0] = {}
         p[0]['isArray'] = True
-        p[0]['ArrayIndex'] = p[2]['place']
-        p[0]['dimension'] = 1
-
-    elif len(p) == 7:
-        p[0] = {}
-        p[0]['isArray'] = True
-        p[0]['rowIndex'] = p[2]['place']
-        p[0]['columnIndex'] = p[5]['place']
-        p[0]['dimension'] = 2
+        p[0]['ArrayIndices'] = p[2]
+        p[0]['dimension'] = len(p[2])
+        print p[0]
 
     else:
         p[0] = {}
@@ -811,23 +821,25 @@ def p_TypedConst(p):
     reverse_output.append(p.slice)
     
 def p_Array(p):
-    ''' Array : ARRAY LSQUARE ArrayBetween RSQUARE OF TypeArray '''
+    ''' Array : ARRAY LSQUARE ArrayRange ArrayBetween RSQUARE OF TypeArray '''
+
     p[0] = {}
-    p[0]['ranges'] = p[3]
-    p[0]['dataType'] = p[6]
+    p[0]['ranges'] = p[4]
+    p[0]['ranges'].append(p[3])
+    p[0]['ranges'] = p[0]['ranges'][::-1]
+    p[0]['dataType'] = p[7]
+
     reverse_output.append(p.slice)
 
 def p_ArrayBetween(p):
-    ''' ArrayBetween : ArrayRange COMMA ArrayRange
-    | ArrayRange '''
-
-    p[0] = []
-
-    if len(p) == 4:
-        p[0].append(p[1])
-        p[0].append(p[3])
+    ''' ArrayBetween : COMMA ArrayRange ArrayBetween
+    | '''
+    
+    if len(p) == 1:
+        p[0] = []
     else:
-        p[0].append(p[1])
+        p[0] = p[3]
+        p[0].append(p[2])
     
     reverse_output.append(p.slice)
     

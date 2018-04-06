@@ -28,7 +28,7 @@
     5. Symbol Table for Objects and classes 
     6. Floats (in the end)
 
-- Multi-dimensional arrays (upto 2 have been handled)
+- Multi-dimensional arrays
 
 # Testing
 
