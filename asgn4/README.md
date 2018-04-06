@@ -25,7 +25,8 @@
     2. Designator Type Checks while assignment and others operations, like AddOp and MulOp
     3. Functon calls in Factor (return value to be assigned to a temporary)
     4. Pointer Arithematic
-    5. Floats (in the end)
+    5. Symbol Table for Objects and classes 
+    6. Floats (in the end)
 
 - Multi-dimensional arrays (upto 2 have been handled)
 
