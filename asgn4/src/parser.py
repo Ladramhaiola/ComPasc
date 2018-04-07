@@ -39,7 +39,54 @@ def getValue(Id):
             sys.exit("Error: Array range Ids (Id..Id) can either be numbers or constants")
         else:
             return int(entry.params)
-        
+
+
+def handleFuncCall(p, ifAssign = False):
+
+    name = symTab.Lookup(p[1]['place'],'Func')
+        # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
+
+        if ifAssign and p[1]['place'] == symTab.currScope + '_WRITELN':
+            sys.exit("Wrong use of WRITELN")
+
+        elif p[1]['place'] == symTab.currScope + '_WRITELN':
+            for argument in p[3]:
+                # argument is a dict
+                tac.emit('PRINT','',argument['place'],'')
+
+       	elif name != None:
+            if name.cat == 'function':
+                arg_count = 0
+                if p[3] != None:
+                    # p[3] is a list of dicts
+                    arg_count = len(p[3])
+
+                if name.num_params == arg_count:
+                    if arg_count > 0:
+                        p[3] = p[3].reverse()
+			for argument in p[3]:
+                            # argument is a dict
+                            tac.emit('PARAM','',argument['place'],'' )
+
+                    if ifAssign:
+                        lhs = symTab.getTemp()
+                        tac.emit('CALL', lhs, p[1]['place'], '')
+                        p[0]['place'] = lhs
+                    else:
+                        tac.emit('CALL','', p[1]['place'], '')
+                else:
+                    print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
+                    print "Compilation Terminated"
+                    exit()
+            else:
+                print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined as a function"
+                print "Compilation Terminated"
+                exit()
+        else:
+            print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined"
+            print "Compilation Terminated"
+            exit()
+    
 def resolveRHSArray(factor):
 
     entry = symTab.Lookup(factor['place'],'Ident')
@@ -240,42 +287,7 @@ def p_SimpleStatement(p):
 
     # This is for handling a function CALL
     elif len(p) == 5:
-
-        name = symTab.Lookup(p[1]['place'],'Func')
-        # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
-
-        if p[1]['place'] == symTab.currScope + '_WRITELN':
-            for argument in p[3]:
-                # argument is a dict
-                tac.emit('PRINT','',argument['place'],'')
-
-       	elif name != None:
-            if name.cat == 'function':
-                arg_count = 0
-                if p[3] != None:
-                    # p[3] is a list of dicts
-                    arg_count = len(p[3])
-
-                if name.num_params == arg_count:
-                    if arg_count > 0:
-                        p[3] = p[3].reverse()
-			for argument in p[3]:
-                            # argument is a dict
-                            tac.emit('PARAM','',argument['place'],'' )
-
-                    tac.emit('CALL','',p[1]['place'],'')
-                else:
-                    print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
-                    print "Compilation Terminated"
-                    exit()
-            else:
-                print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined as a function"
-                print "Compilation Terminated"
-                exit()
-        else:
-            print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined"
-            print "Compilation Terminated"
-            exit()
+        handleFuncCall(p)
             
     reverse_output.append(p.slice)
 
@@ -588,7 +600,9 @@ def p_Factor(p):
 
     p[0] = {}
 
-    if type(p[1]) is dict:
+    if len(p) == 5 and type(p[1]) is dict:
+        handleFuncCall(p, True)
+    elif len(p) == 2 and type(p[1]) is dict:
         p[0] = p[1]
     elif p[1] == '(':
         p[0] = p[2]
