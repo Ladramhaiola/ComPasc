@@ -47,6 +47,7 @@ reserved = {
     'char':'CHAR',
     'double':'DOUBLE',
     'lambda':'LAMBDA',
+    'scan':'SCAN',
     'public':'PUBLIC' # why is this required?
     # 'readln':'READLN',
     # 'writeln':'WRITELN',
