@@ -31,7 +31,7 @@ loopEnd = []
 
 #Getting the integer value of an Id (constant) or a number
 def getValue(Id):
-    entry = symTab.Lookup(Id,'Ident')
+    entry = symTab.Lookup(symTab.currScope + "_" + Id,'Ident')
     if entry == None:
         return int(Id)
     else:
@@ -180,7 +180,11 @@ def p_SimpleStatement(p):
     | INHERITED
     | LPAREN Expression RPAREN
     | BREAK
-    | CONTINUE'''
+    | CONTINUE
+    | SCAN LPAREN Designator RPAREN'''
+
+    if p[1] == 'SCAN':
+        tac.emit('SCAN',p[3]['place'],'','')
 
     if p[1] == 'BREAK':
         if loopBegin == []:
@@ -237,6 +241,13 @@ def p_SimpleStatement(p):
     # This is for handling a function CALL
     if len(p) == 5:
 
+        if p[1] == 'WRITELN':
+            for argument in p[3]:
+                # argument is a dict
+                tac.emit('PRINT','',argument['place'],'')
+            pass
+
+
 	name = symTab.Lookup(p[1]['place'],'Func')
         # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
 
@@ -249,16 +260,11 @@ def p_SimpleStatement(p):
 
                 if name.num_params == arg_count:
                     if arg_count > 0:
+                        p[3] = p[3].reverse()
 			for argument in p[3]:
                             # argument is a dict
                             tac.emit('PARAM','',argument['place'],'' )
 
-		    # if name.typ != 'void':
-                            # t = symTab.maketemp(name['type'], symbol_table.curr_table)
-                            # p[0]['value'] = t
-                            # p[0]['code'] += ['call, ' + p[1] + ', ' + str(arg_cnt) + ', ' + t]
-                    # else:
-                            # p[0]['code'] += ['call, ' + p[1] + ', ' + str(arg_cnt)]
                     tac.emit('CALL','',p[1]['place'],'')
                 else:
                     print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
@@ -668,7 +674,7 @@ def p_TypeDecl(p):
     #| ID EQUALS TYPE RestrictedType '''
     
     if p[3]['type'] == 'ARRAY':
-        symTab.Define(p[1],p[3]['dataType'],'ARRAY',p[3]['ranges'])
+        symTab.Define(symTab.currScope + "_" + p[1],p[3]['dataType'],'ARRAY',p[3]['ranges'])
     
     reverse_output.append(p.slice)
 
@@ -740,11 +746,11 @@ def p_Designator(p):
     ''' Designator : ID DesSubEleStar'''
 
     p[0] = p[2]
-    p[0]['place'] = p[1]
+    p[0]['place'] = symTab.currScope + "_" + p[1]
 
     if p[2]['isArray']:
 
-        entry = symTab.Lookup(p[1],'Ident')
+        entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
 
         if len(entry.params) > p[2]['dimension']:
             sys.exit("Array index missing")
@@ -752,10 +758,12 @@ def p_Designator(p):
         elif len(entry.params) < p[2]['dimension']:
             sys.exit("Extra Array Index")
     
-    if symTab.Lookup(p[1],'Ident') != None:
+    if symTab.Lookup(symTab.currScope + "_" + p[1],'Ident') != None:
         # We are only concerned about identifiers at the moment
-        p[0]['type'] = symTab.Lookup(p[1],'Ident').typ 
-        
+        p[0]['type'] = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident').typ 
+
+    elif symTab.Lookup(symTab.currScope + "_" + p[1],'Func') != None or p[1] in ['READLN','WRITELN']:
+        pass
     else:
         sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
@@ -809,9 +817,9 @@ def p_ConstDecl(p):
     | ID COLON TypeID EQUALS TypedConst '''
 
     if len(p) == 4:
-        tac.emit('+',p[1],p[3],'0')
+        tac.emit('+',symTab.currScope + "_" + p[1],p[3],'0')
         #print symTab.Lookup(p[1],'Ident')
-        entry = symTab.Lookup(p[1],'Ident')
+        entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
         entry.cat = 'constant'
         entry.params = p[3]
         
@@ -945,7 +953,7 @@ def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
 
     for elem in p[1]:
-        symTab.Define(elem,p[3]['type'].lower(),'VAR')
+        symTab.Define(symTab.currScope + "_" + elem,p[3]['type'].lower(),'VAR')
     
     reverse_output.append(p.slice)
 
@@ -1061,7 +1069,7 @@ def p_ProcedureHeading(p):
             # print "ID is: ",ids
             # print "Type is: ",id_type
             params.append(id_type)
-            symTab.Define(ids,id_type,'VAR')
+            symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR')
 
 
     save_scope = symTab.currScope # Save to revert back
