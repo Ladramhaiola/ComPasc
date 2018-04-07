@@ -13,7 +13,7 @@ z = 7;
 TYPE
    a1 = ARRAY[x..10,y..10,z..10] OF INTEGER;
 
-FUNCTION MyFunc(size: INTEGER);
+PROCEDURE MyFunc(size: INTEGER;);
 BEGIN
     size := size + 1;
 END;
@@ -21,6 +21,6 @@ END;
 
 BEGIN
 
-   height = x + y * z * MyFunc(x);
+   MyFunc(x);
 
 END;

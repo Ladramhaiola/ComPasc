@@ -6,14 +6,14 @@ height, width : INTEGER;
 c: CHAR;
 
 CONSTANT
-x = 5;
-y = 6;
 z = 7;
 
 BEGIN
 
+   x := 3;
+   y := 6;
    REPEAT
-      x := x-1;
+      x := x - 1;
    UNTIL x<5;
     WHILE x < 5 DO
     BEGIN

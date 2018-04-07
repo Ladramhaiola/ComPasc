@@ -39,7 +39,54 @@ def getValue(Id):
             sys.exit("Error: Array range Ids (Id..Id) can either be numbers or constants")
         else:
             return int(entry.params)
-        
+
+
+def handleFuncCall(p, ifAssign = False):
+
+    name = symTab.Lookup(p[1]['place'],'Func')
+        # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
+
+    if ifAssign and p[1]['place'] == symTab.currScope + '_WRITELN':
+            sys.exit("Wrong use of WRITELN")
+
+    elif p[1]['place'] == symTab.currScope + '_WRITELN':
+        for argument in p[3]:
+            # argument is a dict
+            tac.emit('PRINT','',argument['place'],'')
+            
+    elif name != None:
+        if name.cat == 'function':
+            arg_count = 0
+            if p[3] != None:
+                # p[3] is a list of dicts
+                arg_count = len(p[3])
+                
+            if name.num_params == arg_count:
+                if arg_count > 0:
+                    p[3] = p[3][::-1]
+		    for argument in p[3]:
+                        # argument is a dict
+                        tac.emit('PARAM','',argument['place'],'' )
+
+                if ifAssign:
+                    lhs = symTab.getTemp()
+                    tac.emit('CALL', lhs, p[1]['place'], '')
+                    p[0]['place'] = lhs
+                else:
+                    tac.emit('CALL','', p[1]['place'], '')
+            else:
+                print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
+                print "Compilation Terminated"
+                exit()
+        else:
+            print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined as a function"
+            print "Compilation Terminated"
+            exit()
+    else:
+        print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined"
+        print "Compilation Terminated"
+        exit()
+    
 def resolveRHSArray(factor):
 
     entry = symTab.Lookup(factor['place'],'Ident')
@@ -240,42 +287,7 @@ def p_SimpleStatement(p):
 
     # This is for handling a function CALL
     elif len(p) == 5:
-
-        name = symTab.Lookup(p[1]['place'],'Func')
-        # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
-
-        if p[1]['place'] == symTab.currScope + '_WRITELN':
-            for argument in p[3]:
-                # argument is a dict
-                tac.emit('PRINT','',argument['place'],'')
-
-       	elif name != None:
-            if name.cat == 'function':
-                arg_count = 0
-                if p[3] != None:
-                    # p[3] is a list of dicts
-                    arg_count = len(p[3])
-
-                if name.num_params == arg_count:
-                    if arg_count > 0:
-                        p[3] = p[3].reverse()
-			for argument in p[3]:
-                            # argument is a dict
-                            tac.emit('PARAM','',argument['place'],'' )
-
-                    tac.emit('CALL','',p[1]['place'],'')
-                else:
-                    print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
-                    print "Compilation Terminated"
-                    exit()
-            else:
-                print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined as a function"
-                print "Compilation Terminated"
-                exit()
-        else:
-            print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined"
-            print "Compilation Terminated"
-            exit()
+        handleFuncCall(p)
             
     reverse_output.append(p.slice)
 
@@ -588,7 +600,10 @@ def p_Factor(p):
 
     p[0] = {}
 
-    if type(p[1]) is dict:
+    if len(p) == 5 and type(p[1]) is dict:
+        handleFuncCall(p, True)
+        p[0]['isArray'] = False
+    elif len(p) == 2 and type(p[1]) is dict:
         p[0] = p[1]
     elif p[1] == '(':
         p[0] = p[2]
@@ -672,7 +687,7 @@ def p_TypeDecl(p):
     #| ID EQUALS TYPE RestrictedType '''
     
     if p[3]['type'] == 'ARRAY':
-        symTab.Define(symTab.currScope + "_" + p[1],p[3]['dataType'],'ARRAY',p[3]['ranges'])
+        symTab.Define(symTab.currScope + "_" + p[1], p[3]['dataType'], 'ARRAY', p[3]['ranges'])
     
     reverse_output.append(p.slice)
 
@@ -749,7 +764,8 @@ def p_Designator(p):
     if p[2]['isArray']:
 
         entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
-
+        print entry.typ
+        
         if len(entry.params) > p[2]['dimension']:
             sys.exit("Array index missing")
 
@@ -760,9 +776,10 @@ def p_Designator(p):
         # We are only concerned about identifiers at the moment
         p[0]['type'] = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident').typ 
 
-    elif symTab.Lookup(symTab.currScope + "_" + p[1],'Func') != None or p[1] in ['READLN','WRITELN']:
+    elif p[-1] in ['FUNCTION','CONSTRUCTOR','PROCEDURE'] or symTab.Lookup(symTab.currScope + "_" + p[1],'Func') != None or p[1] in ['READLN','WRITELN']:
         pass
-    else:
+
+    else :
         sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
     reverse_output.append(p.slice)
@@ -818,8 +835,11 @@ def p_ConstDecl(p):
         tac.emit('+',symTab.currScope + "_" + p[1],p[3],'0')
         #print symTab.Lookup(p[1],'Ident')
         entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
-        entry.cat = 'constant'
-        entry.params = p[3]
+        if entry == None:
+            symTab.Define(symTab.currScope + "_" + p[1],'integer','CONST',p[3])
+        else:
+            entry.cat = 'constant'
+            entry.params = p[3]
         
     reverse_output.append(p.slice)
 
@@ -951,7 +971,7 @@ def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
 
     for elem in p[1]:
-        symTab.Define(symTab.currScope + "_" + elem,p[3]['type'].lower(),'VAR')
+        symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'VAR')
     
     reverse_output.append(p.slice)
 
