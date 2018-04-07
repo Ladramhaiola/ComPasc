@@ -186,20 +186,20 @@ def p_SimpleStatement(p):
     if p[1] == 'SCAN':
         tac.emit('SCAN',p[3]['place'],'','')
 
-    if p[1] == 'BREAK':
+    elif p[1] == 'BREAK':
         if loopBegin == []:
             print "Wrong use of BREAK. Enter within a loop"
         else:
             tac.emit("JMP",'',loopEnd[-1],'')
 
-    if p[1] == 'CONTINUE':
+    elif p[1] == 'CONTINUE':
         if loopBegin == []:
             print "Wrong use of CONTINUE. Enter within a loop"
         else:
             tac.emit("JMP",'',loopBegin[-1],'')
             
     # This is for handling cases where assignment happens
-    if len(p) == 4 and p[2] == ':=':
+    elif len(p) == 4 and p[2] == ':=':
 
         entry = symTab.Lookup(p[1]['place'],'Ident')
         if entry.cat == 'constant':
@@ -239,19 +239,17 @@ def p_SimpleStatement(p):
                 scope_table['ReturnSet'] = True
 
     # This is for handling a function CALL
-    if len(p) == 5:
+    elif len(p) == 5:
 
-        if p[1] == 'WRITELN':
+        name = symTab.Lookup(p[1]['place'],'Func')
+        # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
+
+        if p[1]['place'] == symTab.currScope + '_WRITELN':
             for argument in p[3]:
                 # argument is a dict
                 tac.emit('PRINT','',argument['place'],'')
-            pass
 
-
-	name = symTab.Lookup(p[1]['place'],'Func')
-        # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
-
-	if name != None:
+       	elif name != None:
             if name.cat == 'function':
                 arg_count = 0
                 if p[3] != None:

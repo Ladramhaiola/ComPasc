@@ -15,6 +15,7 @@ TYPE
 
 BEGIN
 
+   SCAN(a);
    a1[7,8,9]:=a1[6,7,8]-"YO";
    
    { IF a1[6]<z THEN }
