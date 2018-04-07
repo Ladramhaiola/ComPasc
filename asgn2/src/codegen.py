@@ -793,7 +793,7 @@ class CodeGenerator():
                     self.check_dealloc(ln,blockIndex)
 
                 elif op == 'SCAN':
-                	self.handle_input(ln,lhs)
+                    self.handle_input(ln,lhs)
 
 
     def check_dealloc(self,ln,blockIndex):

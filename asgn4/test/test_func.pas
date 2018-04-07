@@ -10,6 +10,16 @@ VAR
 	i, j, tmp, size: integer;
 	arr: IntArrType;
 
+{ procedure Print(x: INTEGER;y: INTEGER); }
+{ BEGIN }
+{     x := x + y; }
+{ END; }
+
+{ FUNCTION Print1(x: INTEGER;y: INTEGER): INTEGER; }
+{ BEGIN }
+{     Print1 := x + y; }
+{ END; }
+
 PROCEDURE ReadArr(size: Integer; a: IntArrType);
 BEGIN
     size := 1;

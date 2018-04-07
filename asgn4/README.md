@@ -1,12 +1,3 @@
-# To Do
-|Function Features | Status |
-| ------ | ------ |
-| Param list | :white_check_mark: |
-| Adding Func to Parent Scope | :white_check_mark: |
-| Add Func Label | :white_check_mark: |
-| Arg Count Consistency| :white_check_mark: |
-| Return variable consistency | :white_check_mark: |
-
 - Misc:
     1. Our current IR requires all function code to be together at the end
     2. Designator Type Checks while assignment and others operations, like AddOp and MulOp
@@ -15,6 +6,7 @@
     5. Symbol Table for Objects and classes 
     6. Floats (in the end)
     7. What do we have to do in type section?
+    8. offsets stack (for functions)
 
 # Testing
 

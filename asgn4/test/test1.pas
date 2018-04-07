@@ -13,19 +13,9 @@ z = 7;
 TYPE
    a1 = ARRAY[x..10,y..10,z..10] OF INTEGER;
 
-{ procedure Print(x: INTEGER;y: INTEGER); }
-{ BEGIN }
-{     x := x + y; }
-{ END; }
-
-{ FUNCTION Print1(x: INTEGER;y: INTEGER): INTEGER; }
-{ BEGIN }
-{     Print1 := x + y; }
-{ END; }
-
 BEGIN
 
-   a1[7,8,9]:=a1[6,7,8]-z;
+   a1[7,8,9]:=a1[6,7,8]-"YO";
    
    { IF a1[6]<z THEN }
    {    BEGIN }
@@ -59,13 +49,4 @@ BEGIN
    {      x := x + 1; }
    {  UNTIL x<9; }
 
-   { CASE x OF }
-   {  1: x:= x + 1; }
-   {  2: x:= x + 2; }
-   {  3: x:= x + 3; }
-   {  ELSE }
-   {  BEGIN }
-   {      x:= x + 5; }
-   {  END; }
-   { END; }
 END;
