@@ -1,16 +1,3 @@
-# Done:
-
-1. Variable declaration (entry into symbol table)
-2. Constant Declaration (in const section).
-3. Arithematic and Boolean expressions.
-4. For the else part in CASE statement, we have the constraint that it should be compound
-
-# Doubts:
-
-1. What do we have to do in type section?
-2. Handling 'Factor' in all it's cases.
-3. What is the point of VAR/FUNC while doing symTabOp?
-
 # To Do
 |Function Features | Status |
 | ------ | ------ |
@@ -24,11 +11,10 @@
     1. Our current IR requires all function code to be together at the end
     2. Designator Type Checks while assignment and others operations, like AddOp and MulOp
     3. Functon calls in Factor (return value to be assigned to a temporary)
-    4. Pointer Arithematic
+    4. Pointer Arithematic (define unary operations (* and &) and enforce checks on arithematic)
     5. Symbol Table for Objects and classes 
     6. Floats (in the end)
-
-- Multi-dimensional arrays
+    7. What do we have to do in type section?
 
 # Testing
 
