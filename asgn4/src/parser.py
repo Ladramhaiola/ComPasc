@@ -236,12 +236,14 @@ def p_SimpleStatement(p):
     elif p[1] == 'BREAK':
         if loopBegin == []:
             print "Wrong use of BREAK. Enter within a loop"
+            exit
         else:
             tac.emit("JMP",'',loopEnd[-1],'')
 
     elif p[1] == 'CONTINUE':
         if loopBegin == []:
             print "Wrong use of CONTINUE. Enter within a loop"
+            exit
         else:
             tac.emit("JMP",'',loopBegin[-1],'')
             
@@ -611,7 +613,6 @@ def p_Factor(p):
         p[0]['place'] = p[1]
         p[0]['isArray'] = False
 
-    print(p[0])
     reverse_output.append(p.slice)
 
 # Added ID as a form of type for handling objects and classes
@@ -764,7 +765,6 @@ def p_Designator(p):
     if p[2]['isArray']:
 
         entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
-        print entry.typ
         
         if len(entry.params) > p[2]['dimension']:
             sys.exit("Array index missing")
@@ -808,7 +808,6 @@ def p_DesignatorSubElem(p):
         p[0]['isArray'] = True
         p[0]['ArrayIndices'] = p[2]
         p[0]['dimension'] = len(p[2])
-        print p[0]
 
     else:
         p[0] = {}
@@ -1268,7 +1267,6 @@ tac = ThreeAddrCode()
 
 # Do the things that we want to here
 inputfile = open(sys.argv[1],'r').read()
-yacc.parse(inputfile, debug = 1)
-symTab.PrintSymTable()
+yacc.parse(inputfile, debug = 0)
 
 tac.display_code()

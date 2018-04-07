@@ -82,21 +82,21 @@ class SymTable (object):
         # If the current scope is not same as the scope where this variable already exists
 
             if (cat == "VAR"):
-                print "Defining var: ",v
+                #print "Defining var: ",v
                 if (v not in curr_scope['Ident']):
                     e = SymTableEntry (v, typ, 'variable', params)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             elif (cat=="CONST"):
-                print "Defining constant: ",v
+                #print "Defining constant: ",v
                 if (v not in curr_scope['Ident']):
                     e = SymTableEntry (v, typ, 'constant', params)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             elif (cat=="ARRAY"):
-                print "Defining array: ",v
+                #print "Defining array: ",v
                 if (v not in curr_scope['Ident']):
                     e = SymTableEntry (v, typ, 'array', params)
                     curr_scope['Ident'][v] = e
