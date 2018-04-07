@@ -21,6 +21,6 @@ END;
 
 BEGIN
 
-   height := MyFunc(x);
+   MyFunc(x);
 
 END;

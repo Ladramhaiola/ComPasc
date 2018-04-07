@@ -687,7 +687,7 @@ def p_TypeDecl(p):
     #| ID EQUALS TYPE RestrictedType '''
     
     if p[3]['type'] == 'ARRAY':
-        symTab.Define(symTab.currScope + "_" + p[1],p[3]['dataType'],'ARRAY',p[3]['ranges'])
+        symTab.Define(symTab.currScope + "_" + p[1], p[3]['dataType'], 'ARRAY', p[3]['ranges'])
     
     reverse_output.append(p.slice)
 
@@ -764,7 +764,8 @@ def p_Designator(p):
     if p[2]['isArray']:
 
         entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
-
+        print entry.typ
+        
         if len(entry.params) > p[2]['dimension']:
             sys.exit("Array index missing")
 
@@ -834,8 +835,11 @@ def p_ConstDecl(p):
         tac.emit('+',symTab.currScope + "_" + p[1],p[3],'0')
         #print symTab.Lookup(p[1],'Ident')
         entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
-        entry.cat = 'constant'
-        entry.params = p[3]
+        if entry == None:
+            symTab.Define(symTab.currScope + "_" + p[1],'integer','CONST',p[3])
+        else:
+            entry.cat = 'constant'
+            entry.params = p[3]
         
     reverse_output.append(p.slice)
 
@@ -967,7 +971,7 @@ def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
 
     for elem in p[1]:
-        symTab.Define(symTab.currScope + "_" + elem,p[3]['type'].lower(),'VAR')
+        symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'VAR')
     
     reverse_output.append(p.slice)
 

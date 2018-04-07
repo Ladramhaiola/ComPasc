@@ -4,27 +4,27 @@ CONSTANT
 	MaxElts = 50;
 
 TYPE 
-	IntArrType = ARRAY [1..MaxElts] OF Integer;
+	IntArrType = ARRAY [1..MaxElts] OF INTEGER;
 
 VAR
-	i, j, tmp, size: integer;
+	i, j, tmp, size: INTEGER;
 	arr: IntArrType;
 
 PROCEDURE ReadArr(size: Integer; a: IntArrType);
 BEGIN
     size := 1;
-    WHILE NOT eof DO 
+    WHILE NOT size DO 
     BEGIN
        a[size] := 1;
 	END;
-	IF NOT eof THEN
+	IF NOT size THEN
 	BEGIN
 	    size := size + 1;
+	END;
     END;
 END;
 
 BEGIN
-	ReadArr(size, arr);
 	i := size - 1;
 	WHILE i > 1 DO
 	BEGIN

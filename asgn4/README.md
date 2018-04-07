@@ -1,6 +1,7 @@
 - Misc:
     1. Our current IR requires all function code to be together at the end
     2. Designator Type Checks while assignment and others operations, like AddOp and MulOp
+    3. Array declin Type Section creates a datatype, not the actual array variable
     4. Pointer Arithematic (define unary operations (* and &) and enforce checks on arithematic)
     5. Symbol Table for Objects and classes 
     6. Floats (in the end)
