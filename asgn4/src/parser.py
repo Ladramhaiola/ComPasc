@@ -46,46 +46,46 @@ def handleFuncCall(p, ifAssign = False):
     name = symTab.Lookup(p[1]['place'],'Func')
         # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
 
-        if ifAssign and p[1]['place'] == symTab.currScope + '_WRITELN':
+    if ifAssign and p[1]['place'] == symTab.currScope + '_WRITELN':
             sys.exit("Wrong use of WRITELN")
 
-        elif p[1]['place'] == symTab.currScope + '_WRITELN':
-            for argument in p[3]:
-                # argument is a dict
-                tac.emit('PRINT','',argument['place'],'')
+    elif p[1]['place'] == symTab.currScope + '_WRITELN':
+        for argument in p[3]:
+            # argument is a dict
+            tac.emit('PRINT','',argument['place'],'')
+            
+    elif name != None:
+        if name.cat == 'function':
+            arg_count = 0
+            if p[3] != None:
+                # p[3] is a list of dicts
+                arg_count = len(p[3])
+                
+            if name.num_params == arg_count:
+                if arg_count > 0:
+                    p[3] = p[3][::-1]
+		    for argument in p[3]:
+                        # argument is a dict
+                        tac.emit('PARAM','',argument['place'],'' )
 
-       	elif name != None:
-            if name.cat == 'function':
-                arg_count = 0
-                if p[3] != None:
-                    # p[3] is a list of dicts
-                    arg_count = len(p[3])
-
-                if name.num_params == arg_count:
-                    if arg_count > 0:
-                        p[3] = p[3].reverse()
-			for argument in p[3]:
-                            # argument is a dict
-                            tac.emit('PARAM','',argument['place'],'' )
-
-                    if ifAssign:
-                        lhs = symTab.getTemp()
-                        tac.emit('CALL', lhs, p[1]['place'], '')
-                        p[0]['place'] = lhs
-                    else:
-                        tac.emit('CALL','', p[1]['place'], '')
+                if ifAssign:
+                    lhs = symTab.getTemp()
+                    tac.emit('CALL', lhs, p[1]['place'], '')
+                    p[0]['place'] = lhs
                 else:
-                    print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
-                    print "Compilation Terminated"
-                    exit()
+                    tac.emit('CALL','', p[1]['place'], '')
             else:
-                print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined as a function"
+                print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
                 print "Compilation Terminated"
                 exit()
         else:
-            print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined"
+            print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined as a function"
             print "Compilation Terminated"
             exit()
+    else:
+        print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined"
+        print "Compilation Terminated"
+        exit()
     
 def resolveRHSArray(factor):
 
@@ -602,6 +602,7 @@ def p_Factor(p):
 
     if len(p) == 5 and type(p[1]) is dict:
         handleFuncCall(p, True)
+        p[0]['isArray'] = False
     elif len(p) == 2 and type(p[1]) is dict:
         p[0] = p[1]
     elif p[1] == '(':
@@ -774,9 +775,10 @@ def p_Designator(p):
         # We are only concerned about identifiers at the moment
         p[0]['type'] = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident').typ 
 
-    elif symTab.Lookup(symTab.currScope + "_" + p[1],'Func') != None or p[1] in ['READLN','WRITELN']:
+    elif p[-1] in ['FUNCTION','CONSTRUCTOR','PROCEDURE'] or symTab.Lookup(symTab.currScope + "_" + p[1],'Func') != None or p[1] in ['READLN','WRITELN']:
         pass
-    else:
+
+    else :
         sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
     reverse_output.append(p.slice)
