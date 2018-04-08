@@ -94,7 +94,7 @@ def resolveRHSArray(factor):
     if entry != None and entry.cat == 'variable' and entry.assigned == False:
         print "Warning : Variable " + factor['place'] + " used before assignment"
         
-    if factor['isArray']:
+    if entry != None and entry.cat == 'array':
 
         # this is temporary for array index calculation
         indexTemp = symTab.getTemp()
@@ -686,9 +686,11 @@ def p_TypeDecl(p):
     | ID EQUALS RestrictedType '''
     #| ID EQUALS TYPE Type
     #| ID EQUALS TYPE RestrictedType '''
-    
+
+    # Not prepending this with current scope because array type can be globally defined
     if p[3]['type'] == 'ARRAY':
-        symTab.Define(symTab.currScope + "_" + p[1], p[3]['dataType'], 'ARRAY', p[3]['ranges'])
+        symTab.Define(p[1], p[3]['dataType'], 'ARRAY', p[3]['ranges'])
+        p[3]['type'] = p[1]
     
     reverse_output.append(p.slice)
 
@@ -758,7 +760,7 @@ def p_ExprList(p):
 
 def p_Designator(p):
     ''' Designator : ID DesSubEleStar'''
-
+    
     p[0] = p[2]
     p[0]['place'] = symTab.currScope + "_" + p[1]
 
@@ -908,8 +910,10 @@ def p_IdentList(p):
     | ID CommaIDTypeArgs'''
 
     if len(p) == 3:
+
         if p[2] == None:
             p[0] = []
+
         else:
             p[0] = p[2]
 
@@ -923,11 +927,15 @@ def p_CommaIDTypeArgs(p):
     | '''
     
     if len(p) == 4:
+
         if p[3] == None:
             p[0] = []
+
         else:
             p[0] = p[3]
+
         p[0].append(p[2])
+
     reverse_output.append(p.slice)
 
 #ParamIdentList and ParamIdent are added for handling Formal Parameters for function or procedure declaration
@@ -936,11 +944,14 @@ def p_ParamIdentList(p):
     ''' ParamIdentList : ParamIdent SEMICOLON ParamIdentList
     | ParamIdent
     | '''
+
     if len(p) == 1:
         p[0] = []
+
     elif len(p) == 2:
         p[0] = []
         p[0].append(p[1])
+
     elif len(p) == 4:
         p[0] = p[3]
         p[0].append(p[1])
@@ -950,10 +961,12 @@ def p_ParamIdentList(p):
 def p_ParamIdent(p):
     ''' ParamIdent : IdentList COLON Type
     | IdentList '''
+
     if len(p) == 4:
         p[0] = [p[1],p[3]['type']]
     else:
         p[0] = [p[1]]
+
     reverse_output.append(p.slice)
     
 # Added VarSection without starting with the keyword VAR for classes and objects
@@ -969,8 +982,14 @@ def p_ColonVarDecl(p):
 def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
 
-    for elem in p[1]:
-        symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'VAR')
+    typeEntry = symTab.Lookup(p[3]['type'],'Ident')
+
+    if typeEntry != None:
+        for elem in p[1]:
+            symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'ARRAY',typeEntry.params)
+    else:
+        for elem in p[1]:
+            symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'VAR')
     
     reverse_output.append(p.slice)
 
@@ -1018,6 +1037,7 @@ def p_FuncHeading(p):
     # Add the variables into symbol Table
     param_list = p[4]
     params = []
+
     for item in param_list:
         idents = item[0]
         id_type = item[1]
@@ -1025,7 +1045,13 @@ def p_FuncHeading(p):
             # print "ID is: ",ids
             # print "Type is: ",id_type
             params.append(id_type)
-            symTab.Define(ids,id_type,'VAR')
+
+            # For assigning params of an array as the array type
+            typeEntry =  symTab.Lookup(id_type,'Ident')
+            if typeEntry != None:
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params)
+            else:
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR')
 
 
     save_scope = symTab.currScope # Save to revert back
@@ -1086,8 +1112,12 @@ def p_ProcedureHeading(p):
             # print "ID is: ",ids
             # print "Type is: ",id_type
             params.append(id_type)
-            symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR')
 
+            typeEntry =  symTab.Lookup(id_type,'Ident')
+            if typeEntry != None:
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params)
+            else:
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR')
 
     save_scope = symTab.currScope # Save to revert back
     symTab.endScope() # Go to the parent, and define this function as an entry in Func
