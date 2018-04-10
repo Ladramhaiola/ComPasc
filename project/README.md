@@ -1,3 +1,5 @@
+One major assumption in Assignment2 : SymbolTable contains entries for temporaries as well
+
 - To do in codegen:
   1. Improve the code in handle_binary (and hence rest of similar functions)
   2. See if you can integrate the project
