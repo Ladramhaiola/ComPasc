@@ -32,6 +32,13 @@ loopEnd = []
 symTab = SymTable()
 tac = ThreeAddrCode()
 
+def RepresentsInt(s):
+    try: 
+        int(s)
+        return True
+    except ValueError:
+        return False
+
 def emitTac(op,lhs,op1,op2):
 
     lhsEntry = symTab.Lookup(lhs,'Ident')
@@ -143,6 +150,13 @@ def resolveRHSArray(factor):
         emitTac('LOADREF', lhs, factor['place'], indexTemp)
 
         factor['place'] = lhs
+
+def getType(p):
+
+    Type = p['type']
+    if symTab.Lookup(Type,'Ident') != None:
+        Type = symTab.Lookup(Type,'Ident').typ
+    return Type
         
 def updateStar(p):
 
@@ -153,13 +167,23 @@ def updateStar(p):
     resolveRHSArray(p[2])
     
     if p[3]!={}:
+        if getType(p[2]) != getType(p[3]):
+            sys.exit("Mismatch in types " + getType(p[2]) + " and " + getType(p[3]))
         p[0]['ExprList'] = p[3]['ExprList']
         p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
 
+    p[0]['type'] = getType(p[2])
+         
 def handleTerm(p, termIndex=1, starIndex=2, whetherRelational=False):
 
     p[0]={}
     p[0]['ExprList'] = p[starIndex]['ExprList']
+
+    if getType(p[termIndex]) != getType(p[starIndex]):
+        sys.exit( "mismatch in types " + getType(p[starIndex]) + " and " + getType(p[termIndex]))
+        
+    p[0]['type'] = getType(p[termIndex])
+        
     p[0]['ExprList'].append([p[starIndex]['previousOp'],p[termIndex]['place'],p[starIndex]['place']])
     #reversing the list for left associativity 
     p[0]['ExprList'] = p[0]['ExprList'][::-1]
@@ -307,7 +331,7 @@ def p_SimpleStatement(p):
         if scope_table['Type'] == 'function' and scope_table['ReturnType'] != None:
 
             # if the variable name matches the name of the function
-            if p[1]['place'] == scope_table['Name'] and p[1]['type'] == scope_table['ReturnType']:
+            if p[1]['place'] == scope_table['Name'] and getType(p[1]) == scope_table['ReturnType']:
                 scope_table['ReturnSet'] = True
 
     # This is for handling a function CALL
@@ -595,6 +619,7 @@ def p_Term(p):
 
     else:
         p[0] = p[1]
+        print p[1]
         resolveRHSArray(p[1])
         
     reverse_output.append(p.slice)
@@ -628,10 +653,20 @@ def p_Factor(p):
     if len(p) == 5 and type(p[1]) is dict:
         handleFuncCall(p, True)
         p[0]['isArray'] = False
+        p[0]['type'] = getType(p[1])
     elif len(p) == 2 and type(p[1]) is dict:
         p[0] = p[1]
     elif p[1] == '(':
         p[0] = p[2]
+    elif type(p[1]) == type(""):
+        if RepresentsInt(p[1]):
+            p[0]['type'] = 'INTEGER'
+            p[0]['place'] = p[1]
+            p[0]['isArray'] = False
+        else:
+            p[0]['type'] = 'STRING'
+            p[0]['place'] = p[1]
+            p[0]['isArray'] = False
     else:
         p[0]['place'] = p[1]
         p[0]['isArray'] = False
@@ -807,6 +842,8 @@ def p_Designator(p):
     else :
         sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
+
+    print p[0]['type']
     reverse_output.append(p.slice)
 
 # Removed recrsion from this
@@ -1318,5 +1355,5 @@ def printpretty(filename):
 def parse(inputfile):
   
     parser = yacc.yacc()
-    yacc.parse(inputfile, debug = 0)
+    yacc.parse(inputfile, debug = 1)
     return [symTab,tac]

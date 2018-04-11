@@ -17,6 +17,7 @@ c	      : CHAR;
 BEGIN
 
    a := x*y+z-y*x<x;
+   
    SCAN(a);
    a2[7,8,9] := a2[6,7,8]- "YO";
 
