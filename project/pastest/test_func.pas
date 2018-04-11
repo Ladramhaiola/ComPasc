@@ -9,15 +9,19 @@ TYPE
    a1 = ARRAY[x..10,y..10,z..10] OF INTEGER;
 
 VAR 
-a    : INTEGER; 
+a	      : INTEGER; 
 height, width : INTEGER; 
 c	      : CHAR;
    a2	      : a1;
 
+PROCEDURE MyFunc(size: INTEGER;);
+BEGIN
+    size := size + 1;
+END;
+
+
 BEGIN
 
-   a := x*y+z-y*x<x;
-   SCAN(a);
-   a2[7,8,9] := a2[6,7,8]- "YO";
+   MyFunc(x);
 
 END;

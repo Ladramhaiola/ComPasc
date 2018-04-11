@@ -12,12 +12,11 @@ VAR
 a    : INTEGER; 
 height, width : INTEGER; 
 c	      : CHAR;
-   a2	      : a1;
+a2	      : a1; 
 
 BEGIN
 
-   a := x*y+z-y*x<x;
    SCAN(a);
-   a2[7,8,9] := a2[6,7,8]- "YO";
+   a2[7,8,9]:=a2[6,7,8]-"YO";
 
 END;

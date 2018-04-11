@@ -52,10 +52,12 @@ class varAllocateRegister:
             self.addToSymbols(lhs)
             self.addToSymbols(op1)
             self.addToSymbols(op2)
+
+        self.symbols = list(set(self.symbols))
         
     def addToSymbols(self, symbol):
 
-        if type(symbol) == type("") and not self.RepresentsInt(symbol):
+        if type(symbol) == type("") and symbol != "" and symbol[0] == "t" and self.RepresentsInt(symbol[1:]):
             self.symbols.append(symbol)
         elif isinstance(symbol, SymTableEntry):
             self.symbols.append(symbol.name)
@@ -138,7 +140,6 @@ class varAllocateRegister:
             if (i != (len(self.leaders) - 1)):
                 self.basicBlocks.append([self.leaders[i],self.leaders[i+1]-1]) # -1 because the leader is not a basic block line for previous block
             else:
-                print self.code[-1]
                 self.basicBlocks.append([self.leaders[i],int(self.code[-1][0])])
 
         # Check if the labels are not SHITE.
@@ -154,15 +155,16 @@ class varAllocateRegister:
         block = self.basicBlocks[blockIndex]
         start = block[0]
         end = block[1]
-        code = self.code[start-1:end]                                        # Line numbers start from 1 but code list index starts from 0
-        # print (code)
+        code = self.code[start-1:end]                                      # Line numbers start from 1 but code list index starts from 0
+        #print (code)
         prevLine = {}                                                        # Stores the next use info for the next line (next to the current line in the loop)
         symbols = self.symbols                                             # This is the list of all symbols
-        # print (symbols)
+        #print (symbols)
         for sym in symbols:
             prevLine[sym] = float("inf")
         
         i = len(code)
+        #print range(len(code),0,-1)
         for i in range(len(code),0,-1):
             lineDict = {}
             codeLine = code[i-1]
@@ -220,10 +222,11 @@ class varAllocateRegister:
         blockMaxNext = 0
         blockMaxSymbol = ""
 
-        blockNextUse = self.nextUse[blockIndex][linenumber-1]                              # This is a dictionary
+        blockStart = self.basicBlocks[blockIndex][0]
+        blockNextUse = self.nextUse[blockIndex][linenumber-blockStart]                              # This is a dictionary
 
         symbols = self.symbols
-
+        
         for sym in symbols:
             if blockNextUse[sym] > blockMaxNext and self.symbolToRegister[sym] != "":     # Return only the symbol which is held in some register
                 blockMaxNext = blockNextUse[sym]

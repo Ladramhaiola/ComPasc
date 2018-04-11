@@ -19,12 +19,20 @@ def representsNum(s):
         '''
         Checks if the given entry is a number entry.
         '''
+        s = getName(s)
         try: 
             float(s)
             return True
         except ValueError:
             return False
 
+def getName(symbol):
+
+        if isinstance(symbol, SymTableEntry):
+            return symbol.name
+        else:
+            return symbol
+    
 def modify3ACforCodegen(symTab,tac,listCode):
 
         newCode = []
@@ -40,6 +48,9 @@ def modify3ACforCodegen(symTab,tac,listCode):
                 if (lhs == 'FUNC'):
                     temp[3] = op1
                 else:
+                    temp[5] = op1
+            elif (operator in jump_list):
+                    temp[3] = op1
                     temp[5] = op1
             elif (operator in binary_list):
                 temp[2] = lhs

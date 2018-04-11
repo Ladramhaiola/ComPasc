@@ -101,6 +101,7 @@ class CodeGenerator():
         
 
     def RepresentsInt(self,s):
+        s = self.getName(s)
         try: 
             int(s)
             return True
@@ -179,7 +180,7 @@ class CodeGenerator():
             
         '''
 
-        print lineno, operation, lhs, op1, op2, const1, const2
+        print "#", lineno, operation, lhs, op1, op2, const1, const2
         
         op = self.op32_dict[operation] # add/sub/idiv
         # lineno, operator, lhs, op1, op2 = line
