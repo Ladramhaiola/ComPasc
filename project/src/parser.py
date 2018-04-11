@@ -1355,5 +1355,5 @@ def printpretty(filename):
 def parse(inputfile):
   
     parser = yacc.yacc()
-    yacc.parse(inputfile, debug = 1)
+    yacc.parse(inputfile, debug = 0)
     return [symTab,tac]

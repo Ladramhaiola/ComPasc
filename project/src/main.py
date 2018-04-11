@@ -135,7 +135,7 @@ def main():
 	# Codegen object
     	codeGen = CodeGenerator(symTab, tac, regAlloc, FB)
     	codeGen.setup_all()
-    	#codeGen.display_code()
+    	codeGen.display_code()
 
 if __name__ == '__main__':
 	main()
