@@ -16,6 +16,46 @@ One major assumption in Assignment2 : SymbolTable contains entries for temporari
     7. What do we have to do in type section?
     8. offsets stack (for functions)
 
+# A monologue on Functions
+
+Remember: Stack grows down.
+The task is set out in briefly three phases: Before, After Entry, and Before Exit
+
+## Before
+```
+push arg_3
+push arg_2
+push arg_1
+call MyFunc
+add esp, #Number of Bytes
+```
+The last line is needed to get the stack back to its original state.
+
+## Entry Seq
+
+```
+push ebp
+mov ebp,esp
+```
+Move the current stack pointer to the base pointer. This indicates the beggining of new stack
+
+## Accessing the elements
+The stack curretly has ebp and then return address. Therefore, to access the first pushed parameter on the stack, we do:
+```
+mov ebp+4, a
+```
+and so on.
+
+## Exit Sequence
+```
+mov esp,ebp
+pop ebp
+ret
+```
+The first line(moving ebp to esp) ensures that stack pointer points to the top of this frame. Pop the ebp. Then do ret, it takes the return address present on the stack and returns back.
+
+
+
 # Testing
 
 |    Feature | IR | Assembly |
