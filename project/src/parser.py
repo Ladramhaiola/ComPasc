@@ -101,9 +101,13 @@ def handleFuncCall(p, ifAssign = False):
                 if ifAssign:
                     lhs = symTab.getTemp()
                     emitTac('CALL', lhs, p[1]['place'], '')
+                    # Below statement needs to be refined, in case different bytes than 4
+                    emitTac('+', '%esp',str(arg_count*4) ,'0')
                     p[0]['place'] = lhs
                 else:
                     emitTac('CALL','', p[1]['place'], '')
+                    # Below statement needs to be refined, in case different bytes than 4
+                    emitTac('+', '%esp',str(arg_count*4) ,'0')
             else:
                 print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
                 print "Compilation Terminated"
@@ -1115,6 +1119,8 @@ def p_FuncDecl(p):
 def p_FMark2(p):
     ''' FMark2 : '''
     symTab.endScope()
+    emitTac('+','%esp','%ebp','0')
+    emitTac('POP','','%ebp','')
     emitTac('RETURN','',p[-3]['place'],p[-3]['place'])
 
 def p_FMark1(p):

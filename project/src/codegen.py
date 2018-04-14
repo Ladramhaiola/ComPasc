@@ -520,6 +520,7 @@ class CodeGenerator():
             op1 is a symbol table entry.
         '''
         self.asm_code[self.curr_func].append('\t\tcall ' + self.getName(op1))
+        self.asm_code[self.curr_func].append('\t\tcall ' + self.getName(op1))
 
     def handle_param(self,op1):
         '''
