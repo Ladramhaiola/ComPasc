@@ -54,5 +54,5 @@ class ThreeAddrCode:
             if type(op2) != type(""):
                 op2 = op2.name
             
-            print (LineNumber + ", " + op + ", " + lhs + ", " + op1 + ", " + op2)
+            print ("#" + LineNumber + ", " + op + ", " + lhs + ", " + op1 + ", " + op2)
 
