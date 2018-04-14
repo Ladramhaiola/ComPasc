@@ -21,7 +21,7 @@ One major assumption in Assignment2 : SymbolTable contains entries for temporari
 Remember: Stack grows down.
 The task is set out in briefly three phases: Before, After Entry, and Before Exit
 
-## Before
+## Before :white_check_mark:
 ```
 push arg_3
 push arg_2
@@ -46,7 +46,7 @@ mov ebp+4, a
 ```
 and so on.
 
-## Exit Sequence
+## Exit Sequence :white_check_mark:
 ```
 mov esp,ebp
 pop ebp
