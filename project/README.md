@@ -42,9 +42,9 @@ Move the current stack pointer to the base pointer. This indicates the beggining
 ## Accessing the elements
 The stack curretly has ebp and then return address. Therefore, to access the first pushed parameter on the stack, we do:
 ```
-mov ebp+4, a
+mov ebp+8, a
 ```
-and so on.
+and so on. It will only start after ebp+8 because 4 and 0 are occupied by return address and pushed ebp
 
 ## Exit Sequence :white_check_mark:
 ```
