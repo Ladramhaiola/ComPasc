@@ -29,6 +29,36 @@ precedence = (
 loopBegin = []
 loopEnd = []
 
+symTab = SymTable()
+tac = ThreeAddrCode()
+
+def RepresentsInt(s):
+    try: 
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+def emitTac(op,lhs,op1,op2):
+
+    lhsEntry = symTab.Lookup(lhs,'Ident')
+    op1Entry = symTab.Lookup(op1,'Ident')
+    op2Entry = symTab.Lookup(op2,'Ident')
+    
+    lhsOut = lhs
+    if lhsEntry != None:
+        lhsOut = lhsEntry
+        
+    op1Out = op1
+    if op1Entry != None:
+        op1Out = op1Entry
+
+    op2Out = op2
+    if op2Entry != None:
+        op2Out = op2Entry
+
+    tac.emit(op,lhsOut,op1Out,op2Out)
+    
 #Getting the integer value of an Id (constant) or a number
 def getValue(Id):
     entry = symTab.Lookup(symTab.currScope + "_" + Id,'Ident')
@@ -52,7 +82,7 @@ def handleFuncCall(p, ifAssign = False):
     elif p[1]['place'] == symTab.currScope + '_WRITELN':
         for argument in p[3]:
             # argument is a dict
-            tac.emit('PRINT','',argument['place'],'')
+            emitTac('PRINT','',argument['place'],'')
             
     elif name != None:
         if name.cat == 'function':
@@ -66,14 +96,14 @@ def handleFuncCall(p, ifAssign = False):
                     p[3] = p[3][::-1]
 		    for argument in p[3]:
                         # argument is a dict
-                        tac.emit('PARAM','',argument['place'],'' )
+                        emitTac('PARAM','',argument['place'],'' )
 
                 if ifAssign:
                     lhs = symTab.getTemp()
-                    tac.emit('CALL', lhs, p[1]['place'], '')
+                    emitTac('CALL', lhs, p[1]['place'], '')
                     p[0]['place'] = lhs
                 else:
-                    tac.emit('CALL','', p[1]['place'], '')
+                    emitTac('CALL','', p[1]['place'], '')
             else:
                 print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
                 print "Compilation Terminated"
@@ -102,24 +132,31 @@ def resolveRHSArray(factor):
         temp = symTab.getTemp()
         lhs = symTab.getTemp()
 
-        tac.emit('+',indexTemp,'0','0')
+        emitTac('+',indexTemp,'0','0')
 
         for i in range(len(entry.params)-1):
 
             currIndex = factor['ArrayIndices'][i]['place']
             Range = entry.params[i]
-            tac.emit('-',temp,currIndex,str(Range['start']))
-            tac.emit('+',indexTemp,indexTemp,temp)
+            emitTac('-',temp,currIndex,str(Range['start']))
+            emitTac('+',indexTemp,indexTemp,temp)
             nextRange = entry.params[i+1]
             # Look at (https://stackoverflow.com/questions/789913/array-offset-calculations-in-multi-dimensional-array-column-vs-row-major?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa) for this calculation
-            tac.emit('-',temp,str(nextRange['end']+1),str(nextRange['start']))
-            tac.emit('*',indexTemp,indexTemp,temp)
+            emitTac('-',temp,str(nextRange['end']+1),str(nextRange['start']))
+            emitTac('*',indexTemp,indexTemp,temp)
 
-        tac.emit('-',temp,factor['ArrayIndices'][-1]['place'],str(entry.params[-1]['start']))
-        tac.emit('+',indexTemp,indexTemp,temp)
-        tac.emit('LOADREF', lhs, factor['place'], indexTemp)
+        emitTac('-',temp,factor['ArrayIndices'][-1]['place'],str(entry.params[-1]['start']))
+        emitTac('+',indexTemp,indexTemp,temp)
+        emitTac('LOADREF', lhs, factor['place'], indexTemp)
 
         factor['place'] = lhs
+
+def getType(p):
+
+    Type = p['type']
+    if symTab.Lookup(Type,'Ident') != None:
+        Type = symTab.Lookup(Type,'Ident').typ
+    return Type
         
 def updateStar(p):
 
@@ -130,13 +167,23 @@ def updateStar(p):
     resolveRHSArray(p[2])
     
     if p[3]!={}:
+        if getType(p[2]) != getType(p[3]):
+            sys.exit("Mismatch in types " + getType(p[2]) + " and " + getType(p[3]))
         p[0]['ExprList'] = p[3]['ExprList']
         p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
 
+    p[0]['type'] = getType(p[2])
+         
 def handleTerm(p, termIndex=1, starIndex=2, whetherRelational=False):
 
     p[0]={}
     p[0]['ExprList'] = p[starIndex]['ExprList']
+
+    if getType(p[termIndex]) != getType(p[starIndex]):
+        sys.exit( "mismatch in types " + getType(p[starIndex]) + " and " + getType(p[termIndex]))
+        
+    p[0]['type'] = getType(p[termIndex])
+        
     p[0]['ExprList'].append([p[starIndex]['previousOp'],p[termIndex]['place'],p[starIndex]['place']])
     #reversing the list for left associativity 
     p[0]['ExprList'] = p[0]['ExprList'][::-1]
@@ -146,26 +193,26 @@ def handleTerm(p, termIndex=1, starIndex=2, whetherRelational=False):
         if whetherRelational:
             l1 = symTab.getLabel()
             l2 = symTab.getLabel()
-            tac.emit('CMP','',expr[1],expr[2])
+            emitTac('CMP','',expr[1],expr[2])
             if expr[0] == '<':
-                tac.emit('JGE','',l1,'')
+                emitTac('JGE','',l1,'')
             elif expr[0] == '>':
-                tac.emit('JLE','',l1,'')
+                emitTac('JLE','',l1,'')
             elif expr[0] == '>=':
-                tac.emit('JL','',l1,'')
+                emitTac('JL','',l1,'')
             elif expr[0] == '<=':
-                tac.emit('JG','',l1,'')
+                emitTac('JG','',l1,'')
             elif expr[0] == '<>':
-                tac.emit('JE','',l1,'')
+                emitTac('JE','',l1,'')
             else :
-                tac.emit('JNE','',l1,'')
-            tac.emit('+',lhs,'1','0')
-            tac.emit('JMP','',l2,'')
-            tac.emit('LABEL','',l1,'')
-            tac.emit('+',lhs,'0','0')
-            tac.emit('LABEL','',l2,'')
+                emitTac('JNE','',l1,'')
+            emitTac('+',lhs,'1','0')
+            emitTac('JMP','',l2,'')
+            emitTac('LABEL','',l1,'')
+            emitTac('+',lhs,'0','0')
+            emitTac('LABEL','',l2,'')
         else:
-            tac.emit(expr[0],lhs,expr[1],expr[2])
+            emitTac(expr[0],lhs,expr[1],expr[2])
         if i != len(p[0]['ExprList'])-1:
             p[0]['ExprList'][i+1][1] = lhs
     p[0]['place'] = lhs
@@ -231,21 +278,21 @@ def p_SimpleStatement(p):
     | SCAN LPAREN Designator RPAREN'''
 
     if p[1] == 'SCAN':
-        tac.emit('SCAN',p[3]['place'],'','')
+        emitTac('SCAN',p[3]['place'],'','')
 
     elif p[1] == 'BREAK':
         if loopBegin == []:
             print "Wrong use of BREAK. Enter within a loop"
             exit
         else:
-            tac.emit("JMP",'',loopEnd[-1],'')
+            emitTac("JMP",'',loopEnd[-1],'')
 
     elif p[1] == 'CONTINUE':
         if loopBegin == []:
             print "Wrong use of CONTINUE. Enter within a loop"
             exit
         else:
-            tac.emit("JMP",'',loopBegin[-1],'')
+            emitTac("JMP",'',loopBegin[-1],'')
             
     # This is for handling cases where assignment happens
     elif len(p) == 4 and p[2] == ':=':
@@ -258,22 +305,22 @@ def p_SimpleStatement(p):
             
             indexTemp = symTab.getTemp()
             temp = symTab.getTemp()
-            tac.emit('+',indexTemp,'0','0')
+            emitTac('+',indexTemp,'0','0')
             for i in range(len(entry.params)-1):
 
                 currIndex = p[1]['ArrayIndices'][i]['place']
                 Range = entry.params[i]
-                tac.emit('-',temp,currIndex,str(Range['start']))
-                tac.emit('+',indexTemp,indexTemp,temp)
+                emitTac('-',temp,currIndex,str(Range['start']))
+                emitTac('+',indexTemp,indexTemp,temp)
                 nextRange = entry.params[i+1]
-                tac.emit('-',temp,str(nextRange['end']+1),str(nextRange['start']))
-                tac.emit('*',indexTemp,indexTemp,temp)
+                emitTac('-',temp,str(nextRange['end']+1),str(nextRange['start']))
+                emitTac('*',indexTemp,indexTemp,temp)
 
-            tac.emit('-',temp,p[1]['ArrayIndices'][-1]['place'],str(entry.params[-1]['start']))
-            tac.emit('+',indexTemp,indexTemp,temp)
-            tac.emit('STOREREF', p[1]['place'], indexTemp, p[3]['place'])
+            emitTac('-',temp,p[1]['ArrayIndices'][-1]['place'],str(entry.params[-1]['start']))
+            emitTac('+',indexTemp,indexTemp,temp)
+            emitTac('STOREREF', p[1]['place'], indexTemp, p[3]['place'])
         else:
-            tac.emit('+',p[1]['place'],p[3]['place'],'0')
+            emitTac('+',p[1]['place'],p[3]['place'],'0')
 
         # This is for knowing that a variable has been assigned    
         if entry.cat == 'variable':
@@ -284,7 +331,7 @@ def p_SimpleStatement(p):
         if scope_table['Type'] == 'function' and scope_table['ReturnType'] != None:
 
             # if the variable name matches the name of the function
-            if p[1]['place'] == scope_table['Name'] and p[1]['type'] == scope_table['ReturnType']:
+            if p[1]['place'] == scope_table['Name'] and getType(p[1]) == scope_table['ReturnType']:
                 scope_table['ReturnSet'] = True
 
     # This is for handling a function CALL
@@ -314,26 +361,26 @@ def p_IfStmt(p):
 def p_IfMark1(p):
     ''' IfMark1 : '''
     l1 = symTab.getLabel()
-    tac.emit('CMP','',p[-2]['place'],'0')
-    tac.emit('JE','',l1,'')
+    emitTac('CMP','',p[-2]['place'],'0')
+    emitTac('JE','',l1,'')
     p[0] = l1
 
 def p_IfMark2(p):
     ''' IfMark2 :  '''
     label = p[-2]
-    tac.emit('LABEL','',label,'')
+    emitTac('LABEL','',label,'')
 
 def p_IfMark3(p):
     ''' IfMark3 :  '''
     l1 = symTab.getLabel()
     label = p[-3]
-    tac.emit('JMP','',l1,'')
-    tac.emit('LABEL','',label,'')
+    emitTac('JMP','',l1,'')
+    emitTac('LABEL','',label,'')
     p[0] = l1
 
 def p_IfMark4(p):
     ''' IfMark4 : '''
-    tac.emit('LABEL','',p[-2],'')
+    emitTac('LABEL','',p[-2],'')
 ## ------------------------ IF DEFS END ------------------------------ ###
 
 #testMark is for the function test as in Sir's slides
@@ -345,54 +392,54 @@ def p_CaseStmt(p):
 def p_CaseMark1(p):
     ''' CaseMark1 : '''
     temp = symTab.getLabel()
-    tac.emit('JMP','',temp,'')
+    emitTac('JMP','',temp,'')
     p[0] = temp
 
 def p_CaseMark2(p):
     ''' CaseMark2 : '''
-    tac.emit('LABEL','',p[-2],'')
+    emitTac('LABEL','',p[-2],'')
 
 def p_CaseMark3(p):
     ''' CaseMark3 :  '''
-    tac.emit('LABEL','',p[-5]['next'],'')
+    emitTac('LABEL','',p[-5]['next'],'')
 
 
 def p_CaseTest2(p):
     ''' CaseTest2 : '''
     
-    tac.emit('LABEL','',p[-5],'')
+    emitTac('LABEL','',p[-5],'')
     
     # For first CaseSelector
-    tac.emit('CMP','',p[-4]['place'],p[-2]['value'])
-    tac.emit('JE','',p[-2]['label'],'')
+    emitTac('CMP','',p[-4]['place'],p[-2]['value'])
+    emitTac('JE','',p[-2]['label'],'')
 
     
     # Testing the value which matches, and then jumping
     for key in p[-1]['map'].keys():
-        tac.emit('CMP','',p[-4]['place'],key)
-        tac.emit('JE','',p[-1]['map'][key],'')
+        emitTac('CMP','',p[-4]['place'],key)
+        emitTac('JE','',p[-1]['map'][key],'')
 
     # Unconditionally jump to the ELSE label
     temp = symTab.getLabel()
-    tac.emit('JMP','',temp,'')
+    emitTac('JMP','',temp,'')
     p[0] = temp
 
 def p_CaseTest(p):
     ''' CaseTest : '''
     
-    tac.emit('LABEL','',p[-5],'')
+    emitTac('LABEL','',p[-5],'')
     
     # For first CaseSelector
-    tac.emit('CMP','',p[-4]['place'],p[-2]['value'])
-    tac.emit('JE','',p[-2]['label'],'')
+    emitTac('CMP','',p[-4]['place'],p[-2]['value'])
+    emitTac('JE','',p[-2]['label'],'')
 
     
     # Testing the value which matches, and then jumping
     for key in p[-1]['map'].keys():
-        tac.emit('CMP','',p[-4]['place'],key)
-        tac.emit('JE','',p[-1]['map'][key],'')
+        emitTac('CMP','',p[-4]['place'],key)
+        emitTac('JE','',p[-1]['map'][key],'')
 
-    tac.emit('LABEL','',p[-1]['next'],'')
+    emitTac('LABEL','',p[-1]['next'],'')
 
 
 def p_ColonCaseSelector(p):
@@ -405,25 +452,25 @@ def p_ColonCaseSelector(p):
         p[0]['next'] = lab
         # gstack.append(lab)
         p[0]['map'] = {}
-        tac.emit('JMP','',p[0]['next'],'')
+        emitTac('JMP','',p[0]['next'],'')
     else:
         p[0] = p[1]
         p[0]['map'][p[2]['value']] = p[2]['label']
-        tac.emit('JMP','',p[1]['next'],'')
+        emitTac('JMP','',p[1]['next'],'')
 
     reverse_output.append(p.slice)
 
 def p_CaseSelector(p):
     ''' CaseSelector : CaseLabel COLON Statement '''
     p[0] = p[1]
-    # tac.emit('JMP','',gstack[-1],'')
+    # emitTac('JMP','',gstack[-1],'')
     reverse_output.append(p.slice)
 
 
 def p_CaseLabel(p):
     ''' CaseLabel : NUMBER '''
     lab = symTab.getLabel()
-    tac.emit('LABEL','',lab,'')
+    emitTac('LABEL','',lab,'')
     p[0] = {}
     p[0]['label'] = lab
     p[0]['value'] = p[1]
@@ -452,7 +499,7 @@ def p_RepMark1(p):
     ''' RepMark1 : '''
     l1 = symTab.getLabel()
     l2 = symTab.getLabel()
-    tac.emit('LABEL','',l1,'')
+    emitTac('LABEL','',l1,'')
     p[0] = l1
 
     loopBegin.append(l1)
@@ -460,8 +507,8 @@ def p_RepMark1(p):
 
 def p_RepMark2(p):
     ''' RepMark2 : '''
-    tac.emit('CMP','',p[-1]['place'],'1')
-    tac.emit('JE','',p[-4],'')
+    emitTac('CMP','',p[-1]['place'],'1')
+    emitTac('JE','',p[-4],'')
 
 ### ------------------------ REP DEFS END --------------------------- ###
 
@@ -480,7 +527,7 @@ def p_WhileMark1(p):
     ''' WhileMark1 :  '''
     l1 = symTab.getLabel()
     l2 = symTab.getLabel()
-    tac.emit('LABEL','',l1,'')
+    emitTac('LABEL','',l1,'')
     p[0] = [l1,l2]
 
     loopBegin.append(l1)
@@ -488,13 +535,13 @@ def p_WhileMark1(p):
     
 def p_WhileMark2(p):
     ''' WhileMark2 :  '''
-    tac.emit('CMP','',p[-2]['place'],'0')
-    tac.emit('JE','',p[-3][1],'') # Jump to l2, that is exit
+    emitTac('CMP','',p[-2]['place'],'0')
+    emitTac('JE','',p[-3][1],'') # Jump to l2, that is exit
 
 def p_WhileMark3(p):
     ''' WhileMark3 :  '''
-    tac.emit('JMP','',p[-5][0],'') # Go back to l1
-    tac.emit('LABEL','',p[-5][1],'') # l2, This is exit
+    emitTac('JMP','',p[-5][0],'') # Go back to l1
+    emitTac('LABEL','',p[-5][1],'') # l2, This is exit
 
 ### -------------------- WHILE DEFS END --------------------------- ###
 
@@ -547,7 +594,7 @@ def p_SimpleExpression(p):
         p[0] = p[1]
 
     if len(p) == 4:
-        tac.emit('-',p[0]['place'],'0',p[0]['place'])
+        emitTac('-',p[0]['place'],'0',p[0]['place'])
         
     reverse_output.append(p.slice)
 
@@ -605,10 +652,20 @@ def p_Factor(p):
     if len(p) == 5 and type(p[1]) is dict:
         handleFuncCall(p, True)
         p[0]['isArray'] = False
+        p[0]['type'] = getType(p[1])
     elif len(p) == 2 and type(p[1]) is dict:
         p[0] = p[1]
     elif p[1] == '(':
         p[0] = p[2]
+    elif type(p[1]) == type(""):
+        if RepresentsInt(p[1]):
+            p[0]['type'] = 'INTEGER'
+            p[0]['place'] = p[1]
+            p[0]['isArray'] = False
+        else:
+            p[0]['type'] = 'STRING'
+            p[0]['place'] = p[1]
+            p[0]['isArray'] = False
     else:
         p[0]['place'] = p[1]
         p[0]['isArray'] = False
@@ -691,12 +748,18 @@ def p_TypeDecl(p):
     if p[3]['type'] == 'ARRAY':
         symTab.Define(p[1], p[3]['dataType'], 'ARRAY', p[3]['ranges'])
         p[3]['type'] = p[1]
-    
+    elif p[3]['type'] in ['OBJECT','CLASS']:
+        symTab.Define(p[1], 'OBJECT','OBJECT', p[3]['params'])
     reverse_output.append(p.slice)
 
 def p_RestrictedType(p):
     ''' RestrictedType : ObjectType
     | ClassType '''
+
+    p[0] = {}
+    p[0]['type'] = p[1]['type']
+    p[0]['params'] = p[1]['params']
+    
     reverse_output.append(p.slice)
 
 def p_RelOp(p):
@@ -773,7 +836,11 @@ def p_Designator(p):
 
         elif len(entry.params) < p[2]['dimension']:
             sys.exit("Extra Array Index")
-    
+
+    # This is for handling object.variable
+    elif 'var' in p[2].keys() :
+        p[0]['place'] = p[0]['place'] + "_" + p[2]['var']
+
     if symTab.Lookup(symTab.currScope + "_" + p[1],'Ident') != None:
         # We are only concerned about identifiers at the moment
         p[0]['type'] = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident').typ 
@@ -784,6 +851,8 @@ def p_Designator(p):
     else :
         sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
+
+    print p[2]['place']
     reverse_output.append(p.slice)
 
 # Removed recrsion from this
@@ -810,7 +879,10 @@ def p_DesignatorSubElem(p):
         p[0]['isArray'] = True
         p[0]['ArrayIndices'] = p[2]
         p[0]['dimension'] = len(p[2])
-
+    elif len(p) == 3:
+        p[0] = {}
+        p[0]['isArray'] = False
+        p[0]['var'] = p[2]
     else:
         p[0] = {}
         p[0]['isArray'] = False
@@ -833,14 +905,16 @@ def p_ConstDecl(p):
     | ID COLON TypeID EQUALS TypedConst '''
 
     if len(p) == 4:
-        tac.emit('+',symTab.currScope + "_" + p[1],p[3],'0')
-        #print symTab.Lookup(p[1],'Ident')
+
         entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
         if entry == None:
-            symTab.Define(symTab.currScope + "_" + p[1],'integer','CONST',p[3])
+            symTab.Define(symTab.currScope + "_" + p[1],'INTEGER','CONST',p[3])
         else:
             entry.cat = 'constant'
             entry.params = p[3]
+            
+        emitTac('+',symTab.currScope + "_" + p[1],p[3],'0')
+        #print symTab.Lookup(p[1],'Ident')
         
     reverse_output.append(p.slice)
 
@@ -918,6 +992,7 @@ def p_IdentList(p):
             p[0] = p[2]
 
         p[0].append(p[1])
+        p[0] = p[0][::-1]
 
     reverse_output.append(p.slice)
 
@@ -977,16 +1052,37 @@ def p_VarSection(p):
 def p_ColonVarDecl(p):
     ''' ColonVarDecl : ColonVarDecl VarDecl SEMICOLON
     | VarDecl SEMICOLON'''
+
+    p[0] = []
+    if len(p) == 3 and inObject:
+        p[0] = p[1]['params']
+    elif inObject:
+        p[0] = p[1] + p[2]['params']
     reverse_output.append(p.slice)
 
 def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
 
     typeEntry = symTab.Lookup(p[3]['type'],'Ident')
-
-    if typeEntry != None:
+    
+    # When this comes within object declaration
+    if inObject:
+        p[0] = {}
+        params = []
         for elem in p[1]:
-            symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'ARRAY',typeEntry.params)
+            params.append([elem, p[3]['type'], 'VAR'])
+        p[0]['params'] = params
+    elif typeEntry != None:
+        print typeEntry.params
+        if typeEntry.cat == 'array':
+            for elem in p[1]:
+                symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'ARRAY', typeEntry.params)
+        elif typeEntry.cat == 'object':
+            for elem in p[1]:
+                symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'OBJECT', typeEntry.params)
+                for var in typeEntry.params:
+                    symTab.Define(symTab.currScope + "_" + elem + "_" + var[0], var[1], 'VAR')
+            #print symTab.table
     else:
         for elem in p[1]:
             symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'VAR')
@@ -1019,11 +1115,11 @@ def p_FuncDecl(p):
 def p_FMark2(p):
     ''' FMark2 : '''
     symTab.endScope()
-    tac.emit('RETURN','',p[-3]['place'],p[-3]['place'])
+    emitTac('RETURN','',p[-3]['place'],p[-3]['place'])
 
 def p_FMark1(p):
     ''' FMark1 : '''
-    tac.emit('LABEL','FUNC',p[-1]['place'],'')
+    emitTac('LABEL','FUNC',p[-1]['place'],'')
 
 def p_FuncHeading(p):
     ''' FuncHeading : FUNCTION Designator FMark1 FormalParams COLON Type '''
@@ -1087,12 +1183,12 @@ def p_ProcedureDecl(p):
 
 def p_PMark1(p):
     ''' PMark1 : '''
-    tac.emit('LABEL','FUNC',p[-1]['place'],'')
+    emitTac('LABEL','FUNC',p[-1]['place'],'')
 
 def p_PMark2(p):
     ''' PMark2 : '''
     symTab.endScope()
-    tac.emit('RETURN','','',p[-3]['place'])
+    emitTac('RETURN','','',p[-3]['place'])
 
 #replaced ID by designator for dealing with Object.Function
 def p_ProcedureHeading(p):
@@ -1139,23 +1235,43 @@ def p_LambFunc(p):
     reverse_output.append(p.slice)
 
 
-
+# This will denote that we are within an object declaration
+inObject = False;
 
 ### ---------------- OBJECT DEFS -------------- ###
 
 def p_ObjectType(p):
     ''' ObjectType : OBJECT ObjectHeritage ObjectVis ObjectBody END'''
+
+    global inObject
+    p[0] = {}
+    p[0]['type'] = 'OBJECT'
+    p[0]['params'] = p[4]['params']
+    inObject = False;
+
     reverse_output.append(p.slice)
 
 def p_ObjectHeritage(p):
     ''' ObjectHeritage : LPAREN IdentList RPAREN
     | '''
+
+    global inObject
+    inObject = True;
     reverse_output.append(p.slice)
 
 # The problem here is that the first Identifier list is being identified as that in VarSection rather than type section
 def p_ObjectBody(p): 
     ''' ObjectBody : ObjectBody ObjectTypeSection ObjectVarSection ObjectConstSection ObjectMethodList
     | '''
+
+    if len(p) == 1:
+        p[0] = {}
+        p[0]['params'] = []
+    else:
+        p[0] = {}
+        p[0]['params'] = p[1]['params']
+        p[0]['params'] = p[2]['params'] + p[3]['params'] + p[4]['params']
+
     reverse_output.append(p.slice)
     
 def p_ObjectVis(p):
@@ -1166,16 +1282,36 @@ def p_ObjectVis(p):
 def p_ObjectVarSection(p):
     ''' ObjectVarSection : ColonVarDecl %prec IDTOK
     | '''
+    p[0] = {}
+    if len(p) == 1:
+        p[0]['params'] = []
+    else:
+        p[0]['params'] = p[1]
+        
     reverse_output.append(p.slice)
 
 def p_ObjectTypeSection(p):
     ''' ObjectTypeSection : ColonTypeDecl %prec IDTOK
     | %prec ENDTOK '''
+
+    p[0] = {}
+    if len(p) == 1:
+        p[0]['params'] = []
+    else:
+        p[0]['params'] = p[1]
+        
     reverse_output.append(p.slice)
 
 def p_ObjectConstSection(p):
     ''' ObjectConstSection : ColonConstDecl %prec IDTOK
     | '''
+
+    p[0] = {}
+    if len(p) == 1:
+        p[0]['params'] = []
+    else:
+        p[0]['params'] = p[1]
+        
     reverse_output.append(p.slice)
 
 def p_ObjectMethodList(p):
@@ -1288,15 +1424,10 @@ def printpretty(filename):
                 
         runningRule = runningRule + post
         f.write("</u>" + post + "\n")
-    f.write("\t</body> \n </html>") 
+    f.write("\t</body> \n </html>")
 
-parser = yacc.yacc()
-
-symTab = SymTable()
-tac = ThreeAddrCode()
-
-# Do the things that we want to here
-inputfile = open(sys.argv[1],'r').read()
-yacc.parse(inputfile, debug = 0)
-
-tac.display_code()
+def parse(inputfile):
+  
+    parser = yacc.yacc()
+    yacc.parse(inputfile, debug = 1)
+    return [symTab,tac]

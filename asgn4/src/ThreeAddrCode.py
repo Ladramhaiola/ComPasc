@@ -96,15 +96,10 @@ class ThreeAddrCode:
 
             The point of this to finally emit all the code generated, in the way desired.
         '''
-
-        print ("=========================================")
-        print ('      Displaying three-address-code      ')
-        print ("=========================================")
-
+        
         for i,code in enumerate(self.code):
 
             # print (code)
             op, lhs, op1, op2 = code
             print (str(i+1) + ", " + op + ", " + lhs + ", " + op1 + ", " + op2)
-        print ("=========================================")
 

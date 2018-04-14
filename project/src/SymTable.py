@@ -45,34 +45,30 @@ class SymTable (object):
         self.table[scopeName] = temp_scope
         self.currScope = scopeName
 
+    def width(self,typ):
 
-    def RepresentsNum(self,s):
-        '''
-        Checks if the given entry is a number entry.
-        '''
-        try: 
-            float(s)
-            return True
-        except ValueError:
-            return False
-
-    def symTabOp (self, x, typ, varfunc = 'VAR'):
-        '''
-        args:
-            x: If it is a constant, then return nothing as the object to be appended to 3Ac line.
-               Else, define it in the table, and return the symbolTable entry
-
-        '''
-        xEntry = None
-        if (self.RepresentsNum(x) == True):
-            return None
-        if (x != ''):
-            xEntry = self.Lookup(x)
-        if (xEntry == None and x != ''):
-            xEntry = self.Define(x, typ, varfunc)
-        return xEntry
-
-
+        if typ == 'INTEGER':
+            return 4
+        elif typ == 'CHAR':
+            return 1
+        else:
+            return 0
+        
+    def getWidth(self, v):
+        vEntry = self.Lookup(v,'Ident')
+        if vEntry.params == '':
+            return self.width(vEntry.typ)
+        elif vEntry.cat == 'array':
+            size = 1
+            for Range in vEntry.params:
+                size = size*(Range['end']-Range['start']+1)
+            arrayType = vEntry.typ
+            arrayEntry = self.Lookup(arrayType, 'Ident')
+            if self.width(vEntry.typ) != 0:
+                return self.width(vEntry.typ)*size
+            else:
+                return self.width(arrayEntry.typ)*size
+        
     def Define(self, v, typ, cat, params = ''):
         
         curr_scope = self.table[self.currScope]
@@ -102,6 +98,12 @@ class SymTable (object):
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
+            elif (cat=="OBJECT"):
+                if (v not in curr_scope['Ident']):
+                    e = SymTableEntry (v, typ, 'object', params)
+                    curr_scope['Ident'][v] = e
+                else:
+                    sys.exit(v + " is already initialised in this scope")
             else:
                 if (v not in curr_scope['Func']):
                     # If function, then: v - name, typ - return type, category = function
@@ -122,12 +124,9 @@ class SymTable (object):
 
     def getScope(self, identifier, idFunc = 'Ident'):
 
-        scope = self.currScope
-        while scope != None:
+        for scope in self.table.keys():
             if identifier in self.table[scope][idFunc].keys():
                 return scope
-            else:
-                scope = self.table[scope]['ParentScope']
 
         return None
 

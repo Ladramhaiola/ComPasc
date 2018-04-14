@@ -10,19 +10,18 @@ VAR
 	i, j, tmp, size: INTEGER;
 	arr: IntArrType;
 
-PROCEDURE ReadArr(size: Integer; a: IntArrType);
+PROCEDURE ReadArr(size: INTEGER; a: IntArrType);
 BEGIN
     size := 1;
-    WHILE NOT size DO 
+    WHILE size=0 DO 
     BEGIN
        a[size] := 1;
 	END;
-	IF NOT size THEN
+	IF size=0 THEN
 	BEGIN
 	    size := size + 1;
 	END;
     END;
-END;
 
 BEGIN
 	i := size - 1;

@@ -1,7 +1,15 @@
+One major assumption in Assignment2 : SymbolTable contains entries for temporaries as well
+
+- To do in codegen:
+  1. Improve the code in handle_binary (and hence rest of similar functions)
+  2. See if you can integrate the project
+  3. Functions
+  4. Objects and classes (both in semantics and codegen)
+
 - Misc:
     1. Our current IR requires all function code to be together at the end
     2. Designator Type Checks while assignment and others operations, like AddOp and MulOp
-    3. Functon calls in Factor (return value to be assigned to a temporary)
+    3. NOT relational operator not working fine
     4. Pointer Arithematic (define unary operations (\* and &) and enforce checks on arithematic)
     5. Symbol Table for Objects and classes 
     6. Floats (in the end)
