@@ -1113,8 +1113,16 @@ def p_ConstrucHeadingSemicolon(p):
     reverse_output.append(p.slice)
 
 def p_FuncDecl(p):
-    ''' FuncDecl : FuncHeading SEMICOLON Block FMark2'''
+    ''' FuncDecl : FuncHeading SEMICOLON FMark3 Block FMark2'''
     reverse_output.append(p.slice)
+
+def p_FMark3(p):
+    ''' FMark3 : '''
+    emitTac('PARAM','','%ebp','')
+    emitTac('+','%ebp','%esp','0')
+
+    # Now move the variables on the stack to local variables
+
 
 def p_FMark2(p):
     ''' FMark2 : '''

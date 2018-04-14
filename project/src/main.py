@@ -124,11 +124,11 @@ def main():
         inputfile = open(sys.argv[1],'r').read()
         symTab,tac = parse(inputfile)
         tac.addlineNumbers()
+        print("\n#Displaying 3AC\n")
         tac.display_code()
         modify3ACforCodegen(symTab,tac,tac.code)
 
 	FB = divideToFunctions(tac.code)
-
 	regAlloc = varAllocateRegister(symTab,tac)
 
     	codeGen = CodeGenerator(symTab, tac, regAlloc, FB)
