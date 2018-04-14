@@ -10,7 +10,7 @@ VAR
 	i, j, tmp, size: INTEGER;
 	arr: IntArrType;
 
-PROCEDURE ReadArr(size: Integer; a: IntArrType);
+PROCEDURE ReadArr(size: INTEGER; a: IntArrType);
 BEGIN
     size := 1;
     WHILE size=0 DO 

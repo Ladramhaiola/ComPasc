@@ -118,12 +118,9 @@ class SymTable (object):
 
     def getScope(self, identifier, idFunc = 'Ident'):
 
-        scope = self.currScope
-        while scope != None:
+        for scope in self.table.keys():
             if identifier in self.table[scope][idFunc].keys():
                 return scope
-            else:
-                scope = self.table[scope]['ParentScope']
 
         return None
 

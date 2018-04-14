@@ -118,7 +118,6 @@ class varAllocateRegister:
         for i in range(len(code)):
             # print (self.leaders)
             codeLine = code[i]
-            print "#"+str(codeLine)
             if codeLine[1].lower() in ["jmp","je","jne","jz","jg","jl","jge","jle"]:
 
                 # Store the linenumber of the target label

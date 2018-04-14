@@ -619,7 +619,6 @@ def p_Term(p):
 
     else:
         p[0] = p[1]
-        print p[1]
         resolveRHSArray(p[1])
         
     reverse_output.append(p.slice)
@@ -842,8 +841,6 @@ def p_Designator(p):
     else :
         sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
-
-    print p[0]['type']
     reverse_output.append(p.slice)
 
 # Removed recrsion from this
@@ -896,7 +893,7 @@ def p_ConstDecl(p):
 
         entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
         if entry == None:
-            symTab.Define(symTab.currScope + "_" + p[1],'integer','CONST',p[3])
+            symTab.Define(symTab.currScope + "_" + p[1],'INTEGER','CONST',p[3])
         else:
             entry.cat = 'constant'
             entry.params = p[3]
