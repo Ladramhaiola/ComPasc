@@ -98,6 +98,12 @@ class SymTable (object):
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
+            elif (cat=="OBJECT"):
+                if (v not in curr_scope['Ident']):
+                    e = SymTableEntry (v, typ, 'object', params)
+                    curr_scope['Ident'][v] = e
+                else:
+                    sys.exit(v + " is already initialised in this scope")
             else:
                 if (v not in curr_scope['Func']):
                     # If function, then: v - name, typ - return type, category = function

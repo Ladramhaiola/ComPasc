@@ -771,6 +771,8 @@ class CodeGenerator():
                     arrayType = varEntry.typ
                     arrayEntry = self.symTab.Lookup(arrayType,'Ident')
                     conv = arrayEntry.typ
+                elif varEntry.cat == 'object':
+                    continue
                 memsize = self.symTab.getWidth(var) # for arrays
                 self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " " + str(memsize))
 

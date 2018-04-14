@@ -28,7 +28,7 @@ class ThreeAddrCode:
 
         for i,code in enumerate(self.code):
 
-            # print (code)
+            #print (code)
             op, lhs, op1, op2 = code
             self.code[i] = [str(i+1)] + code
         
@@ -40,9 +40,9 @@ class ThreeAddrCode:
             The point of this to finally emit all the code generated, in the way desired.
         '''
         
-        for code in enumerate(self.code):
+        for i, code in enumerate(self.code):
 
-            # print (code)
+            #print (code)
             LineNumber, op, lhs, op1, op2 = code
 
             if type(lhs) != type(""):

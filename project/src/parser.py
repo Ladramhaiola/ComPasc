@@ -748,12 +748,18 @@ def p_TypeDecl(p):
     if p[3]['type'] == 'ARRAY':
         symTab.Define(p[1], p[3]['dataType'], 'ARRAY', p[3]['ranges'])
         p[3]['type'] = p[1]
-    
+    elif p[3]['type'] in ['OBJECT','CLASS']:
+        symTab.Define(p[1], 'OBJECT','OBJECT', p[3]['params'])
     reverse_output.append(p.slice)
 
 def p_RestrictedType(p):
     ''' RestrictedType : ObjectType
     | ClassType '''
+
+    p[0] = {}
+    p[0]['type'] = p[1]['type']
+    p[0]['params'] = p[1]['params']
+    
     reverse_output.append(p.slice)
 
 def p_RelOp(p):
@@ -830,7 +836,11 @@ def p_Designator(p):
 
         elif len(entry.params) < p[2]['dimension']:
             sys.exit("Extra Array Index")
-    
+
+    # This is for handling object.variable
+    elif 'var' in p[2].keys() :
+        p[0]['place'] = p[0]['place'] + "_" + p[2]['var']
+
     if symTab.Lookup(symTab.currScope + "_" + p[1],'Ident') != None:
         # We are only concerned about identifiers at the moment
         p[0]['type'] = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident').typ 
@@ -841,6 +851,8 @@ def p_Designator(p):
     else :
         sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
+
+    print p[2]['place']
     reverse_output.append(p.slice)
 
 # Removed recrsion from this
@@ -867,7 +879,10 @@ def p_DesignatorSubElem(p):
         p[0]['isArray'] = True
         p[0]['ArrayIndices'] = p[2]
         p[0]['dimension'] = len(p[2])
-
+    elif len(p) == 3:
+        p[0] = {}
+        p[0]['isArray'] = False
+        p[0]['var'] = p[2]
     else:
         p[0] = {}
         p[0]['isArray'] = False
@@ -977,6 +992,7 @@ def p_IdentList(p):
             p[0] = p[2]
 
         p[0].append(p[1])
+        p[0] = p[0][::-1]
 
     reverse_output.append(p.slice)
 
@@ -1036,16 +1052,37 @@ def p_VarSection(p):
 def p_ColonVarDecl(p):
     ''' ColonVarDecl : ColonVarDecl VarDecl SEMICOLON
     | VarDecl SEMICOLON'''
+
+    p[0] = []
+    if len(p) == 3 and inObject:
+        p[0] = p[1]['params']
+    elif inObject:
+        p[0] = p[1] + p[2]['params']
     reverse_output.append(p.slice)
 
 def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
 
     typeEntry = symTab.Lookup(p[3]['type'],'Ident')
-
-    if typeEntry != None:
+    
+    # When this comes within object declaration
+    if inObject:
+        p[0] = {}
+        params = []
         for elem in p[1]:
-            symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'ARRAY',typeEntry.params)
+            params.append([elem, p[3]['type'], 'VAR'])
+        p[0]['params'] = params
+    elif typeEntry != None:
+        print typeEntry.params
+        if typeEntry.cat == 'array':
+            for elem in p[1]:
+                symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'ARRAY', typeEntry.params)
+        elif typeEntry.cat == 'object':
+            for elem in p[1]:
+                symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'OBJECT', typeEntry.params)
+                for var in typeEntry.params:
+                    symTab.Define(symTab.currScope + "_" + elem + "_" + var[0], var[1], 'VAR')
+            #print symTab.table
     else:
         for elem in p[1]:
             symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'VAR')
@@ -1198,23 +1235,43 @@ def p_LambFunc(p):
     reverse_output.append(p.slice)
 
 
-
+# This will denote that we are within an object declaration
+inObject = False;
 
 ### ---------------- OBJECT DEFS -------------- ###
 
 def p_ObjectType(p):
     ''' ObjectType : OBJECT ObjectHeritage ObjectVis ObjectBody END'''
+
+    global inObject
+    p[0] = {}
+    p[0]['type'] = 'OBJECT'
+    p[0]['params'] = p[4]['params']
+    inObject = False;
+
     reverse_output.append(p.slice)
 
 def p_ObjectHeritage(p):
     ''' ObjectHeritage : LPAREN IdentList RPAREN
     | '''
+
+    global inObject
+    inObject = True;
     reverse_output.append(p.slice)
 
 # The problem here is that the first Identifier list is being identified as that in VarSection rather than type section
 def p_ObjectBody(p): 
     ''' ObjectBody : ObjectBody ObjectTypeSection ObjectVarSection ObjectConstSection ObjectMethodList
     | '''
+
+    if len(p) == 1:
+        p[0] = {}
+        p[0]['params'] = []
+    else:
+        p[0] = {}
+        p[0]['params'] = p[1]['params']
+        p[0]['params'] = p[2]['params'] + p[3]['params'] + p[4]['params']
+
     reverse_output.append(p.slice)
     
 def p_ObjectVis(p):
@@ -1225,16 +1282,36 @@ def p_ObjectVis(p):
 def p_ObjectVarSection(p):
     ''' ObjectVarSection : ColonVarDecl %prec IDTOK
     | '''
+    p[0] = {}
+    if len(p) == 1:
+        p[0]['params'] = []
+    else:
+        p[0]['params'] = p[1]
+        
     reverse_output.append(p.slice)
 
 def p_ObjectTypeSection(p):
     ''' ObjectTypeSection : ColonTypeDecl %prec IDTOK
     | %prec ENDTOK '''
+
+    p[0] = {}
+    if len(p) == 1:
+        p[0]['params'] = []
+    else:
+        p[0]['params'] = p[1]
+        
     reverse_output.append(p.slice)
 
 def p_ObjectConstSection(p):
     ''' ObjectConstSection : ColonConstDecl %prec IDTOK
     | '''
+
+    p[0] = {}
+    if len(p) == 1:
+        p[0]['params'] = []
+    else:
+        p[0]['params'] = p[1]
+        
     reverse_output.append(p.slice)
 
 def p_ObjectMethodList(p):
@@ -1352,5 +1429,5 @@ def printpretty(filename):
 def parse(inputfile):
   
     parser = yacc.yacc()
-    yacc.parse(inputfile, debug = 0)
+    yacc.parse(inputfile, debug = 1)
     return [symTab,tac]
