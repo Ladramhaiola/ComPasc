@@ -96,6 +96,7 @@ def main():
 
         inputfile = open(sys.argv[1],'r').read()
         symTab,tac = parse(inputfile)
+        print symTab.localVals
         tac.addlineNumbers()
         print("\n#Displaying 3AC\n")
         tac.display_code()
@@ -103,6 +104,8 @@ def main():
 
 	# FB = divideToFunctions(tac.code)
 	regAlloc = varAllocateRegister(symTab,tac)
+
+        tac.mapOffset() # Map the offsets
 
     	codeGen = CodeGenerator(symTab, tac, regAlloc)
     	codeGen.setup_all()

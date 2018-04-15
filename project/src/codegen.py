@@ -77,6 +77,8 @@ class CodeGenerator():
 
         symbolName = self.getName(symbol)
         symbolReg = self.getRegister(symbol)
+        symbolOffsets = self.threeAC.tempToOffset[self.curr_func]
+        print "symbolName: ",symbolName
 
 
         loc_op = "" # condition checks in varAllocate and codegen
@@ -87,15 +89,16 @@ class CodeGenerator():
             Loc_op =  "%" + symbolReg
         else:
             symbolEntry = self.symTab.Lookup(symbolName,'Ident')
-            print "symbolName: ",symbolName
-            print "SE retrieved: ",symbolEntry
+            # print "SE retrieved: ",symbolEntry
+            loc_op = symbolName
             if symbolEntry != None and symbolEntry.offset != '' :
-                print "Now we are going to get the offset"
-                loc_op = symbolName
+                # print "Now we are going to get the offset"
                 Loc_op = str(symbolEntry.offset) + '(%ebp)'
+            elif symbolName in symbolOffsets.keys():
+                Loc_op = str(symbolOffsets[symbolName]) + '(%ebp)'
+                print "Loc_op inside temps: ",Loc_op
             else:
-                print "Or maybe not"
-                loc_op = symbolName
+                # print "Or maybe not"
                 Loc_op = symbolName
 
         return [loc_op,Loc_op]
@@ -206,6 +209,8 @@ class CodeGenerator():
 
         loc_op1, Loc_op1 = self.getLoc(op1)
         loc_op2, Loc_op2 = self.getLoc(op2)
+        # print "# Loc_op1: ",str(lineno),Loc_op1
+        # print "# Loc_op2: ",str(lineno),Loc_op2
 
         # handle cases a = a + b  (cases like a = a + 1 will be handled in BA_1CR)
         if (op1 == lhs and self.checkVariable(op2)):
@@ -803,7 +808,7 @@ class CodeGenerator():
         for codeline in self.asm_code['data']:
             print codeline
 
-        print self.asm_code.keys()
+        # print self.asm_code.keys()
         for key in self.asm_code.keys():
             if key not in ['data']:
                 # print "\t%s:" % key
