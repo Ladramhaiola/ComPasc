@@ -7,17 +7,17 @@ class CodeGenerator():
             varAllocate: the varAllocate object from main.py
     '''
 
-    def __init__(self,symTab,threeAC,varAllocate,fBlocks):
+    def __init__(self,symTab,threeAC,varAllocate):
 
         self.symTab = symTab
         self.threeAC = threeAC
         self.asm_code = {'text':[],
                          'data':[]}
-        self.curr_func = ''
+        self.curr_func = 'main'
         self.varAllocate = varAllocate
         self.varAllocate.getBasicBlocks()
         self.varAllocate.iterateOverBlocks()
-        self.functionBlocks = fBlocks
+        # self.functionBlocks = fBlocks
         self.code = threeAC.code
         self.symbols = self.varAllocate.symbols
         self.registers = ['eax','ebx','ecx','edx']
@@ -78,15 +78,25 @@ class CodeGenerator():
         symbolName = self.getName(symbol)
         symbolReg = self.getRegister(symbol)
 
-        loc_op = ""
-        Loc_op = ""
-        
+
+        loc_op = "" # condition checks in varAllocate and codegen
+        Loc_op = "" # this is the actual codegen loc
+
         if symbolReg != "":
             loc_op = symbolReg
             Loc_op =  "%" + symbolReg
         else:
-            loc_op = symbolName
-            Loc_op = symbolName
+            symbolEntry = self.symTab.Lookup(symbolName,'Ident')
+            print "symbolName: ",symbolName
+            print "SE retrieved: ",symbolEntry
+            if symbolEntry != None and symbolEntry.offset != '' :
+                print "Now we are going to get the offset"
+                loc_op = symbolName
+                Loc_op = str(symbolEntry.offset) + '(%ebp)'
+            else:
+                print "Or maybe not"
+                loc_op = symbolName
+                Loc_op = symbolName
 
         return [loc_op,Loc_op]
         
@@ -509,10 +519,10 @@ class CodeGenerator():
             const1: if non func, then simply take this
         '''
         if lhs == 'FUNC':
-            ascode = "\t" + self.getName(op1) + ":"
+            self.function_change(self.getName(op1))
         else:
             ascode = "\t" + const1 + ":"
-        self.asm_code[self.curr_func].append(ascode)
+            self.asm_code[self.curr_func].append(ascode)
 
     def handle_funccall (self,op1):
         '''
@@ -526,7 +536,9 @@ class CodeGenerator():
         args:
             op1 is the symbol table entry for the object to push
         '''
-        self.asm_code[self.curr_func].append('\t\tpush %' + self.getName(op1))
+        if op1 == None:
+            return 
+        self.asm_code[self.curr_func].append('\t\tpush ' + self.getName(op1))
 
 
     def handle_return(self,op1):
@@ -551,6 +563,11 @@ class CodeGenerator():
             # print ('tati')
             self.asm_code[self.curr_func].append('\t\tret')
 
+        for scope in self.symTab.table.keys():
+            if self.symTab.table[scope]['Name'] == self.curr_func:
+                parent_scope = self.symTab.table[scope]['ParentScope']
+                self.curr_func = self.symTab.table[parent_scope]['Name']
+                break
 
     def handle_loadref (self,lineno, lhs, op1, op2, const2):
     	# op1.name is always avaiable
@@ -650,7 +667,7 @@ class CodeGenerator():
         '''
             If we get a basic block part which has different name than the current, add a key with that name
         '''
-        self.asm_code[func_name] = []
+        self.asm_code[func_name] = ["\t" + func_name + ":"]
         self.curr_func = func_name
 
 
@@ -664,84 +681,77 @@ class CodeGenerator():
 
         self.asm_code['text'].append('\n.text\n\t.global main\n')
         
-        for key in self.functionBlocks.keys():
-
-            # key, according to the function names
-            # print key
-                
-            self.function_change(key)
-
-            if key == 'main':
-                self.asm_code[self.curr_func].append("\tmain:")
+        self.function_change('main')
             
-            start, end = self.functionBlocks[key]
+        start, end = 1,len(self.code)
 
-            for i in range(start-1,end):
-                # i is the index into self.code
+        for i in range(start-1,end):
+            # i is the index into self.code
 
-                #print(self.registerToSymbol)
-                #print(self.code[i])
-                lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
-                # print lhs.name
-                ln = int(lineno)
+            #print(self.registerToSymbol)
+            #print(self.code[i])
+            lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
+            # print "code[i]: ",self.code[i]
+            # print lhs.name
+            ln = int(lineno)
 
-                # Find the blockIndex
-                blockIndex =  self.varAllocate.line2Block(ln)
+            # Find the blockIndex
+            blockIndex = self.varAllocate.line2Block(ln)
 
-                self.asm_code[self.curr_func].append("# Linenumber IR: " + str(ln))
+            self.asm_code[self.curr_func].append("# Linenumber IR: " + str(ln))
 
-                # DONE HOPEFULLY
-                if op in ["+","-","*","AND","OR","SHL","SHR"]:
-                    self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
-                    self.check_dealloc(ln,blockIndex)
-                    # pass
+            # DONE HOPEFULLY
+            if op in ["+","-","*","AND","OR","SHL","SHR"]:
+                self.handle_binary (ln, op, lhs, op1, op2, const1, const2)
+                self.check_dealloc(ln,blockIndex)
+                # pass
 
-                elif op in ["/","MOD"]:
-                    self.handle_division(ln, op, lhs, op1, op2, const1, const2)
-                    
-                # Would need to refer to handle_binary for most part
-                elif op == 'CMP':
-                    self.handle_cmp (ln, op1, op2, const1, const2)
-                    self.check_dealloc(ln,blockIndex)
+            elif op in ["/","MOD"]:
+                self.handle_division(ln, op, lhs, op1, op2, const1, const2)
                 
-                # DONE HOPEFULLY
-                elif op in self.jump_list:
-                    self.check_dealloc(ln,blockIndex)
-                    self.handle_jump (op, const1)
+            # Would need to refer to handle_binary for most part
+            elif op == 'CMP':
+                self.handle_cmp (ln, op1, op2, const1, const2)
+                self.check_dealloc(ln,blockIndex)
+            
+            # DONE HOPEFULLY
+            elif op in self.jump_list:
+                self.check_dealloc(ln,blockIndex)
+                self.handle_jump (op, const1)
 
-                # DONE HOPEFULLY
-                elif op == 'LABEL':
-                    #print("#",self.code[i])
-                    self.check_dealloc(ln,blockIndex)
-                    self.handle_label (lhs, op1, const1)
+            # DONE HOPEFULLY
+            elif op == 'LABEL':
+                #print("#",self.code[i])
+                self.check_dealloc(ln,blockIndex)
+                self.handle_label (lhs, op1, const1)
 
-                # DONE HOPEFULLY
-                elif op == 'CALL':
-                    self.check_dealloc(ln,blockIndex)
-                    self.handle_funccall (op1)
+            # DONE HOPEFULLY
+            elif op == 'CALL':
+                self.check_dealloc(ln,blockIndex)
+                self.handle_funccall (op1)
 
-                # DONE HOPEFULLY
-                elif op == 'PARAM':
-                    self.handle_param (op1)
-                    self.check_dealloc(ln,blockIndex)
+            # DONE HOPEFULLY
+            elif op == 'PARAM':
+                self.handle_param (op1)
+                self.check_dealloc(ln,blockIndex)
 
-                elif op == 'RETURN':
-                    self.check_dealloc(ln,blockIndex)
-                    self.handle_return (op1)
+            elif op == 'RETURN':
+                self.check_dealloc(ln,blockIndex)
+                self.handle_return (op1)
 
-                elif op == 'LOADREF':
-                    self.handle_loadref (ln,lhs, op1, op2, const2)
+            elif op == 'LOADREF':
+                self.handle_loadref (ln,lhs, op1, op2, const2)
 
-                elif op == 'STOREREF':
-                    self.handle_storeref (ln, lhs, op1, op2, const1, const2)
+            elif op == 'STOREREF':
+                self.handle_storeref (ln, lhs, op1, op2, const1, const2)
 
-                elif op == 'PRINT':
-                    self.check_dealloc(ln,blockIndex)
-                    self.handle_print (ln,op1,const1)
-                    self.check_dealloc(ln,blockIndex)
+            elif op == 'PRINT':
+                self.check_dealloc(ln,blockIndex)
+                self.handle_print (ln,op1,const1)
+                self.check_dealloc(ln,blockIndex)
 
-                elif op == 'SCAN':
-                    self.handle_input(ln,lhs)
+            elif op == 'SCAN':
+                self.handle_input(ln,lhs)
 
 
     def check_dealloc(self,ln,blockIndex):
@@ -762,7 +772,7 @@ class CodeGenerator():
         self.asm_code['data'].append('.data \n')
         self.asm_code['data'].append('.formatINT : \n .string \"%d\\n\" \n')
         self.asm_code['data'].append('.formatINT_INP : \n .string \"%d\" \n')
-        for scope in self.symTab.table.keys():
+        for scope in ['main']:
             for var in self.symTab.table[scope]['Ident']:
                 varEntry = self.symTab.Lookup(var,'Ident')
                 if varEntry.typ in type_to_asm.keys():
@@ -793,8 +803,10 @@ class CodeGenerator():
         for codeline in self.asm_code['data']:
             print codeline
 
+        print self.asm_code.keys()
         for key in self.asm_code.keys():
-            if key!= 'data':
+            if key not in ['data']:
+                # print "\t%s:" % key
                 for codeLine in self.asm_code[key]:
                     print codeLine
         # print (self.asm_code['text'])
