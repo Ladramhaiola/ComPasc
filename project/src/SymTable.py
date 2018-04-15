@@ -10,8 +10,8 @@ class SymTable (object):
 
         # default values
         self.table = {
-            'Main': {
-                'Name': 'Main',
+            'main': {
+                'Name': 'main',
                 'ParentScope' : None,
                 'Type' : 'function', # This can be function or loop
                 'ReturnType' : None,
@@ -20,7 +20,7 @@ class SymTable (object):
                 'ReturnSet' : False
             }
         }
-        self.currScope = 'Main'
+        self.currScope = 'main'
         self.tNo = -1
         self.lNo = -1
         self.scopeNo = -1
@@ -69,7 +69,7 @@ class SymTable (object):
             else:
                 return self.width(arrayEntry.typ)*size
         
-    def Define(self, v, typ, cat, params = ''):
+    def Define(self, v, typ, cat, params = '', offset = ''):
         
         curr_scope = self.table[self.currScope]
         e = None
@@ -80,34 +80,34 @@ class SymTable (object):
             if (cat == "VAR"):
                 #print "Defining var: ",v
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, 'variable', params)
+                    e = SymTableEntry (v, typ, 'variable', params, offset)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             elif (cat=="CONST"):
                 #print "Defining constant: ",v
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, 'constant', params)
+                    e = SymTableEntry (v, typ, 'constant', params, offset)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             elif (cat=="ARRAY"):
                 #print "Defining array: ",v
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, 'array', params)
+                    e = SymTableEntry (v, typ, 'array', params, offset)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             elif (cat=="OBJECT"):
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, 'object', params)
+                    e = SymTableEntry (v, typ, 'object', params, offset)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             else:
                 if (v not in curr_scope['Func']):
                     # If function, then: v - name, typ - return type, category = function
-                    e = SymTableEntry (v, typ, 'function', params)
+                    e = SymTableEntry (v, typ, 'function', params, offset)
                     curr_scope['Func'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
@@ -167,10 +167,11 @@ class SymTableEntry(object):
     '''
     Create a symbol table entry
     '''
-    def __init__(self,name, typ, category = "variable", params = ''):
+    def __init__(self, name, typ, category = "variable", params = '', offset = ''):
         self.name = name
         self.typ = typ # for var: int, char, double | for function: typ is return type
         self.cat = category # either variable, constant, function, class or object
         self.params = params # For function, this is a list of param types, for constant, this is value of the constant and for array this is the range of array rows and columns 
         self.num_params = len(self.params)
         self.assigned = False # This is for knowing whether a variable has been assigned before use or not (won't work for arrays)
+        self.offset = offset
