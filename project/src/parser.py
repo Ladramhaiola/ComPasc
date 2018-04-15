@@ -30,7 +30,7 @@ loopBegin = []
 loopEnd = []
 
 symTab = SymTable()
-tac = ThreeAddrCode()
+tac = ThreeAddrCode(symTab)
 
 def RepresentsInt(s):
     try: 
@@ -73,7 +73,7 @@ def getValue(Id):
 
 def handleFuncCall(p, ifAssign = False):
 
-    name = symTab.Lookup(p[1]['place'],'Func')
+    name = symTab.Lookup(p[1]['place'],'FuncParFinder')
         # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
 
     if ifAssign and p[1]['place'] == symTab.currScope + '_WRITELN':
@@ -833,6 +833,8 @@ def p_Designator(p):
     
     p[0] = p[2]
     p[0]['place'] = symTab.currScope + "_" + p[1]
+    # print "currscope in designator: ",symTab.currScope
+    # print "p[1] in designator: ",p[1]
 
     if p[2]['isArray']:
 
@@ -848,14 +850,26 @@ def p_Designator(p):
     elif 'var' in p[2].keys() :
         p[0]['place'] = p[0]['place'] + "_" + p[2]['var']
 
+    flag = 0
     if symTab.Lookup(symTab.currScope + "_" + p[1],'Ident') != None:
         # We are only concerned about identifiers at the moment
         p[0]['type'] = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident').typ 
+        flag = 1
 
-    elif p[-1] in ['FUNCTION','CONSTRUCTOR','PROCEDURE'] or symTab.Lookup(symTab.currScope + "_" + p[1],'Func') != None or p[1] in ['READLN','WRITELN']:
-        pass
 
-    else :
+    elif p[-1] in ['FUNCTION','CONSTRUCTOR','PROCEDURE'] or p[1] in ['READLN','WRITELN']:
+        flag = 1
+
+    elif flag != 1:
+    # Declaration check happening here
+        for scope in symTab.table.keys():
+            # print "Name of entry: ",symTab.table[scope]['Name'], symTab.table[scope]['ParentScope']
+            if symTab.table[scope]['Name'] == p[1] and symTab.table[scope]['ParentScope'] == symTab.currScope:
+                flag = 1
+                break
+
+    elif flag != 1:
+        # If the previous checks fail, do this.
         sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
 
@@ -1148,7 +1162,7 @@ def p_FuncHeading(p):
     # Declare new scope here
     symTab.AddScope(p[2]['place'],'function')
     symTab.table[symTab.currScope]['ReturnType'] = p[6]['type']
-    symTab.Define(p[2]['place'],p[6]['type'],'VAR') # Define a variable with same return type as function
+    # symTab.Define(p[2]['place'],p[6]['type'],'VAR') # Define a variable with same return type as function
 
     # Add the variables into symbol Table
     param_list = p[4]
@@ -1158,7 +1172,7 @@ def p_FuncHeading(p):
 
     offset = 8
     for item in param_list:
-        print "Offset checking ",offset
+        # print "Offset checking ",offset
         idents = item[0]
         id_type = item[1]
         for ids in idents:
@@ -1169,9 +1183,10 @@ def p_FuncHeading(p):
             # For assigning params of an array as the array type
             typeEntry =  symTab.Lookup(id_type,'Ident')
             if typeEntry != None:
-                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params, offset)
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params, offset,True)
             else:
-                symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR','',offset)
+                # print "defining param in symbolTable: ",symTab.currScope + "_" + ids
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR','',offset,True)
 
             offset = offset + symTab.getWidth(symTab.currScope + "_" + ids)
 
