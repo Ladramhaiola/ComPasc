@@ -20,7 +20,7 @@ class varAllocateRegister:
         self.blocksToLabels = {}                                         # key value is the [startline,endline] for a block and value is the label name
         self.leaders = []                                                # This will determine the basic blocks 
         self.code = ThreeAddrCode.code
-        self.symbols = []
+        self.symbols = ["%esp","%ebp"]
         
         for reg in self.unusedRegisters:
             self.registerToSymbol[reg] = ""

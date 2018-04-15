@@ -31,7 +31,7 @@ add esp, #Number of Bytes
 ```
 The last line is needed to get the stack back to its original state.
 
-## Entry Seq
+## Entry Seq :white_check_mark:
 
 ```
 push ebp

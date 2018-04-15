@@ -1128,7 +1128,7 @@ def p_FMark2(p):
     ''' FMark2 : '''
     symTab.endScope()
     emitTac('+','%esp','%ebp','0')
-    emitTac('POP','','%ebp','')
+    emitTac('+','%esp','%esp','4')
     emitTac('RETURN','',p[-3]['place'],p[-3]['place'])
 
 def p_FMark1(p):
