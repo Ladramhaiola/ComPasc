@@ -102,12 +102,12 @@ def handleFuncCall(p, ifAssign = False):
                     lhs = symTab.getTemp()
                     emitTac('CALL', lhs, p[1]['place'], '')
                     # Below statement needs to be refined, in case different bytes than 4
-                    emitTac('+', '%esp',str(arg_count*4) ,'0')
+                    emitTac('+', '%esp','%esp',str(arg_count*4))
                     p[0]['place'] = lhs
                 else:
                     emitTac('CALL','', p[1]['place'], '')
                     # Below statement needs to be refined, in case different bytes than 4
-                    emitTac('+', '%esp',str(arg_count*4) ,'0')
+                    emitTac('+', '%esp','%esp',str(arg_count*4))
             else:
                 print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
                 print "Compilation Terminated"
@@ -331,11 +331,14 @@ def p_SimpleStatement(p):
             entry.assigned = True
 
         scope_table = symTab.table[symTab.currScope]
+        # print "Current Scope: ",symTab.currScope
 
         if scope_table['Type'] == 'function' and scope_table['ReturnType'] != None:
 
             # if the variable name matches the name of the function
-            if p[1]['place'] == scope_table['Name'] and getType(p[1]) == scope_table['ReturnType']:
+            # print("During ReturnSet check, name of scope_table: ",scope_table['Name'])
+            # print("During ReturnSet check, p[1] place: ",p[1]['place'])
+            if p[1]['place'].split("_")[1] == scope_table['Name'].split("_")[1] and getType(p[1]) == scope_table['ReturnType']:
                 scope_table['ReturnSet'] = True
 
     # This is for handling a function CALL
@@ -856,7 +859,7 @@ def p_Designator(p):
         sys.exit("Error : Symbol " + p[1] + " is used without declaration")
 
 
-    print p[2]['place']
+    # print p[2]['place']
     reverse_output.append(p.slice)
 
 # Removed recrsion from this
@@ -1077,7 +1080,7 @@ def p_VarDecl(p):
             params.append([elem, p[3]['type'], 'VAR'])
         p[0]['params'] = params
     elif typeEntry != None:
-        print typeEntry.params
+        # print typeEntry.params
         if typeEntry.cat == 'array':
             for elem in p[1]:
                 symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'ARRAY', typeEntry.params)
@@ -1113,7 +1116,7 @@ def p_ConstrucHeadingSemicolon(p):
     reverse_output.append(p.slice)
 
 def p_FuncDecl(p):
-    ''' FuncDecl : FuncHeading SEMICOLON FMark3 Block FMark2'''
+    ''' FuncDecl : FuncHeading SEMICOLON Block FMark2'''
     reverse_output.append(p.slice)
 
 def p_FMark3(p):
@@ -1139,6 +1142,9 @@ def p_FuncHeading(p):
     ''' FuncHeading : FUNCTION Designator FMark1 FormalParams COLON Type '''
     # p[0] = p[2]
 
+    emitTac('PARAM','','%ebp','')
+    emitTac('+','%ebp','%esp','0')
+    
     # Declare new scope here
     symTab.AddScope(p[2]['place'],'function')
     symTab.table[symTab.currScope]['ReturnType'] = p[6]['type']
@@ -1146,9 +1152,13 @@ def p_FuncHeading(p):
 
     # Add the variables into symbol Table
     param_list = p[4]
+    param_list = param_list[::-1] # GEtting the list in incremental order
     params = []
+    temp_code = []
 
+    offset = 8
     for item in param_list:
+        print "Offset checking ",offset
         idents = item[0]
         id_type = item[1]
         for ids in idents:
@@ -1159,10 +1169,11 @@ def p_FuncHeading(p):
             # For assigning params of an array as the array type
             typeEntry =  symTab.Lookup(id_type,'Ident')
             if typeEntry != None:
-                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params)
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params, offset)
             else:
-                symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR')
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR','',offset)
 
+            offset = offset + symTab.getWidth(symTab.currScope + "_" + ids)
 
     save_scope = symTab.currScope # Save to revert back
     symTab.endScope() # Go to the parent, and define this function as an entry in Func
@@ -1170,6 +1181,9 @@ def p_FuncHeading(p):
     symTab.currScope = save_scope # Load back the current scope
 
     p[0] = p[2] # Giving the designator to Procedure Heading
+
+
+
 
     reverse_output.append(p.slice)
 
@@ -1192,7 +1206,7 @@ def p_FormalParams(p):
     reverse_output.append(p.slice)
 
 def p_ProcedureDecl(p):
-    ''' ProcedureDecl : ProcedureHeading SEMICOLON Block PMark2'''
+    ''' ProcedureDecl : ProcedureHeading SEMICOLON FMark3 Block PMark2'''
     reverse_output.append(p.slice)
 
 def p_PMark1(p):
@@ -1202,7 +1216,7 @@ def p_PMark1(p):
 def p_PMark2(p):
     ''' PMark2 : '''
     symTab.endScope()
-    emitTac('RETURN','','',p[-3]['place'])
+    emitTac('RETURN','','',p[-4]['place'])
 
 #replaced ID by designator for dealing with Object.Function
 def p_ProcedureHeading(p):
@@ -1443,5 +1457,5 @@ def printpretty(filename):
 def parse(inputfile):
   
     parser = yacc.yacc()
-    yacc.parse(inputfile, debug = 1)
+    yacc.parse(inputfile, debug = 0)
     return [symTab,tac]
