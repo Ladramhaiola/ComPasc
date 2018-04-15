@@ -24,6 +24,10 @@ class SymTable (object):
         self.tNo = -1
         self.lNo = -1
         self.scopeNo = -1
+        # This is a list of all local variables of a function (including temporaries)
+        self.localVals = {}
+        # list of all local variables in main
+        self.localVals['main'] = []
 
     def PrintSymTable(self):
         pprint.pprint(self.table)
@@ -56,7 +60,11 @@ class SymTable (object):
         
     def getWidth(self, v):
         vEntry = self.Lookup(v,'Ident')
-        if vEntry.params == '':
+        # print "vEntry after Lookup in getWidth: ",vEntry
+        # print vEntry.params
+        if vEntry.cat == 'constant':
+            return 4
+        elif vEntry.params == '' :
             return self.width(vEntry.typ)
         elif vEntry.cat == 'array':
             size = 1
@@ -69,7 +77,7 @@ class SymTable (object):
             else:
                 return self.width(arrayEntry.typ)*size
         
-    def Define(self, v, typ, cat, params = '', offset = ''):
+    def Define(self, v, typ, cat, params = '', offset = '', parameter = False):
         
         curr_scope = self.table[self.currScope]
         e = None
@@ -80,34 +88,34 @@ class SymTable (object):
             if (cat == "VAR"):
                 #print "Defining var: ",v
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, 'variable', params, offset)
+                    e = SymTableEntry (v, typ, 'variable', params, offset, parameter)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             elif (cat=="CONST"):
                 #print "Defining constant: ",v
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, 'constant', params, offset)
+                    e = SymTableEntry (v, typ, 'constant', params, offset, parameter)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             elif (cat=="ARRAY"):
                 #print "Defining array: ",v
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, 'array', params, offset)
+                    e = SymTableEntry (v, typ, 'array', params, offset, parameter)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             elif (cat=="OBJECT"):
                 if (v not in curr_scope['Ident']):
-                    e = SymTableEntry (v, typ, 'object', params, offset)
+                    e = SymTableEntry (v, typ, 'object', params, offset, parameter)
                     curr_scope['Ident'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
             else:
                 if (v not in curr_scope['Func']):
                     # If function, then: v - name, typ - return type, category = function
-                    e = SymTableEntry (v, typ, 'function', params, offset)
+                    e = SymTableEntry (v, typ, 'function', params, offset, parameter)
                     curr_scope['Func'][v] = e
                 else:
                     sys.exit(v + " is already initialised in this scope")
@@ -125,7 +133,14 @@ class SymTable (object):
     def getScope(self, identifier, idFunc = 'Ident'):
 
         for scope in self.table.keys():
-            if identifier in self.table[scope][idFunc].keys():
+            if idFunc == 'Ident':
+                if identifier in self.table[scope][idFunc].keys():
+                    return scope
+            elif idFunc == 'FuncParFinder':
+                if identifier in self.table[scope]['Func'].keys():
+                    return scope
+            elif identifier == self.table[scope]['Name']:
+                # We need the scope(different from name) for functions.
                 return scope
 
         return None
@@ -138,7 +153,10 @@ class SymTable (object):
         if scope == None:
             return None
         else:
-            return self.table[scope][idFunc][name]
+            if idFunc == 'FuncParFinder':
+                return self.table[scope]['Func'][name]
+            else:
+                return self.table[scope][idFunc][name]
 
 
     def endScope(self):
@@ -147,7 +165,12 @@ class SymTable (object):
 
     def getTemp(self):
         self.tNo += 1
-        newTemp = "t" + str(self.tNo) 
+        newTemp = "t" + str(self.tNo)
+        
+        funcName = self.table[self.currScope]['Name']
+        if funcName not in self.localVals.keys():
+            self.localVals[funcName] = []
+        self.localVals[funcName].append(newTemp)
         return newTemp
 
 
@@ -167,7 +190,7 @@ class SymTableEntry(object):
     '''
     Create a symbol table entry
     '''
-    def __init__(self, name, typ, category = "variable", params = '', offset = ''):
+    def __init__(self, name, typ, category = "variable", params = '', offset = '',parameter = False):
         self.name = name
         self.typ = typ # for var: int, char, double | for function: typ is return type
         self.cat = category # either variable, constant, function, class or object
@@ -175,3 +198,4 @@ class SymTableEntry(object):
         self.num_params = len(self.params)
         self.assigned = False # This is for knowing whether a variable has been assigned before use or not (won't work for arrays)
         self.offset = offset
+        self.parameter = parameter
