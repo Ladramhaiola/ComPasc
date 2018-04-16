@@ -662,6 +662,7 @@ def p_Factor(p):
     p[0] = {}
 
     if len(p) == 5 and type(p[1]) is dict:
+        # print p[1]
         handleFuncCall(p, True)
         p[0]['isArray'] = False
         p[0]['type'] = getType(p[1])
@@ -871,8 +872,9 @@ def p_Designator(p):
     # Declaration check happening here
         for scope in symTab.table.keys():
             # print "Name of entry: ",symTab.table[scope]['Name'], symTab.table[scope]['ParentScope']
-            if symTab.table[scope]['Name'] == p[1] and symTab.table[scope]['ParentScope'] == symTab.currScope:
+            if symTab.table[scope]['Name'] == p[0]['place'] and symTab.table[scope]['ParentScope'] == symTab.currScope:
                 flag = 1
+                p[0]['type'] = symTab.table[scope]['ReturnType']
                 break
 
     elif flag != 1:
@@ -1158,7 +1160,10 @@ def p_FMark2(p):
     symTab.endScope()
     # emitTac('+','%esp','%ebp','0')
     # emitTac('+','%esp','%esp','4')
-    emitTac('RETURN','',p[-3]['place'],p[-3]['place'])
+    for scope in symTab.table.keys():
+        if symTab.table[scope]['Name'] == p[-3]['place']:
+            break
+    emitTac('RETURN','',scope + '_' + p[-3]['place'].split('_')[1],p[-3]['place'])
 
 def p_FMark1(p):
     ''' FMark1 : '''

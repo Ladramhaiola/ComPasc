@@ -20,7 +20,7 @@ class CodeGenerator():
         # self.functionBlocks = fBlocks
         self.code = threeAC.code
         self.symbols = self.varAllocate.symbols
-        self.registers = ['eax','ebx','ecx','edx']
+        # self.registers = ['eax','ebx','ecx','edx']
         
         # Register descriptor
         self.registerToSymbol = self.varAllocate.registerToSymbol
@@ -155,7 +155,7 @@ class CodeGenerator():
 
     def newLocHandling(self, loc, Loc, symbol):
 
-        if (loc in self.registers and self.registerToSymbol[loc] != "" and self.getName(symbol) != self.registerToSymbol[loc]):
+        if (loc in self.Registers and self.registerToSymbol[loc] != "" and self.getName(symbol) != self.registerToSymbol[loc]):
             s_code = "" # store code
             self.asm_code[self.curr_func].append("# loc: " + loc)
             #print "symbol : " , self.registerToSymbol[loc]
@@ -166,7 +166,7 @@ class CodeGenerator():
             self.registerToSymbol[loc] = ''
             self.asm_code[self.curr_func].append(s_code)
 
-        if loc in self.registers:    
+        if loc in self.Registers:    
             self.symbolToRegister[self.getName(symbol)] = loc
         loc, Loc = self.getLoc(symbol)
         return [loc, Loc]
@@ -579,12 +579,14 @@ class CodeGenerator():
             Currently moving the variable to be returned to the eax register, and updating the descriptors
         '''
 
+        print "Op1 in handle_return: ", op1
+
         scope = self.symTab.getScope(self.curr_func, 'Func')
         width = self.symTab.table[scope]['width']
-        self.asm_code[self.curr_func].append("\t\taddl $" + str(width)  + ", %esp")
+        self.asm_code[self.curr_func].append("\t\taddl $" + str(width)  + ", %esp   # This is for parameters")
         
         self.asm_code[self.curr_func].append("\t\tmovl %ebp, %esp")
-        self.asm_code[self.curr_func].append("\t\taddl $4, %esp")
+        self.asm_code[self.curr_func].append("\t\tpop %ebp")
         
         if self.checkVariable(op1) and op1 != '':
             # Clear EAX before putting the return value
@@ -710,13 +712,13 @@ class CodeGenerator():
         '''
         self.asm_code[func_name] = ["\t" + func_name + ":"]
         self.curr_func = func_name
-        if func_name != 'main':
-            self.asm_code[func_name].append("\t\tpush %ebp")
-            self.asm_code[func_name].append("\t\tmovl %esp, %ebp")
+
+        self.asm_code[func_name].append("\t\tpush %ebp")
+        self.asm_code[func_name].append("\t\tmovl %esp, %ebp")
     
         scope = self.symTab.getScope(func_name, 'Func')
         width = self.symTab.table[scope]['width']
-        self.asm_code[func_name].append("\t\tsubl $" + str(width)  + ", %esp")
+        self.asm_code[func_name].append("\t\tsubl $" + str(width)  + ", %esp    # This is for parameters")
             
 
     def setup_text(self):
@@ -729,7 +731,7 @@ class CodeGenerator():
 
         self.asm_code['text'].append('\n.text\n\t.global main\n')
         
-        self.function_change('main')
+        self.function_change('main') # We assume that in IR the first thing we get is of main. If not it would be a func label, leading to func_change
             
         start, end = 1,len(self.code)
 
@@ -800,6 +802,16 @@ class CodeGenerator():
 
             elif op == 'SCAN':
                 self.handle_input(ln,lhs)
+
+
+        # Adding this for the things required at the end of main wrt ebp and esp
+        self.curr_func = 'main'
+        width = self.symTab.table['main']['width']
+        self.asm_code[self.curr_func].append("\t\taddl $" + str(width)  + ", %esp   # This is for local stack variables in main")
+        self.asm_code[self.curr_func].append("\t\tmovl %ebp, %esp")
+        self.asm_code[self.curr_func].append("\t\tpop %ebp")
+        self.asm_code[self.curr_func].append("\t\tret   # Ret for Main only")
+
 
 
     def check_dealloc(self,ln,blockIndex):
