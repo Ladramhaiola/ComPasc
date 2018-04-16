@@ -556,13 +556,19 @@ class CodeGenerator():
             ascode = "\t" + const1 + ":"
             self.asm_code[self.curr_func].append(ascode)
 
-    def handle_funccall (self,op1):
+
+    def handle_funccall (self,lhs,op1):
         '''
         args:
             op1 is a symbol table entry.
+            lhs maybe empty depending on the call is for procedure or function
         '''
         self.deallocRegs()
         self.asm_code[self.curr_func].append('\t\tcall ' + self.getName(op1))
+
+        # if lhs is not empty, we'll have to move the value in %eax to the mapping of lhs
+        print "LHS Value: ",lhs
+        self.asm_code[self.curr_func].append('\t\tmovl ' + '%eax,' + self.getLoc(lhs)[1])
 
     def handle_param(self,op1):
         '''
@@ -578,22 +584,16 @@ class CodeGenerator():
         '''
             Currently moving the variable to be returned to the eax register, and updating the descriptors
         '''
-
-        print "Op1 in handle_return: ", op1
-
-        scope = self.symTab.getScope(self.curr_func, 'Func')
-        width = self.symTab.table[scope]['width']
-        self.asm_code[self.curr_func].append("\t\taddl $" + str(width)  + ", %esp   # This is for parameters")
-        
-        self.asm_code[self.curr_func].append("\t\tmovl %ebp, %esp")
-        self.asm_code[self.curr_func].append("\t\tpop %ebp")
         
         if self.checkVariable(op1) and op1 != '':
-            # Clear EAX before putting the return value
-            self.movToMem('eax',self.registerToSymbol['eax'])
+            # print "Op1 in handle_return: ", op1.name
+
+            # Clear EAX before putting the return value only if it is occupied
+            if self.registerToSymbol['eax'] != '':
+                self.movToMem('eax',self.registerToSymbol['eax'])
 
             # Move the actual value to eax
-            self.asm_code[self.curr_func].append('\t\tmovl ' + self.getName(op1) + ',%eax')
+            self.asm_code[self.curr_func].append('\t\tmovl ' + self.getLoc(op1)[1] + ',%eax   # Set the return value in %eax')
 
             # Register descriptor update
             self.registerToSymbol['eax'] = self.getName(op1)
@@ -601,10 +601,15 @@ class CodeGenerator():
             # memvariable update
             self.symbolToRegister[self.getName(op1)] = 'eax'
 
-            self.asm_code[self.curr_func].append('\t\tret')
-        else:
-            # print ('tati')
-            self.asm_code[self.curr_func].append('\t\tret')
+
+        # Scope, Stack, Base pointer setters
+        scope = self.symTab.getScope(self.curr_func, 'Func')
+        width = self.symTab.table[scope]['width']
+        self.asm_code[self.curr_func].append("\t\taddl $" + str(width)  + ", %esp   # This is for parameters")
+        
+        self.asm_code[self.curr_func].append("\t\tmovl %ebp, %esp")
+        self.asm_code[self.curr_func].append("\t\tpop %ebp")
+        self.asm_code[self.curr_func].append('\t\tret')
 
         for scope in self.symTab.table.keys():
             if self.symTab.table[scope]['Name'] == self.curr_func:
@@ -741,7 +746,7 @@ class CodeGenerator():
             #print(self.registerToSymbol)
             #print(self.code[i])
             lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
-            # print "code[i]: ",self.code[i]
+            print "code[i]: ",self.code[i]
             # print lhs.name
             ln = int(lineno)
 
@@ -778,7 +783,7 @@ class CodeGenerator():
             # DONE HOPEFULLY
             elif op == 'CALL':
                 self.check_dealloc(ln,blockIndex)
-                self.handle_funccall (op1)
+                self.handle_funccall (lhs,op1)
 
             # DONE HOPEFULLY
             elif op == 'PARAM':
