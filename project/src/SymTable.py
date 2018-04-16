@@ -51,12 +51,37 @@ class SymTable (object):
         self.table[scopeName] = temp_scope
         self.currScope = scopeName
 
-    def width(self,typ):
 
+    def specialWidth(self, typ):
+
+        typEntry = self.Lookup(typ, 'Ident')
+
+        if typEntry.cat == 'array':
+            size = 1
+            for Range in typEntry.params:
+                size = size*(Range['end']-Range['start']+1)
+            arrayType = typEntry.typ
+            arrayEntry = self.Lookup(arrayType, 'Ident')
+            if self.width(typEntry.typ) != 0:
+                return self.width(arrayType)*size
+            else:
+                return self.width(arrayEntry.typ)*size
+
+        elif typEntry.cat == 'object':
+            width = 0
+            for param in typEntry.params:
+                width += self.width(param[1], param[0])
+            return width
+        
+    def width(self, typ, var = ''):
+
+        #print typ
         if typ == 'INTEGER':
             return 4
         elif typ == 'CHAR':
             return 1
+        elif typ in ['OBJECT', 'ARRAY']:
+            return self.specialWidth(var)
         else:
             return 0
         
@@ -68,16 +93,8 @@ class SymTable (object):
             return 4
         elif vEntry.params == '' :
             return self.width(vEntry.typ)
-        elif vEntry.cat == 'array':
-            size = 1
-            for Range in vEntry.params:
-                size = size*(Range['end']-Range['start']+1)
-            arrayType = vEntry.typ
-            arrayEntry = self.Lookup(arrayType, 'Ident')
-            if self.width(vEntry.typ) != 0:
-                return self.width(vEntry.typ)*size
-            else:
-                return self.width(arrayEntry.typ)*size
+        elif vEntry.cat in ['array', 'object']:
+            return self.specialWidth(v)
         
     def Define(self, v, typ, cat, params = '', offset = '', parameter = False):
         

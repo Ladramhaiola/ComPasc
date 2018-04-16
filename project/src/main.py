@@ -96,7 +96,7 @@ def main():
 
         inputfile = open(sys.argv[1],'r').read()
         symTab,tac = parse(inputfile)
-        print symTab.localVals
+        #print symTab.localVals
         tac.addlineNumbers()
         print("\n#Displaying 3AC\n")
         tac.display_code()
