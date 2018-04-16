@@ -17,5 +17,6 @@ begin
   Rectangle.width:= 40;
   Rectangle.height:= 40;
    x := Rectangle.x + Rectangle.y;
+   WRITELN(x);
    
 end;

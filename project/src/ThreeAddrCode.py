@@ -46,6 +46,7 @@ class ThreeAddrCode:
                         offset = offset - self.symTab.width(varEntry.typ, var)
                         varEntry.offset = offset
                         width = width + self.symTab.width(varEntry.typ, var)
+                        #print "var : ", var, " , offset : ", str(offset)
 
             # Now handling the temporaries.
             for temp in self.symTab.localVals[func_name]:
@@ -63,6 +64,7 @@ class ThreeAddrCode:
                             offset = objOffset + param[3]
                             mapDick[temp] = offset
                             break
+                    offset = objOffset
                     continue
                 
                 offset = offset - 4 # temporaries are size 4
