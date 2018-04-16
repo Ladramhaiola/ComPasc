@@ -302,6 +302,11 @@ def p_SimpleStatement(p):
     elif len(p) == 4 and p[2] == ':=':
 
         entry = symTab.Lookup(p[1]['place'],'Ident')
+
+        if entry == None:
+            emitTac('+',p[1]['place'],p[3]['place'],'0')
+            return
+        
         if entry.cat == 'constant':
             sys.exit("ERROR : Trying to assign constant variable "+p[1]['place'])
             
@@ -757,7 +762,9 @@ def p_TypeDecl(p):
         symTab.Define(p[1], p[3]['dataType'], 'ARRAY', p[3]['ranges'])
         p[3]['type'] = p[1]
     elif p[3]['type'] in ['OBJECT','CLASS']:
+        #print p[3]['params']
         symTab.Define(p[1], 'OBJECT','OBJECT', p[3]['params'])
+        #print symTab.table
     reverse_output.append(p.slice)
 
 def p_RestrictedType(p):
@@ -849,7 +856,7 @@ def p_Designator(p):
 
     # This is for handling object.variable
     elif 'var' in p[2].keys() :
-        p[0]['place'] = p[0]['place'] + "_" + p[2]['var']
+        p[0]['place'] = p[1] + "_" + p[2]['var']
 
     flag = 0
     if symTab.Lookup(symTab.currScope + "_" + p[1],'Ident') != None:
@@ -1087,13 +1094,15 @@ def p_VarDecl(p):
     ''' VarDecl : IdentList COLON Type'''
 
     typeEntry = symTab.Lookup(p[3]['type'],'Ident')
+    global objectOffset
     
     # When this comes within object declaration
     if inObject:
         p[0] = {}
         params = []
         for elem in p[1]:
-            params.append([elem, p[3]['type'], 'VAR'])
+            params.append([elem, p[3]['type'], 'VAR', objectOffset])
+            objectOffset += symTab.width(p[3]['type'])
         p[0]['params'] = params
     elif typeEntry != None:
         # print typeEntry.params
@@ -1104,8 +1113,11 @@ def p_VarDecl(p):
             for elem in p[1]:
                 symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'OBJECT', typeEntry.params)
                 for var in typeEntry.params:
-                    symTab.Define(symTab.currScope + "_" + elem + "_" + var[0], var[1], 'VAR')
-            #print symTab.table
+                    funcName = symTab.table[symTab.currScope]['Name']
+                    if funcName not in symTab.localVals.keys():
+                        symTab.localVals[funcName] = []
+                    symTab.localVals[funcName].append(elem + "_" + var[0])
+                #print symTab.localVals
     else:
         for elem in p[1]:
             symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'VAR')
@@ -1285,6 +1297,7 @@ def p_LambFunc(p):
 
 # This will denote that we are within an object declaration
 inObject = False;
+objectOffset = 0;
 
 ### ---------------- OBJECT DEFS -------------- ###
 
