@@ -457,14 +457,15 @@ class CodeGenerator():
 	        if (v != ''):
 	            ascode += "\n\t\tmovl " + "%" + reg + "," + v
 
-        if self.symbolToRegister[x] != '':
-            x = "%"+self.symbolToRegister[x]
+        # if self.symbolToRegister[x] != '':
+        #     x = "%"+self.symbolToRegister[x]
             
         # central code 
-        ascode += "\n\t\tmovl $0, %eax"
-        ascode += "\n\t\tmovl " + x + ",%esi"
-        ascode += "\n\t\tmovl $.formatINT, %edi"
-        ascode += "\n\t\tcall printf" 
+        ascode += "\n\t\tsubl $16, %esp"
+        ascode += "\n\t\tpush " + x
+        ascode += "\n\t\tpush $.formatINT"
+        ascode += "\n\t\tcall printf"
+        ascode += "\n\t\taddl $8, %esp"
 
         # restore values in registers
         for i,reg in enumerate(changedRegisters):
@@ -746,7 +747,7 @@ class CodeGenerator():
             #print(self.registerToSymbol)
             #print(self.code[i])
             lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
-            print "code[i]: ",self.code[i]
+            #print "code[i]: ",self.code[i]
             # print lhs.name
             ln = int(lineno)
 
@@ -835,7 +836,7 @@ class CodeGenerator():
         self.asm_code['data'] = []
         self.asm_code['data'].append('.extern printf \n')
         self.asm_code['data'].append('.data \n')
-        self.asm_code['data'].append('.formatINT : \n .string \"%d\\n\" \n')
+        self.asm_code['data'].append('.formatINT : \n .string \"%d\\n\\0\" \n')
         self.asm_code['data'].append('.formatINT_INP : \n .string \"%d\" \n')
         for scope in ['main']:
             for var in self.symTab.table[scope]['Ident']:
