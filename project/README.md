@@ -70,6 +70,5 @@ The first line(moving ebp to esp) ensures that stack pointer points to the top o
 | Lambda     |                  |   |
 
 # Things out of mind
-- Function return obtaining in eax
 - Array addressing to be improved, because now we are using stack. Check example 1 in Address Operand Syntax wiki page
 - Replicating for procedures what has been done for functions
