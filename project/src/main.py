@@ -85,6 +85,7 @@ def modify3ACforCodegen(symTab,tac,listCode):
                     temp[6] = op2
             elif (operator == 'CALL'):
                 temp[3] = op1
+                temp[2] = lhs
             elif (operator == 'PARAM'):
                 temp[3] = op1
 
