@@ -20,7 +20,7 @@ class varAllocateRegister:
         self.blocksToLabels = {}                                         # key value is the [startline,endline] for a block and value is the label name
         self.leaders = []                                                # This will determine the basic blocks 
         self.code = ThreeAddrCode.code
-        self.symbols = ["%esp","%ebp"]
+        self.symbols = []
         
         for reg in self.unusedRegisters:
             self.registerToSymbol[reg] = ""
@@ -40,6 +40,13 @@ class varAllocateRegister:
         except ValueError:
             return False
 
+    def getName(self, symbol):
+
+        if isinstance(symbol, SymTableEntry):
+            return symbol.name
+        else:
+            return symbol
+        
     # Need to add temporaries to the symbols list for calculation of max next use
     def addSymbols(self):
 
@@ -118,6 +125,7 @@ class varAllocateRegister:
         for i in range(len(code)):
             # print (self.leaders)
             codeLine = code[i]
+
             if codeLine[1].lower() in ["jmp","je","jne","jz","jg","jl","jge","jle"]:
 
                 # Store the linenumber of the target label
@@ -131,6 +139,9 @@ class varAllocateRegister:
                 if (i != (len(code) - 1)):
                     self.leaders.append(int(code[i+1][0]))         # 0 represents the linenumber
 
+            elif codeLine[1].lower() == "label" and codeLine[2].lower() == "func" or codeLine[1].lower() == "return":
+                self.leaders.append(int(codeLine[0]))
+                
         self.leaders = list(set(self.leaders))         # removes duplicates
         self.leaders.sort()
 
@@ -169,33 +180,22 @@ class varAllocateRegister:
             codeLine = code[i-1]
             # print (codeLine)
 
-            lhs = codeLine[2]
-            op1 = codeLine[3]
-            op2 = codeLine[4]
+            lhs = self.getName(codeLine[2])
+            op1 = self.getName(codeLine[3])
+            op2 = self.getName(codeLine[4])
         
-            if isinstance(lhs, SymTableEntry):
-                lineDict[lhs.name] = float("inf")
-            if isinstance(op1, SymTableEntry):
-                lineDict[op1.name] = codeLine[0]
+            if lhs in self.symbols:
+                lineDict[lhs] = float("inf")
+            if op1 in self.symbols:
+                lineDict[op1] = codeLine[0]
                 # print ('ZZZ = ', lineDict[op1])
-            if isinstance(op2, SymTableEntry):
-                lineDict[op2.name] = codeLine[0]
+            if op2 in self.symbols:
+                lineDict[op2] = codeLine[0]
 
             # print (lineDict)
 
             for sym in symbols:
-                op1_s = ""
-                op2_s = ""
-                lhs_s = ""
-                if (isinstance(op1, SymTableEntry)):
-                    op1_s = op1.name
-                if (isinstance(op2, SymTableEntry)):
-                    op2_s = op2.name
-                if (isinstance(lhs, SymTableEntry)):
-                    lhs_s = lhs.name
-                # if ((op1 != None and sym != op1.name) or (op2 != None and sym != op2.name) or (lhs != None and sym != lhs.name)):
-                #     lineDict[sym] = prevLine[sym]
-                if sym not in [op1_s,op2_s,lhs_s]:
+                if sym not in [op1,op2,lhs]:
                     lineDict[sym] = prevLine[sym]                            # Rest of the symbols will get the next use info of the next line
 
             self.nextUse[blockIndex].append(lineDict)                        # These dictionaries will be appended in reverse order of the line number
@@ -224,8 +224,12 @@ class varAllocateRegister:
         blockStart = self.basicBlocks[blockIndex][0]
         blockNextUse = self.nextUse[blockIndex][linenumber-blockStart]                              # This is a dictionary
 
+        #print blockNextUse
         symbols = self.symbols
+        #print symbols
+        #print self.basicBlocks
         
+        #print self.symbolToRegister
         for sym in symbols:
             if blockNextUse[sym] > blockMaxNext and self.symbolToRegister[sym] != "":     # Return only the symbol which is held in some register
                 blockMaxNext = blockNextUse[sym]
@@ -249,10 +253,13 @@ class varAllocateRegister:
         msg = ""
         codeLine = self.code[line-1]
         
-        lhs = codeLine[2] # x
-        op1 = codeLine[3] # y
-        op2 = codeLine[4] # z
+        lhs = self.getName(codeLine[2]) # x
+        op1 = self.getName(codeLine[3]) # y
+        op2 = self.getName(codeLine[4]) # z
 
+        if lhs not in self.symbols:
+            return (lhs, "Replaced Nothing")
+        
         # x = y OP z
         if (line < self.basicBlocks[blockIndex][1]): # less than endline index
             nextUseInBlock = self.nextUse[blockIndex][line + 1 - self.basicBlocks[blockIndex][0]]
@@ -260,30 +267,27 @@ class varAllocateRegister:
             nextUseInBlock = {}
             for sym in self.symbols:
                 nextUseInBlock[sym] = float("inf")
-
+  
         # float("inf") means that variable has no next use after that particular line in the block
-        if (isinstance(op1, SymTableEntry) and self.symbolToRegister[op1.name] != "" and nextUseInBlock[op1.name] == float("inf") ):
-            reg = self.symbolToRegister[op1.name]
+        if (op1 in self.symbols and self.symbolToRegister[op1] != "" and nextUseInBlock[op1] == float("inf") ):
+            reg = self.symbolToRegister[op1]
             #self.symbolToRegister[op1.name] = ""
             msg = "Replaced op1"
-        elif (isinstance(op2, SymTableEntry) and self.symbolToRegister[op2.name] != "" and nextUseInBlock[op2.name] == float("inf") ):
-            reg = self.symbolToRegister[op2.name]
+        elif (op2 in self.symbols and self.symbolToRegister[op2] != "" and nextUseInBlock[op2] == float("inf") ):
+            reg = self.symbolToRegister[op2]
             #self.symbolToRegister[op2.name] = ""
             msg = "Replaced op2"
-        elif ( len(self.unusedRegisters) > 0 ):
+        elif (len(self.unusedRegisters) > 0):
             reg = self.unusedRegisters[0]
             self.unusedRegisters.remove(reg)
             self.usedRegisters.append(reg)
             msg = "Did not replace"
-        elif (( isinstance(lhs, SymTableEntry) and nextUseInBlock[lhs.name] != float("inf")) or all_mem == True):
+        elif (( lhs in self.symbols and nextUseInBlock[lhs] != float("inf")) or all_mem == True):
             MU_var = self.getBlockMaxUse(blockIndex, line)
             reg = self.symbolToRegister[MU_var]
             #self.symbolToRegister[MU_var] = ""
             msg = "Replaced NextUse , " + MU_var
         else:
-            if isinstance(lhs, SymTableEntry):
-                reg = lhs.name # var
-            else:
-                reg = lhs
+            reg = lhs
             msg = "Replaced Nothing"
         return (reg, msg)

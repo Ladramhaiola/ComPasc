@@ -57,6 +57,7 @@ class CodeGenerator():
         
     def getRegister(self, symbol):
 
+        
         if isinstance(symbol, SymTableEntry):
             return self.symbolToRegister[symbol.name]
         else:
@@ -68,17 +69,29 @@ class CodeGenerator():
     def checkVariable(self, symbol):
         
         symbolName = self.getName(symbol)
-        if symbolName in self.symbols:
+        if symbolName in self.symbols and symbolName[0] != "%":
             return True
         else:
             return False
+
+    def checkOffset(self, symbol):
+
+        symbolName = self.getName(symbol)
+        symbolEntry = self.symTab.Lookup(symbolName,'Ident')
+        symbolOffsets = self.threeAC.tempToOffset[self.curr_func]
+
+        if symbolEntry != None and symbolEntry.offset != '' :
+            return str(symbolEntry.offset) + '(%ebp)'
+        elif symbolName in symbolOffsets.keys():
+            return str(symbolOffsets[symbolName]) + '(%ebp)'
+        return symbol
         
     def getLoc(self, symbol):
 
         symbolName = self.getName(symbol)
         symbolReg = self.getRegister(symbol)
         symbolOffsets = self.threeAC.tempToOffset[self.curr_func]
-        print "symbolName: ",symbolName
+        #print "symbolName: ",symbolName
 
 
         loc_op = "" # condition checks in varAllocate and codegen
@@ -91,12 +104,15 @@ class CodeGenerator():
             symbolEntry = self.symTab.Lookup(symbolName,'Ident')
             # print "SE retrieved: ",symbolEntry
             loc_op = symbolName
+            #print "Symbolname is " + symbolName
             if symbolEntry != None and symbolEntry.offset != '' :
                 # print "Now we are going to get the offset"
+                #print "offset is " + str(symbolEntry.offset)
                 Loc_op = str(symbolEntry.offset) + '(%ebp)'
             elif symbolName in symbolOffsets.keys():
+                #print "offset is : " + str(symbolOffsets[symbolName])
                 Loc_op = str(symbolOffsets[symbolName]) + '(%ebp)'
-                print "Loc_op inside temps: ",Loc_op
+                #print "Loc_op inside temps: ",Loc_op
             else:
                 # print "Or maybe not"
                 Loc_op = symbolName
@@ -142,11 +158,19 @@ class CodeGenerator():
         if (loc in self.registers and self.registerToSymbol[loc] != "" and self.getName(symbol) != self.registerToSymbol[loc]):
             s_code = "" # store code
             self.asm_code[self.curr_func].append("# loc: " + loc)
-            s_code = '\t\tmovl ' + Loc + "," + self.registerToSymbol[loc]
+            #print "symbol : " , self.registerToSymbol[loc]
+            place = self.checkOffset(self.registerToSymbol[loc])
+            #print "offset : ", place
+            s_code = '\t\tmovl ' + Loc + "," + place
             self.symbolToRegister[self.registerToSymbol[loc]] = ""
             self.registerToSymbol[loc] = ''
             self.asm_code[self.curr_func].append(s_code)
 
+        if loc in self.registers:    
+            self.symbolToRegister[self.getName(symbol)] = loc
+        loc, Loc = self.getLoc(symbol)
+        return [loc, Loc]
+            
     def updateRegEntry(self, symbol, loc):
 
         symbolName = self.getName(symbol)
@@ -166,6 +190,7 @@ class CodeGenerator():
         '''
         # print (v)
         self.asm_code[self.curr_func].append('#movToMem starts here')
+        v = self.checkOffset(v)
         ascode = "\t\tmovl " + "%" + reg + "," + v
         self.symbolToRegister[v] = ''
         self.registerToSymbol[reg] = ''
@@ -192,6 +217,7 @@ class CodeGenerator():
         '''
             
         '''
+        #print lineno, operation, lhs, op1, op2, const1, const2
         
         op = self.op32_dict[operation] # add/sub/idiv
         # lineno, operator, lhs, op1, op2 = line
@@ -242,7 +268,7 @@ class CodeGenerator():
         else:
             Loc = loc
 
-        self.newLocHandling(loc, Loc, lhs)
+        loc, Loc = self.newLocHandling(loc, Loc, lhs)
 
         ascode = ''
 
@@ -317,7 +343,8 @@ class CodeGenerator():
 
         ### ------------ Update descriptors for L and LHS ------------ ###
 
-        if loc in self.Registers:
+        #print "yoooooooooooooooooo", Loc
+        if Loc[1:] in self.Registers:
             self.updateRegEntry(lhs, loc)
 
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
@@ -534,6 +561,7 @@ class CodeGenerator():
         args:
             op1 is a symbol table entry.
         '''
+        self.deallocRegs()
         self.asm_code[self.curr_func].append('\t\tcall ' + self.getName(op1))
 
     def handle_param(self,op1):
@@ -550,6 +578,9 @@ class CodeGenerator():
         '''
             Currently moving the variable to be returned to the eax register, and updating the descriptors
         '''
+        self.asm_code[self.curr_func].append("\t\tmovl %ebp, %esp")
+        self.asm_code[self.curr_func].append("\t\taddl $4, %esp")
+        
         if self.checkVariable(op1) and op1 != '':
             # Clear EAX before putting the return value
             self.movToMem('eax',self.registerToSymbol['eax'])
@@ -586,7 +617,7 @@ class CodeGenerator():
 
     	ascode = ''
 
-        self.newLocHandling(loc, Loc, lhs)
+        loc, Loc = self.newLocHandling(loc, Loc, lhs)
 
         # We are checking if op2 is a symTableEntry instead we need to check if it's a variable
         if self.checkVariable(op2) and self.checkVariable(lhs) and lhs != op2:
@@ -594,7 +625,7 @@ class CodeGenerator():
             loc_op2, msg = self.varAllocate.getReg(blockIndex, lineno, True)
             Loc_op2 = "%" + loc_op2
 
-            self.newLocHandling(loc_op2, Loc_op2, op2)
+            loc, Loc = self.newLocHandling(loc_op2, Loc_op2, op2)
 
         else:
             
@@ -630,7 +661,7 @@ class CodeGenerator():
         loc_op1, msg = self.varAllocate.getReg(blockIndex, lineno, True)
         Loc_op1 = "%" + loc_op1
 
-        self.newLocHandling(loc_op1, Loc_op1, op1)
+        loc, Loc = self.newLocHandling(loc_op1, Loc_op1, op1)
 
         # loc_op2 is to store x in a[i] = x
         if self.checkVariable(op2) and self.checkVariable(op1) and op1 != op2:
@@ -638,7 +669,7 @@ class CodeGenerator():
             loc_op2, msg = self.varAllocate.getReg(blockIndex, lineno, True)
             Loc_op2 = "%" + loc_op2
 
-            self.newLocHandling(loc_op2, Loc_op2, op2)
+            loc, Loc = self.newLocHandling(loc_op2, Loc_op2, op2)
 
         else:
             
@@ -674,7 +705,10 @@ class CodeGenerator():
         '''
         self.asm_code[func_name] = ["\t" + func_name + ":"]
         self.curr_func = func_name
-
+        if func_name != 'main':
+            self.asm_code[func_name].append("\t\tpush %ebp")
+            self.asm_code[func_name].append("\t\tmovl %esp, %ebp")
+            
 
     def setup_text(self):
         '''

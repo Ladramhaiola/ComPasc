@@ -29,22 +29,24 @@ class ThreeAddrCode:
             self.tempToOffset[func_name] = {}
             mapDick = self.tempToOffset[func_name]
 
-            print "Scope:",scope
+            #print "Scope:",scope
 
             # First adding the local variables
             if func_name != 'main':
                 for var in scope_entry['Ident'].keys():
                     if scope_entry['Ident'][var].parameter == False:
-                        print "Var in mapping, offset: ",var, offset
+                        #print "Var in mapping, offset: ",var, offset
                         # First fetch the variables from the scope
                         mapDick[var] = offset
+                        varEntry = self.symTab.Lookup(var, 'Ident')
+                        varEntry.offset = offset
 
                         # Now upadate the offset
                         offset = offset - self.symTab.getWidth(var)
 
             # Now handling the temporaries.
             for temp in self.symTab.localVals[func_name]:
-                print "Temp in mapping, offset: ",temp, offset
+                #print "Temp in mapping, offset: ",temp, offset
                 mapDick[temp] = offset
                 offset = offset - 4 # temporaries are size 4
 

@@ -1133,10 +1133,10 @@ def p_FuncDecl(p):
     ''' FuncDecl : FuncHeading SEMICOLON Block FMark2'''
     reverse_output.append(p.slice)
 
-def p_FMark3(p):
-    ''' FMark3 : '''
-    emitTac('PARAM','','%ebp','')
-    emitTac('+','%ebp','%esp','0')
+# def p_FMark3(p):
+#     ''' FMark3 : '''
+#     emitTac('PARAM','','%ebp','')
+#     emitTac('+','%ebp','%esp','0')
 
     # Now move the variables on the stack to local variables
 
@@ -1144,8 +1144,8 @@ def p_FMark3(p):
 def p_FMark2(p):
     ''' FMark2 : '''
     symTab.endScope()
-    emitTac('+','%esp','%ebp','0')
-    emitTac('+','%esp','%esp','4')
+    # emitTac('+','%esp','%ebp','0')
+    # emitTac('+','%esp','%esp','4')
     emitTac('RETURN','',p[-3]['place'],p[-3]['place'])
 
 def p_FMark1(p):
@@ -1156,8 +1156,8 @@ def p_FuncHeading(p):
     ''' FuncHeading : FUNCTION Designator FMark1 FormalParams COLON Type '''
     # p[0] = p[2]
 
-    emitTac('PARAM','','%ebp','')
-    emitTac('+','%ebp','%esp','0')
+    # emitTac('PARAM','','%ebp','')
+    # emitTac('+','%ebp','%esp','0')
     
     # Declare new scope here
     symTab.AddScope(p[2]['place'],'function')
@@ -1221,7 +1221,7 @@ def p_FormalParams(p):
     reverse_output.append(p.slice)
 
 def p_ProcedureDecl(p):
-    ''' ProcedureDecl : ProcedureHeading SEMICOLON FMark3 Block PMark2'''
+    ''' ProcedureDecl : ProcedureHeading SEMICOLON Block PMark2'''
     reverse_output.append(p.slice)
 
 def p_PMark1(p):
