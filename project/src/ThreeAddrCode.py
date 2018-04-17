@@ -29,6 +29,7 @@ class ThreeAddrCode:
             self.tempToOffset[func_name] = {}
             mapDick = self.tempToOffset[func_name]
 
+            width = 0
             #print "Scope:",scope
 
             # First adding the local variables
@@ -43,13 +44,17 @@ class ThreeAddrCode:
 
                         # Now upadate the offset
                         offset = offset - self.symTab.getWidth(var)
+                        width = width + self.symTab.getWidth(var)
 
             # Now handling the temporaries.
             for temp in self.symTab.localVals[func_name]:
                 #print "Temp in mapping, offset: ",temp, offset
                 mapDick[temp] = offset
                 offset = offset - 4 # temporaries are size 4
+                width = width + 4
 
+            # This is for keeping the stack size for a local function
+            scope_entry['width'] = width
 
 
     def emit(self,op,lhs,op1,op2):

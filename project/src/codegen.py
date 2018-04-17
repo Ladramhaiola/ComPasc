@@ -578,6 +578,11 @@ class CodeGenerator():
         '''
             Currently moving the variable to be returned to the eax register, and updating the descriptors
         '''
+
+        scope = self.symTab.getScope(self.curr_func, 'Func')
+        width = self.symTab.table[scope]['width']
+        self.asm_code[self.curr_func].append("\t\taddl $" + str(width)  + ", %esp")
+        
         self.asm_code[self.curr_func].append("\t\tmovl %ebp, %esp")
         self.asm_code[self.curr_func].append("\t\taddl $4, %esp")
         
@@ -708,6 +713,10 @@ class CodeGenerator():
         if func_name != 'main':
             self.asm_code[func_name].append("\t\tpush %ebp")
             self.asm_code[func_name].append("\t\tmovl %esp, %ebp")
+    
+        scope = self.symTab.getScope(func_name, 'Func')
+        width = self.symTab.table[scope]['width']
+        self.asm_code[func_name].append("\t\tsubl $" + str(width)  + ", %esp")
             
 
     def setup_text(self):

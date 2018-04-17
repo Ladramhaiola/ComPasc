@@ -17,7 +17,8 @@ class SymTable (object):
                 'ReturnType' : None,
                 'Func' : {},
                 'Ident' : {},
-                'ReturnSet' : False
+                'ReturnSet' : False, 
+                'width' : 0
             }
         }
         self.currScope = 'main'
@@ -44,7 +45,8 @@ class SymTable (object):
             'ReturnType' : 'undefined', # default value
             'Func' : {},
             'Ident' : {},
-            'ReturnSet': False
+            'ReturnSet': False, 
+            'width' : 0
         }
         self.table[scopeName] = temp_scope
         self.currScope = scopeName
