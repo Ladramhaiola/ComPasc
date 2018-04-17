@@ -123,6 +123,7 @@ class CodeGenerator():
         for reg in self.Registers:
             if self.registerToSymbol[reg] != '':
                 v = self.registerToSymbol[reg]
+                print "reg, v :", reg, v
                 self.movToMem(reg,v)
                 self.varAllocate.usedRegisters.remove(reg)
                 self.varAllocate.unusedRegisters.append(reg)
@@ -568,8 +569,12 @@ class CodeGenerator():
         self.asm_code[self.curr_func].append('\t\tcall ' + self.getName(op1))
 
         # if lhs is not empty, we'll have to move the value in %eax to the mapping of lhs
-        print "LHS Value: ",lhs
         self.asm_code[self.curr_func].append('\t\tmovl ' + '%eax,' + self.getLoc(lhs)[1])
+        
+        self.symbolToRegister[self.getName(lhs)] = 'eax'
+        self.registerToSymbol['eax'] = self.getName(lhs)
+        self.varAllocate.usedRegisters.append('eax')
+        self.varAllocate.unusedRegisters.remove('eax')
 
     def handle_param(self,op1):
         '''
@@ -591,16 +596,16 @@ class CodeGenerator():
 
             # Clear EAX before putting the return value only if it is occupied
             if self.registerToSymbol['eax'] != '':
-                self.movToMem('eax',self.registerToSymbol['eax'])
+                self.movToMem('eax', self.getLoc(self.registerToSymbol['eax'])[1])
 
             # Move the actual value to eax
             self.asm_code[self.curr_func].append('\t\tmovl ' + self.getLoc(op1)[1] + ',%eax   # Set the return value in %eax')
 
             # Register descriptor update
-            self.registerToSymbol['eax'] = self.getName(op1)
+            # self.registerToSymbol['eax'] = self.getName(op1)
 
-            # memvariable update
-            self.symbolToRegister[self.getName(op1)] = 'eax'
+            # # memvariable update
+            # self.symbolToRegister[self.getName(op1)] = 'eax'
 
 
         # Scope, Stack, Base pointer setters
