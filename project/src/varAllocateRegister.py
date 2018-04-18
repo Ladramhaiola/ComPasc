@@ -178,12 +178,14 @@ class varAllocateRegister:
         for i in range(len(code),0,-1):
             lineDict = {}
             codeLine = code[i-1]
-            # print (codeLine)
+            #print (codeLine)
 
             lhs = self.getName(codeLine[2])
             op1 = self.getName(codeLine[3])
             op2 = self.getName(codeLine[4])
-        
+
+            #print lhs, op1, op2
+            
             if lhs in self.symbols:
                 lineDict[lhs] = float("inf")
             if op1 in self.symbols:
@@ -192,12 +194,12 @@ class varAllocateRegister:
             if op2 in self.symbols:
                 lineDict[op2] = codeLine[0]
 
-            # print (lineDict)
-
             for sym in symbols:
                 if sym not in [op1,op2,lhs]:
                     lineDict[sym] = prevLine[sym]                            # Rest of the symbols will get the next use info of the next line
 
+            #print "linenumber, lineDict",i, lineDict
+            
             self.nextUse[blockIndex].append(lineDict)                        # These dictionaries will be appended in reverse order of the line number
             prevLine = lineDict.copy()                                              # We need this for updating the next use for every symbol
         
@@ -222,8 +224,10 @@ class varAllocateRegister:
         blockMaxSymbol = ""
 
         blockStart = self.basicBlocks[blockIndex][0]
-        blockNextUse = self.nextUse[blockIndex][linenumber-blockStart]                              # This is a dictionary
-
+        blockNextUse = self.nextUse[blockIndex][linenumber+1-blockStart]                              # This is a dictionary
+        #print "blockNextUse for line number :", linenumber, blockNextUse
+        #print "symbol to register mapping at this point is :", self.symbolToRegister
+        
         #print blockNextUse
         symbols = self.symbols
         #print symbols
@@ -231,10 +235,11 @@ class varAllocateRegister:
         
         #print self.symbolToRegister
         for sym in symbols:
-            if blockNextUse[sym] > blockMaxNext and self.symbolToRegister[sym] != "":     # Return only the symbol which is held in some register
-                blockMaxNext = blockNextUse[sym]
+            if self.symbolToRegister[sym] != "" and float(blockNextUse[sym]) > blockMaxNext:     # Return only the symbol which is held in some register
+                blockMaxNext = float(blockNextUse[sym])
                 blockMaxSymbol = sym
-        
+                
+        #print blockMaxSymbol
         return blockMaxSymbol
 
     def line2Block (self, line):
@@ -252,6 +257,11 @@ class varAllocateRegister:
         reg = ""
         msg = ""
         codeLine = self.code[line-1]
+        # print codeLine
+        # print self.registerToSymbol
+        # print self.symbolToRegister
+        # print "Unused : ", self.unusedRegisters
+        # print "Used : ", self.usedRegisters
         
         lhs = self.getName(codeLine[2]) # x
         op1 = self.getName(codeLine[3]) # y
@@ -269,6 +279,7 @@ class varAllocateRegister:
                 nextUseInBlock[sym] = float("inf")
   
         # float("inf") means that variable has no next use after that particular line in the block
+    
         if (op1 in self.symbols and self.symbolToRegister[op1] != "" and nextUseInBlock[op1] == float("inf") ):
             reg = self.symbolToRegister[op1]
             #self.symbolToRegister[op1.name] = ""
@@ -282,7 +293,8 @@ class varAllocateRegister:
             self.unusedRegisters.remove(reg)
             self.usedRegisters.append(reg)
             msg = "Did not replace"
-        elif (( lhs in self.symbols and nextUseInBlock[lhs] != float("inf")) or all_mem == True):
+        elif (( nextUseInBlock[lhs] != float("inf")) or all_mem == True):
+            #print nextUseInBlock
             MU_var = self.getBlockMaxUse(blockIndex, line)
             reg = self.symbolToRegister[MU_var]
             #self.symbolToRegister[MU_var] = ""

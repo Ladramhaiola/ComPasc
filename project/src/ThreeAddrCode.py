@@ -22,7 +22,7 @@ class ThreeAddrCode:
 
     def mapOffset(self):
 
-        #print self.symTab.table
+        #print self.symTab.localVals
         for scope in self.symTab.table.keys():
 
             offset = 0 # Begin at -4, as -4 is the base
@@ -37,7 +37,7 @@ class ThreeAddrCode:
             # First adding the local variables
             for var in scope_entry['Ident'].keys():
                 varEntry = self.symTab.Lookup(var, 'Ident')
-                if func_name != 'main' or (varEntry != None and varEntry.cat in ['object','array']):
+                if func_name != 'main' or (varEntry != None and varEntry.cat in ['object']):
                     if varEntry.parameter == False:
                         #print "Var in mapping, offset: ",var, offset
                         # First fetch the variables from the scope

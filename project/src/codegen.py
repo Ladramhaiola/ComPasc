@@ -84,7 +84,7 @@ class CodeGenerator():
             return str(symbolEntry.offset) + '(%ebp)'
         elif symbolName in symbolOffsets.keys():
             return str(symbolOffsets[symbolName]) + '(%ebp)'
-        return symbol
+        return symbolName
         
     def getLoc(self, symbol):
 
@@ -123,7 +123,7 @@ class CodeGenerator():
         for reg in self.Registers:
             if self.registerToSymbol[reg] != '':
                 v = self.registerToSymbol[reg]
-                print "reg, v :", reg, v
+                #print "reg, v :", reg, v
                 self.movToMem(reg,v)
                 self.varAllocate.usedRegisters.remove(reg)
                 self.varAllocate.unusedRegisters.append(reg)
@@ -163,6 +163,7 @@ class CodeGenerator():
             place = self.checkOffset(self.registerToSymbol[loc])
             #print "offset : ", place
             s_code = '\t\tmovl ' + Loc + "," + place
+            #print self.registerToSymbol[loc]
             self.symbolToRegister[self.registerToSymbol[loc]] = ""
             self.registerToSymbol[loc] = ''
             self.asm_code[self.curr_func].append(s_code)
@@ -170,20 +171,27 @@ class CodeGenerator():
         if loc in self.Registers:    
             self.symbolToRegister[self.getName(symbol)] = loc
         loc, Loc = self.getLoc(symbol)
+        #print "loc, Loc in newLoc", loc, Loc
         return [loc, Loc]
             
-    def updateRegEntry(self, symbol, loc):
+    def updateRegEntry(self, symbol, loc, symbol_reg = ''):
 
         symbolName = self.getName(symbol)
-
+        #print "loc, symbolName", loc, symbolName
+        
         if self.checkVariable(symbol):
-            symbol_reg = self.symbolToRegister[symbolName]
+            if symbol_reg == '':
+                symbol_reg = self.symbolToRegister[symbolName]
+            #print symbol_reg
             if (symbol_reg != "" and loc != symbol_reg):
                 self.varAllocate.unusedRegisters.append(symbol_reg)
                 self.varAllocate.usedRegisters.remove(symbol_reg)
                 self.registerToSymbol[symbol_reg] = ""
             self.registerToSymbol[loc] = symbolName
             self.symbolToRegister[symbolName] = loc
+
+        #print self.symbolToRegister
+        #print self.registerToSymbol
     
     def movToMem (self, reg, v):
         '''
@@ -218,6 +226,9 @@ class CodeGenerator():
         '''
             
         '''
+        #print lineno
+        #print self.registerToSymbol
+        #print self.symbolToRegister
         #print lineno, operation, lhs, op1, op2, const1, const2
         
         op = self.op32_dict[operation] # add/sub/idiv
@@ -242,6 +253,7 @@ class CodeGenerator():
         # handle cases a = a + b  (cases like a = a + 1 will be handled in BA_1CR)
         if (op1 == lhs and self.checkVariable(op2)):
 
+            #print "linenumber, Loc_op1, Loc_op2 : ", lineno,  Loc_op1, Loc_op2
             if (Loc_op1[0] == "%"): # a in register
 
                 ascode = "\t\t" + op + " " + Loc_op2 + ", " +  Loc_op1 
@@ -252,8 +264,13 @@ class CodeGenerator():
                 '''
                 This is for 'a' in memory and 'b' in register (the case for both being in memory is handled below (with a redundant movl))
                 '''
-                ascode = "\t\t" + op + " " + Loc_op2 + "," + Loc_op1
+                ascode = "\t\t" + op + " " + Loc_op1 + "," + Loc_op2
+                self.symbolToRegister[self.getName(op1)] = Loc_op2[1:]
+                self.symbolToRegister[self.getName(op2)] = ''
+                self.registerToSymbol[Loc_op2[1:]] = self.getName(op1)
                 self.asm_code[self.curr_func].append(ascode)
+                #print self.registerToSymbol
+                #print self.symbolToRegister
                 return
             
         ## NORMAL HANDLING ##
@@ -269,6 +286,7 @@ class CodeGenerator():
         else:
             Loc = loc
 
+        oldRegLhs = self.symbolToRegister[self.getName(lhs)]
         loc, Loc = self.newLocHandling(loc, Loc, lhs)
 
         ascode = ''
@@ -346,8 +364,11 @@ class CodeGenerator():
 
         #print "yoooooooooooooooooo", Loc
         if Loc[1:] in self.Registers:
-            self.updateRegEntry(lhs, loc)
+            #print "lineno, into updateRegEntry", lineno
+            self.updateRegEntry(lhs, loc, oldRegLhs)
 
+        #print self.registerToSymbol
+        #print self.symbolToRegister
         # If op1 and/or op2 have no next use, update descriptors to include this info. [?]
 
     def handle_division(self, lineno, operation, lhs, op1, op2, const1, const2):
@@ -456,14 +477,14 @@ class CodeGenerator():
         for i,reg in enumerate(changedRegisters):
         	v = self.registerToSymbol[reg]
 	        if (v != ''):
-	            ascode += "\n\t\tmovl " + "%" + reg + "," + v
+	            ascode += "\n\t\tmovl " + "%" + reg + "," + self.checkOffset(v)
 
         # if self.symbolToRegister[x] != '':
         #     x = "%"+self.symbolToRegister[x]
             
         # central code 
         ascode += "\n\t\tsubl $16, %esp"
-        ascode += "\n\t\tpush " + x
+        ascode += "\n\t\tpush " + self.getLoc(x)[1]
         ascode += "\n\t\tpush $.formatINT"
         ascode += "\n\t\tcall printf"
         ascode += "\n\t\taddl $8, %esp"
@@ -472,7 +493,7 @@ class CodeGenerator():
         for i,reg in enumerate(changedRegisters):
         	v = self.registerToSymbol[reg]
         	if (v != ''):
-        		ascode += "\n\t\tmovl " + v + ",%" + reg
+        		ascode += "\n\t\tmovl " + self.checkOffset(v) + ",%" + reg
         
         self.asm_code[self.curr_func].append(ascode)
         self.asm_code[self.curr_func].append('\t\t#printF ends here')
@@ -494,13 +515,13 @@ class CodeGenerator():
         if (v == ''):
             ascode = ''
         else:
-            ascode = "\t\tmovl " + "%eax" + "," + v
+            ascode = "\t\tmovl " + "%eax" + "," + self.checkOffset(v)
 
 
         # central code 
         # ascode += "\n\t\tpush %ebp"
         ascode += "\n\t\tmovl $0, %eax"
-        ascode += "\n\t\tmovl $" + lhs.name + ",%esi"
+        ascode += "\n\t\tmovl $" + self.checkOffset(lhs) + ",%esi"
         ascode += "\n\t\tmovl $.formatINT_INP, %edi"
         ascode += "\n\t\tcall scanf" 
         # ascode += "\n\t\tpop %ebp"
@@ -627,44 +648,42 @@ class CodeGenerator():
     	# op1.name is always avaiable
 
     	blockIndex = self.varAllocate.line2Block(lineno)
-    	loc, msg = self.varAllocate.getReg(blockIndex, lineno, True)
         
-        #self.registerToSymbol[self.symbolToRegister[self.getName(lhs)]] = ''
-    	# We'll use Loc for printing ascode and loc for accessing the data structures
-        Loc = "%" + loc
+        oldRegLhs = ''
+        oldRegOp2 = ''
 
-    	ascode = ''
-
-        loc, Loc = self.newLocHandling(loc, Loc, lhs)
-
-        # We are checking if op2 is a symTableEntry instead we need to check if it's a variable
-        if self.checkVariable(op2) and self.checkVariable(lhs) and lhs != op2:
-
+        # We need to get op2 in a register
+        if self.symbolToRegister[self.getName(op2)] == '':
             loc_op2, msg = self.varAllocate.getReg(blockIndex, lineno, True)
             Loc_op2 = "%" + loc_op2
-
-            loc, Loc = self.newLocHandling(loc_op2, Loc_op2, op2)
-
+            oldRegOp2 = self.symbolToRegister[self.getName(op2)]
+            loc_op2, Loc_op2 = self.newLocHandling(loc_op2, Loc_op2, op2)
         else:
-            
-            loc_op2 = loc
-            Loc_op2 = Loc
+            loc_op2 = self.symbolToRegister[self.getName(op2)]
+            Loc_op2 = '%'+loc_op2
 
-        if (self.checkVariable(op2)): # if array index is a variable
+        if (not self.checkVariable(op2)):
+            ascode += '\t\tmovl $' + const2 + ',' + Loc_op2
+        elif (self.symbolToRegister[self.getName(op2)] != loc_op2):
+            ascode += '\t\tmovl ' + self.getLoc(op2)[1] + ',' + Loc_op2
+        
+        loc, msg = self.varAllocate.getReg(blockIndex, lineno, True)
+        Loc = "%" + loc
+        if loc != loc_op2 :
+            oldRegLhs = self.symbolToRegister[self.getName(lhs)]
+            loc, Loc = self.newLocHandling(loc, Loc, lhs)
 
-            ascode += '\t\tmovl ' + self.getName(op2) + ",%" + loc_op2
-            self.registerToSymbol[loc_op2] = self.getName(op2)
-            self.symbolToRegister[self.getName(op2)] = loc_op2
-            ascode += '\n\t\tmovl ' + self.getName(op1) + '(,%' + loc_op2 + ",4), " + Loc
+        ascode = ''
 
-        else: # if array index is a constant, we still need to allocate a register for the index as per x86 syntax
-    		ascode += '\t\tmovl %' + loc_op2 + ',' + self.registerToSymbol[loc_op2]
-    		ascode += '\n\t\tmovl $' + const2 + ', %' + loc_op2
-    		ascode += '\n\t\tmovl ' + self.getName(op1) + '(,%' + loc_op2 + ",4), " + Loc
-    		ascode += '\n\t\tmovl ' + self.registerToSymbol[loc_op2] + ', %' + loc_op2
+        #print "loc, Loc, loc_op2, Loc_op2 in storeref : ", loc, Loc, loc_op2, Loc_op2 
+                
+        if self.checkOffset(op1)[-1] == ')':
+            ascode += '\n\t\tmovl ' + self.checkOffset(op1)[:-1] + ',' + Loc_op2 + ",4), " + Loc
+        else:
+            ascode += '\n\t\tmovl ' + self.getLoc(op1)[1] + '(,' + Loc_op2 + ",4), " + Loc
 
-        self.updateRegEntry(op2, loc_op2)
-        self.updateRegEntry(lhs, loc)
+        self.updateRegEntry(op2, loc_op2, oldRegOp2)
+        self.updateRegEntry(lhs, loc, oldRegLhs)
 
         self.asm_code[self.curr_func].append(ascode)
 
@@ -672,45 +691,58 @@ class CodeGenerator():
 
         blockIndex = self.varAllocate.line2Block(lineno)
         
-        loc_op1 = ''
         loc_op2 = ''
+        oldRegOp1 = ''
+        oldRegOp2 = ''
         
         # We always require register to hold the value of i in a[i]
-        loc_op1, msg = self.varAllocate.getReg(blockIndex, lineno, True)
-        Loc_op1 = "%" + loc_op1
-
-        loc, Loc = self.newLocHandling(loc_op1, Loc_op1, op1)
+        if self.symbolToRegister[self.getName(op1)] != '':
+            loc_op1, msg = self.varAllocate.getReg(blockIndex, lineno, True)
+            Loc_op1 = "%" + loc_op1
+            oldRegOp1 = self.symbolToRegister[self.getName(op1)]
+            loc_op1, Loc_op1 = self.newLocHandling(loc_op1, Loc_op1, op1)
+        else:
+            loc_op1 = self.symbolToRegister[self.getName(op1)]
+            Loc_op1 = '%' + loc_op1
 
         # loc_op2 is to store x in a[i] = x
-        if self.checkVariable(op2) and self.checkVariable(op1) and op1 != op2:
+        if op1 != op2:
+            if self.symbolToRegister[self.getName(op2)] != '':
+                loc_op2 = self.symbolToRegister[self.getName(op2)]
+                Loc_op2 = '%' + loc_op2
 
-            loc_op2, msg = self.varAllocate.getReg(blockIndex, lineno, True)
-            Loc_op2 = "%" + loc_op2
-
-            loc, Loc = self.newLocHandling(loc_op2, Loc_op2, op2)
-
+            else:
+                loc_op2, msg = self.varAllocate.getReg(blockIndex, lineno, True)
+                Loc_op2 = "%" + loc_op2
+                oldRegOp2 = self.symbolToRegister[self.getName(op2)]
+                loc_op2 , Loc_op2 = self.newLocHandling(loc_op2, Loc_op2, op2)
         else:
-            
             loc_op2 = loc_op1
             Loc_op2 = Loc_op1
+
+        #print "loc_op1, loc_op2, Loc_op1, Loc_op2 : ", loc_op1, loc_op2, Loc_op1, Loc_op2
 
         ascode = ''
         s_code = "" # store code
         
-        if(op1 != op2):
-            if (not self.checkVariable(op1)):
-                ascode += '\t\tmovl $' + const1 + ',' + Loc_op1
-            elif (self.symbolToRegister[self.getName(op1)] != loc_op1):
-                ascode += '\t\tmovl ' + self.getName(op1) + ',' + Loc_op1
+        if (not self.checkVariable(op1)):
+            ascode += '\t\tmovl $' + const1 + ',' + Loc_op1
+        elif (self.symbolToRegister[self.getName(op1)] != loc_op1):
+            ascode += '\t\tmovl ' + self.getLoc(op1)[1] + ',' + Loc_op1
 
-        if (not self.checkVariable(op2)):
-            ascode += '\n\t\tmovl $' + const2 + ',' + self.getName(lhs) + '(,' + Loc_op1 + ',4)'
+        if op1 != op2:
+            if (not self.checkVariable(op2)):
+                ascode += '\t\tmovl $' + const2 + ',' + Loc_op2
+            elif (self.symbolToRegister[self.getName(op2)] != loc_op2):
+                ascode += '\t\tmovl ' + self.getLoc(op2)[1] + ',' + Loc_op2
+            
+        if self.checkOffset(lhs)[-1] == ')':
+            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + self.checkOffset(lhs)[:-1] + ',' + Loc_op1 + ',4)'
         else:
-            ascode += '\n\t\tmovl ' + self.getName(op2) + ',' + Loc_op2
-            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + self.getName(lhs) + '(,' + Loc_op1 + ',4)'
+            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + self.getLoc(lhs)[1] + '(,' + Loc_op1 + ',4)'
         
-        self.updateRegEntry(op1, loc_op1)
-        self.updateRegEntry(op2, loc_op2)
+        self.updateRegEntry(op1, loc_op1, oldRegOp1)
+        self.updateRegEntry(op2, loc_op2, oldRegOp2)
 
         self.asm_code[self.curr_func].append(ascode)
 
