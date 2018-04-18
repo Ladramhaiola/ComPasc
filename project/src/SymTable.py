@@ -29,7 +29,8 @@ class SymTable (object):
         self.localVals = {}
         # list of all local variables in main
         self.localVals['main'] = []
-
+        self.types = []
+        
     def PrintSymTable(self):
         pprint.pprint(self.table)
 
