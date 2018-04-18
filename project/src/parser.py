@@ -765,6 +765,8 @@ def p_TypeDecl(p):
         #print p[3]['params']
         symTab.Define(p[1], 'OBJECT','OBJECT', p[3]['params'])
         #print symTab.table
+    if symTab.currScope == 'main':
+        symTab.types.append('main_'+p[1])
     reverse_output.append(p.slice)
 
 def p_RestrictedType(p):

@@ -845,17 +845,18 @@ class CodeGenerator():
         self.asm_code['data'].append('.formatINT_INP : \n .string \"%d\" \n')
         for scope in ['main']:
             for var in self.symTab.table[scope]['Ident']:
-                varEntry = self.symTab.Lookup(var,'Ident')
-                if varEntry.typ in type_to_asm.keys():
-                    conv = varEntry.typ
-                elif varEntry.cat == 'array':
-                    arrayType = varEntry.typ
-                    arrayEntry = self.symTab.Lookup(arrayType,'Ident')
-                    conv = arrayEntry.typ
-                elif varEntry.cat == 'object':
-                    continue
-                memsize = self.symTab.getWidth(var) # for arrays
-                self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " " + str(memsize))
+                if var not in self.symTab.types: 
+                    varEntry = self.symTab.Lookup(var,'Ident')
+                    if varEntry.typ in type_to_asm.keys():
+                        conv = varEntry.typ
+                    elif varEntry.cat == 'array':
+                        arrayType = varEntry.typ
+                        arrayEntry = self.symTab.Lookup(arrayType,'Ident')
+                        conv = arrayEntry.typ
+                    elif varEntry.cat == 'object':
+                        continue
+                    memsize = self.symTab.getWidth(var) # for arrays
+                    self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " " + str(memsize))
 
 
     def setup_all(self):
