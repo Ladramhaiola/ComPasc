@@ -704,10 +704,10 @@ class CodeGenerator():
                 ascode += '\t\tmovl ' + self.getName(op1) + ',' + Loc_op1
 
         if (not self.checkVariable(op2)):
-            ascode += '\n\t\tmovl $' + const2 + ',' + self.getName(lhs) + '(,' + Loc_op1 + ',4)'
+            ascode += '\n\t\tmovl $' + const2 + ',' + self.getName(lhs) + '(,' + Loc_op1 + ',4) # if not a variable in storeref'
         else:
             ascode += '\n\t\tmovl ' + self.getName(op2) + ',' + Loc_op2
-            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + self.getName(lhs) + '(,' + Loc_op1 + ',4)'
+            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + self.getName(lhs) + '(,' + Loc_op1 + ',4) # if variable in storeref'
         
         self.updateRegEntry(op1, loc_op1)
         self.updateRegEntry(op2, loc_op2)
