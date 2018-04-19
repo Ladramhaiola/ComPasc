@@ -1,8 +1,6 @@
 One major assumption in Assignment2 : SymbolTable contains entries for temporaries as well
 
 - To do in codegen:
-  1. Improve the code in handle_binary (and hence rest of similar functions)
-  2. See if you can integrate the project
   3. Functions
   4. Objects and classes (both in semantics and codegen)
 
@@ -10,9 +8,7 @@ One major assumption in Assignment2 : SymbolTable contains entries for temporari
     1. Our current IR requires all function code to be together at the end
     2. Designator Type Checks while assignment and others operations, like AddOp and MulOp
     3. NOT relational operator not working fine
-    4. Pointer Arithematic (define unary operations (\* and &) and enforce checks on arithematic)
     5. Symbol Table for Objects and classes 
-    6. Floats (in the end)
     7. What do we have to do in type section?
     8. offsets stack (for functions)
 
@@ -70,5 +66,18 @@ The first line(moving ebp to esp) ensures that stack pointer points to the top o
 | Lambda     |                  |   |
 
 # Things out of mind
+
+## Arrays
 - Array addressing to be improved, because now we are using stack. Check example 1 in Address Operand Syntax wiki page
+- Constant assignment to arrays is not working
+
+
+## Classes and objects
 - Replicating for procedures what has been done for functions
+- Replicating for classes
+
+## Few things to keep in mind for demo
+- Statements in IF-ELSE are always in BEGIN END blocks
+- Repeat statement not working, the IR is not correct
+- Test the jumps?
+- Testing division
