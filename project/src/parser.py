@@ -1207,14 +1207,16 @@ def p_FuncHeading(p):
         idents = item[0]
         id_type = item[1]
         for ids in idents:
-            # print "ID is: ",ids
-            # print "Type is: ",id_type
+            # print "[PARSER] ID is: ",ids
+            # print "[PARSER] Type is: ",id_type
+            # params.append([symTab.currScope + "_" + ids,id_type])
             params.append(id_type)
 
             # For assigning params of an array as the array type
             typeEntry =  symTab.Lookup(id_type,'Ident')
+            # print typeEntry
             if typeEntry != None:
-                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params, offset,True)
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params,offset,True)
                 offset +=  4 # Since this is the pointer to the base of the array
             else:
                 # print "defining param in symbolTable: ",symTab.currScope + "_" + ids
