@@ -78,11 +78,21 @@ class CodeGenerator():
         symbolName = self.getName(symbol)
         symbolEntry = self.symTab.Lookup(symbolName,'Ident')
         symbolOffsets = self.threeAC.tempToOffset[self.curr_func]
-
+        symbolSplit = symbolName.split('_')
+        scope = self.symTab.getScope(self.curr_func, 'Func')
 
         if symbolEntry!= None and symbolEntry.cat == 'array' and self.curr_func != 'main':
             return "%esi"
-        if symbolEntry != None and symbolEntry.offset != '' :
+        if len(symbolSplit) == 2 and self.symTab.Lookup(scope + '_' + symbolSplit[0],'Ident') != None:
+            objectEntry = self.symTab.Lookup(scope + '_' + symbolSplit[0],'Ident')
+            for param in objectEntry.params:
+                if param[0] == symbolSplit[1]:
+                    break
+            objectOffset = param[3]
+            self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %esi")
+            return objectEntry.name + "(,%esi,4)"
+                
+        elif symbolEntry != None and symbolEntry.offset != '' :
             # print symbolEntry.cat
             return str(symbolEntry.offset) + '(%ebp)'
         elif symbolName in symbolOffsets.keys():
@@ -236,6 +246,7 @@ class CodeGenerator():
         '''
         #print lineno
         #print self.registerToSymbol
+        #print self.symbols
         #print self.symbolToRegister
         #print lineno, operation, lhs, op1, op2, const1, const2
         
@@ -933,7 +944,7 @@ class CodeGenerator():
                         arrayEntry = self.symTab.Lookup(arrayType,'Ident')
                         conv = arrayEntry.typ
                     elif varEntry.cat == 'object':
-                        continue
+                        conv = 'INTEGER'
                     memsize = self.symTab.getWidth(var) # for arrays
                     self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " " + str(memsize))
 

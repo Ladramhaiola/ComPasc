@@ -38,7 +38,7 @@ reserved = {
     'while':'WHILE',
     'xor':'XOR',
     # 'as':'AS',
-    'class':'CLASS',
+    #'class':'CLASS',
     'inherited':'INHERITED',
     # 'self':'SELF',
     #adding absent tokens

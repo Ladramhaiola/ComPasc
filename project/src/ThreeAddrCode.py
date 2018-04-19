@@ -37,7 +37,7 @@ class ThreeAddrCode:
             # First adding the local variables
             for var in scope_entry['Ident'].keys():
                 varEntry = self.symTab.Lookup(var, 'Ident')
-                if func_name != 'main' or (varEntry != None and varEntry.cat in ['object']):
+                if func_name != 'main':
                     if varEntry.parameter == False:
                         #print "Var in mapping, offset: ",var, offset
                         # First fetch the variables from the scope
