@@ -62,7 +62,7 @@ class varAllocateRegister:
                     for param in varEntry.params:
                         self.symbols.append(var + "_" + param[0])
             
-            self.symbols += self.SymTable.localVals[scope]
+            self.symbols += self.SymTable.localVals[func_name]
 
         self.symbols = list(set(self.symbols))
         #print self.symbols        
