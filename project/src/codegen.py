@@ -80,9 +80,8 @@ class CodeGenerator():
         symbolOffsets = self.threeAC.tempToOffset[self.curr_func]
 
 
-        if symbolEntry!= None and symbolEntry.cat == 'array':
-            return symbolName
-
+        if symbolEntry!= None and symbolEntry.cat == 'array' and self.curr_func != 'main':
+            return "%esi"
         if symbolEntry != None and symbolEntry.offset != '' :
             # print symbolEntry.cat
             return str(symbolEntry.offset) + '(%ebp)'
@@ -110,8 +109,9 @@ class CodeGenerator():
             # print "SE retrieved: ",symbolEntry
             loc_op = symbolName
 
-            if symbolEntry != None and symbolEntry.cat == 'array':
-                return [loc_op,symbolName]
+            if symbolEntry!= None and symbolEntry.cat == 'array' and self.curr_func != 'main':
+                self.asm_code[self.curr_func].append("\t\tmovl (" + symbolName + "), %esi")
+                return [loc_op,"%esi"]
             #print "Symbolname is " + symbolName
             elif symbolEntry != None and symbolEntry.offset != '' :
                 # print "Now we are going to get the offset"
@@ -612,8 +612,13 @@ class CodeGenerator():
         '''
         if op1 == None:
             return 
+
+        if op1.cat in ['array','object']:
+            self.asm_code[self.curr_func].append('\t\tlea ' + op1.name + ', %esi')
+            self.asm_code[self.curr_func].append('\t\tpush %esi')
+            return
+        
         self.asm_code[self.curr_func].append('\t\tpush ' + self.getName(op1))
-        self.callParams.append(self.getName(op1)))
 
 
     def handle_return(self,op1):
@@ -685,12 +690,17 @@ class CodeGenerator():
         ascode = ''
 
         #print "loc, Loc, loc_op2, Loc_op2 in storeref : ", loc, Loc, loc_op2, Loc_op2 
-                
-        if self.checkOffset(op1)[-1] == ')':
-            ascode += '\n\t\tmovl ' + self.checkOffset(op1)[:-1] + ',' + Loc_op2 + ",4), " + Loc
+
+        arrayBase = self.getLoc(op1)[1]
+
+        if arrayBase == "%esi":
+            ascode += '\n\t\tmovl ( %esi,' + Loc_op2 + ",4), " + Loc
+        elif arrayBase[-1] == ')':
+            ascode += '\n\t\tmovl ' + arrayBase[:-1] + ',' + Loc_op2 + ",4), " + Loc
+        elif arrayBase[0] == '%':
+            ascode += '\n\t\tmovl ( ' + arrayBase + ',' + Loc_op2 + ",4), " + Loc
         else:
-            # ascode += '\n\t\tmovl ' + self.getLoc(op1)[1] + '(,' + Loc_op2 + ",4), " + Loc
-            ascode += '\n\t\tmovl ' + self.getLoc(op1)[1] + '(,' + Loc_op2 + ",4), " + Loc
+            ascode += '\n\t\tmovl ' + arrayBase + '(,' + Loc_op2 + ",4), " + Loc
 
         self.updateRegEntry(op2, loc_op2, oldRegOp2)
         self.updateRegEntry(lhs, loc, oldRegLhs)
@@ -745,11 +755,16 @@ class CodeGenerator():
                 ascode += '\t\tmovl $' + const2 + ',' + Loc_op2
             elif (self.symbolToRegister[self.getName(op2)] != loc_op2):
                 ascode += '\t\tmovl ' + self.getLoc(op2)[1] + ',' + Loc_op2
-            
-        if self.checkOffset(lhs)[-1] == ')':
-            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + self.checkOffset(lhs)[:-1] + ',' + Loc_op1 + ',4)'
+
+        arrayBase = self.getLoc(lhs)[1]
+        if arrayBase == "%esi":
+            ascode += '\n\t\tmovl ' + Loc_op2 + ',( %esi,' + Loc_op1 + ',4)'
+        elif arrayBase[-1] == ')':
+            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + arrayBase[:-1] + ',' + Loc_op1 + ',4)'
+        elif arrayBase[0] == '%':
+            ascode += '\n\t\tmovl ' + Loc_op2 + ',( ' + arrayBase + ',' + Loc_op1 + ',4)'
         else:
-            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + self.getLoc(lhs)[1] + '(,' + Loc_op1 + ',4)'
+            ascode += '\n\t\tmovl ' + Loc_op2 + ',' + arrayBase + '(,' + Loc_op1 + ',4)'
         
         self.updateRegEntry(op1, loc_op1, oldRegOp1)
         self.updateRegEntry(op2, loc_op2, oldRegOp2)
@@ -780,8 +795,7 @@ class CodeGenerator():
                     off = str(entry.offset) + '(%ebp)'
                     # print "[CODEGEN] offset: ",off
                     self.asm_code[self.curr_func].append('\t\tmovl ' +off+ ',%eax')
-                    self.asm_code[self.curr_func].append('\t\tmovl (%eax),%ebx')
-                    self.asm_code[self.curr_func].append('\t\tmovl %ebx,' + var)
+                    self.asm_code[self.curr_func].append('\t\tmovl %eax,' + var)
             
 
     def setup_text(self):
@@ -910,6 +924,12 @@ class CodeGenerator():
                     memsize = self.symTab.getWidth(var) # for arrays
                     self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " " + str(memsize))
 
+        for scope in self.symTab.table.keys():
+            if scope != 'main':
+                for var in self.symTab.table[scope]['Ident']:
+                    varEntry = self.symTab.Lookup(var,'Ident')
+                    if varEntry.cat in ['array','object']:
+                        self.asm_code['data'].append(".globl " + var + "\n" + var + ": .long " + str(4))
 
     def setup_all(self):
         '''
