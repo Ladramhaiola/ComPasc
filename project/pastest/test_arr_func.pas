@@ -23,6 +23,8 @@ BEGIN
     yo := arr[7,8];
     // yo should be 11
     WRITELN(yo);
+    {yo := 99;}
+    {arr[7,8] := 99;}
     MyFunc := temp + size - 8; 
 END;
 
@@ -36,5 +38,7 @@ BEGIN
    b := MyFunc(a2,x,y); 
    WRITELN(b);
 
+   b := a2[7,8]; 
+   WRITELN(b);
 
 END;

@@ -180,8 +180,8 @@ def updateStar(p):
     resolveRHSArray(p[2])
     
     if p[3]!={}:
-        if getType(p[2]) != getType(p[3]):
-            sys.exit("Mismatch in types " + getType(p[2]) + " and " + getType(p[3]))
+        # if getType(p[2]) != getType(p[3]):
+            # sys.exit("Mismatch in types " + getType(p[2]) + " and " + getType(p[3]))
         p[0]['ExprList'] = p[3]['ExprList']
         p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
 
@@ -192,8 +192,8 @@ def handleTerm(p, termIndex=1, starIndex=2, whetherRelational=False):
     p[0]={}
     p[0]['ExprList'] = p[starIndex]['ExprList']
 
-    if getType(p[termIndex]) != getType(p[starIndex]):
-        sys.exit( "mismatch in types " + getType(p[starIndex]) + " and " + getType(p[termIndex]))
+    # if getType(p[termIndex]) != getType(p[starIndex]):
+        # sys.exit( "mismatch in types " + getType(p[starIndex]) + " and " + getType(p[termIndex]))
         
     p[0]['type'] = getType(p[termIndex])
         
@@ -1206,17 +1206,21 @@ def p_FuncHeading(p):
         idents = item[0]
         id_type = item[1]
         for ids in idents:
-            # print "[PARSER] ID is: ",ids
-            # print "[PARSER] Type is: ",id_type
+            print "[PARSER] ID is: ",ids
+            print "[PARSER] Type is: ",id_type
             # params.append([symTab.currScope + "_" + ids,id_type])
             params.append(id_type)
 
             # For assigning params of an array as the array type
             typeEntry =  symTab.Lookup(id_type,'Ident')
-            # print typeEntry
             if typeEntry != None:
-                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params,offset,True)
-                offset +=  4 # Since this is the pointer to the base of the array
+                print "[PARSER]: ",typeEntry.cat
+                if typeEntry.cat.upper() != 'OBJECT':
+                    symTab.Define(symTab.currScope + "_" + ids,id_type,typeEntry.cat.upper(),typeEntry.params,offset,True)
+                    offset +=  4 # Since this is the pointer to the base of the array
+                else:
+                    symTab.Define(symTab.currScope + "_" + ids,id_type,typeEntry.cat.upper(),typeEntry.params,offset,True)
+                    offset +=  4 # Since this is the pointer to the base of the array
             else:
                 # print "defining param in symbolTable: ",symTab.currScope + "_" + ids
                 symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR','',offset,True)

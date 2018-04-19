@@ -20,6 +20,7 @@ MyFunc : INTEGER;
    yo  : INTEGER;
 BEGIN
    yo := o1.x;
+   yo := yo + o1.y;
     // yo should be 11
     WRITELN(yo);
     MyFunc := temp + size - 8; 
