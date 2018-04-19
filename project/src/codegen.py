@@ -725,8 +725,23 @@ class CodeGenerator():
             loc_op1 = self.symbolToRegister[self.getName(op1)]
             Loc_op1 = '%' + loc_op1
 
+        ascode = ''
         # loc_op2 is to store x in a[i] = x
-        if op1 != op2:
+        if const2 != None:
+            # WARNING: This is shit. Don't Let control enter here
+
+            # loc_op2, msg = self.varAllocate.getReg(blockIndex, lineno, True)
+            loc_op2 = "edi"
+            Loc_op2 = "%" + loc_op2
+
+            # place = self.checkOffset(self.registerToSymbol[loc_op2])
+            # ascode += '\t\tmovl ' + Loc_op2 + "," + place + "# This is when we have const2, loc_op1 currently" + loc_op1
+            #print self.registerToSymbol[loc]
+            # self.symbolToRegister[self.registerToSymbol[loc_op2]] = ""
+            # self.registerToSymbol[loc_op2] = ''
+
+
+        elif op1 != op2:
             if self.symbolToRegister[self.getName(op2)] != '':
                 loc_op2 = self.symbolToRegister[self.getName(op2)]
                 Loc_op2 = '%' + loc_op2
@@ -742,27 +757,25 @@ class CodeGenerator():
 
         #print "loc_op1, loc_op2, Loc_op1, Loc_op2 : ", loc_op1, loc_op2, Loc_op1, Loc_op2
 
-        ascode = ''
-        s_code = "" # store code
         
         if (not self.checkVariable(op1)):
-            ascode += '\t\tmovl $' + const1 + ',' + Loc_op1
+            ascode += '\n\t\tmovl $' + const1 + ',' + Loc_op1
         elif (self.symbolToRegister[self.getName(op1)] != loc_op1):
-            ascode += '\t\tmovl ' + self.getLoc(op1)[1] + ',' + Loc_op1
+            ascode += '\n\t\tmovl ' + self.getLoc(op1)[1] + ',' + Loc_op1
 
         if op1 != op2:
             if (not self.checkVariable(op2)):
-                ascode += '\t\tmovl $' + const2 + ',' + Loc_op2
+                ascode += '\n\t\tmovl $' + const2 + ',' + Loc_op2
             elif (self.symbolToRegister[self.getName(op2)] != loc_op2):
-                ascode += '\t\tmovl ' + self.getLoc(op2)[1] + ',' + Loc_op2
+                ascode += '\n\t\tmovl ' + self.getLoc(op2)[1] + ',' + Loc_op2
 
         arrayBase = self.getLoc(lhs)[1]
         if arrayBase == "%esi":
-            ascode += '\n\t\tmovl ' + Loc_op2 + ',( %esi,' + Loc_op1 + ',4)'
+            ascode += '\n\t\tmovl ' + Loc_op2 + ', (%esi,' + Loc_op1 + ',4)'
         elif arrayBase[-1] == ')':
             ascode += '\n\t\tmovl ' + Loc_op2 + ',' + arrayBase[:-1] + ',' + Loc_op1 + ',4)'
         elif arrayBase[0] == '%':
-            ascode += '\n\t\tmovl ' + Loc_op2 + ',( ' + arrayBase + ',' + Loc_op1 + ',4)'
+            ascode += '\n\t\tmovl ' + Loc_op2 + ',(' + arrayBase + ',' + Loc_op1 + ',4)'
         else:
             ascode += '\n\t\tmovl ' + Loc_op2 + ',' + arrayBase + '(,' + Loc_op1 + ',4)'
         
@@ -818,7 +831,7 @@ class CodeGenerator():
             #print(self.registerToSymbol)
             #print(self.code[i])
             lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
-            #print "code[i]: ",self.code[i]
+            # print "code[i]: ",self.code[i]
             # print lhs.name
             ln = int(lineno)
 
