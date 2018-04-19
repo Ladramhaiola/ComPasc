@@ -75,6 +75,7 @@ class CodeGenerator():
     def checkOffset(self, symbol):
 
         symbolName = self.getName(symbol)
+        # print "[CODEGEN]: S Name",symbolName
         symbolEntry = self.symTab.Lookup(symbolName,'Ident')
         symbolOffsets = self.threeAC.tempToOffset[self.curr_func]
         symbolSplit = symbolName.split('_')
@@ -84,12 +85,18 @@ class CodeGenerator():
             return "%esi"
         if len(symbolSplit) == 2 and self.symTab.Lookup(scope + '_' + symbolSplit[0],'Ident') != None:
             objectEntry = self.symTab.Lookup(scope + '_' + symbolSplit[0],'Ident')
+            # print "[CODEGEN]: ",objectEntry.name
             for param in objectEntry.params:
                 if param[0] == symbolSplit[1]:
                     break
             objectOffset = param[3]
-            self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %esi")
-            return objectEntry.name + "(,%esi,4)"
+            if scope != 'main':
+                self.asm_code[self.curr_func].append("\t\tmovl (" + objectEntry.name + "), %esi")
+                self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %edi")
+                return "(%esi,%edi,4)"
+            else:   
+                self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %edi")
+                return objectEntry.name + "(,%edi,4)"
                 
         elif symbolEntry != None and symbolEntry.offset != '' :
             # print symbolEntry.cat
@@ -118,10 +125,32 @@ class CodeGenerator():
             # print "SE retrieved: ",symbolEntry
             loc_op = symbolName
 
+            # Hopefully objects will make use of this
+            symbolSplit = symbolName.split('_')
+            scope = self.symTab.getScope(self.curr_func, 'Func')
+
+            # for arrays
             if symbolEntry!= None and symbolEntry.cat == 'array' and self.curr_func != 'main':
                 self.asm_code[self.curr_func].append("\t\tmovl (" + symbolName + "), %esi")
                 return [loc_op,"%esi"]
             #print "Symbolname is " + symbolName
+
+            # for objects
+            elif len(symbolSplit) == 2 and self.symTab.Lookup(scope + '_' + symbolSplit[0],'Ident') != None:
+                objectEntry = self.symTab.Lookup(scope + '_' + symbolSplit[0],'Ident')
+                print "[CODEGEN]: ",objectEntry.name
+                for param in objectEntry.params:
+                    if param[0] == symbolSplit[1]:
+                        break
+                objectOffset = param[3]
+                if scope != 'main':
+                    self.asm_code[self.curr_func].append("\t\tmovl (" + objectEntry.name + "), %esi")
+                    self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %edi")
+                    return [loc_op,"(%esi,%edi,4)"]
+                else:   
+                    self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %edi")
+                    return [loc_op,objectEntry.name + "(,%edi,4)"]
+
             elif symbolEntry != None and symbolEntry.offset != '' :
                 # print "Now we are going to get the offset"
                 #print "offset is " + str(symbolEntry.offset)
@@ -815,6 +844,12 @@ class CodeGenerator():
             for var in self.symTab.table[scope]['Ident'].keys():
                 entry = self.symTab.table[scope]['Ident'][var]
                 if entry.cat == 'array':
+                    off = str(entry.offset) + '(%ebp)'
+                    # print "[CODEGEN] offset: ",off
+                    self.asm_code[self.curr_func].append('\t\tmovl ' +off+ ',%eax')
+                    self.asm_code[self.curr_func].append('\t\tmovl %eax,' + var)
+
+                elif entry.cat == 'object':
                     off = str(entry.offset) + '(%ebp)'
                     # print "[CODEGEN] offset: ",off
                     self.asm_code[self.curr_func].append('\t\tmovl ' +off+ ',%eax')
