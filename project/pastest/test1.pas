@@ -1,24 +1,19 @@
 PROGRAM Greeting;
 
 CONSTANT
-x = 5;
-y = 6;
-z = 7;
-   
+x = 1;
+y = 1;
+
 TYPE
-   a1 = ARRAY[x..10,y..10,z..10] OF INTEGER;
+   a1 = ARRAY[x..10,y..10] OF INTEGER;
 
 VAR 
-a    : INTEGER; 
-height, width : INTEGER; 
-c	      : CHAR;
-   a2	      : a1;
+a2: a1;
+c : INTEGER;
 
 BEGIN
-
-   a := x*y+z-y*x<x;
-   
-   SCAN(a);
-   a2[7,8,9] := a2[6,7,8]- "YO";
-
+   c := x+y;
+   a2[7,8] := c;
+   c := a2[7,8];
+   WRITELN(c);
 END;
