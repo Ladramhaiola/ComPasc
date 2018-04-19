@@ -284,7 +284,7 @@ def p_SimpleStatement(p):
         if scope_table['Type'] == 'function' and scope_table['ReturnType'] != None:
 
             # if the variable name matches the name of the function
-            if p[1]['place'] == scope_table['Name'] and p[1]['type'] == scope_table['ReturnType']:
+            if p[1]['place'].split("_")[1] == scope_table['Name'].split("_")[1] and p[1]['type'] == scope_table['ReturnType']:
                 scope_table['ReturnSet'] = True
 
     # This is for handling a function CALL
@@ -1297,6 +1297,6 @@ tac = ThreeAddrCode()
 
 # Do the things that we want to here
 inputfile = open(sys.argv[1],'r').read()
-yacc.parse(inputfile, debug = 0)
+yacc.parse(inputfile, debug = 1)
 
 tac.display_code()
