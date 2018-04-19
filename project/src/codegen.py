@@ -83,9 +83,15 @@ class CodeGenerator():
         symbolEntry = self.symTab.Lookup(symbolName,'Ident')
         symbolOffsets = self.threeAC.tempToOffset[self.curr_func]
 
+
+        if symbolEntry!= None and symbolEntry.cat == 'array':
+            return symbolName
+
         if symbolEntry != None and symbolEntry.offset != '' :
+            # print symbolEntry.cat
             return str(symbolEntry.offset) + '(%ebp)'
         elif symbolName in symbolOffsets.keys():
+            # print symbolEntry.cat
             return str(symbolOffsets[symbolName]) + '(%ebp)'
         return symbolName
         
@@ -107,8 +113,11 @@ class CodeGenerator():
             symbolEntry = self.symTab.Lookup(symbolName,'Ident')
             # print "SE retrieved: ",symbolEntry
             loc_op = symbolName
+
+            if symbolEntry != None and symbolEntry.cat == 'array':
+                return [loc_op,symbolName]
             #print "Symbolname is " + symbolName
-            if symbolEntry != None and symbolEntry.offset != '' :
+            elif symbolEntry != None and symbolEntry.offset != '' :
                 # print "Now we are going to get the offset"
                 #print "offset is " + str(symbolEntry.offset)
                 Loc_op = str(symbolEntry.offset) + '(%ebp)'
@@ -703,6 +712,7 @@ class CodeGenerator():
         if self.checkOffset(op1)[-1] == ')':
             ascode += '\n\t\tmovl ' + self.checkOffset(op1)[:-1] + ',' + Loc_op2 + ",4), " + Loc
         else:
+            # ascode += '\n\t\tmovl ' + self.getLoc(op1)[1] + '(,' + Loc_op2 + ",4), " + Loc
             ascode += '\n\t\tmovl ' + self.getLoc(op1)[1] + '(,' + Loc_op2 + ",4), " + Loc
 
         self.updateRegEntry(op2, loc_op2, oldRegOp2)
@@ -785,6 +795,16 @@ class CodeGenerator():
         scope = self.symTab.getScope(func_name, 'Func')
         width = self.symTab.table[scope]['width']
         self.asm_code[func_name].append("\t\tsubl $" + str(width)  + ", %esp    # This is for parameters")
+
+        if func_name != 'main':
+            for var in self.symTab.table[scope]['Ident'].keys():
+                entry = self.symTab.table[scope]['Ident'][var]
+                if entry.cat == 'array':
+                    off = str(entry.offset) + '(%ebp)'
+                    # print "[CODEGEN] offset: ",off
+                    self.asm_code[self.curr_func].append('\t\tmovl ' +off+ ',%eax')
+                    self.asm_code[self.curr_func].append('\t\tmovl (%eax),%ebx')
+                    self.asm_code[self.curr_func].append('\t\tmovl %ebx,' + var)
             
 
     def setup_text(self):
