@@ -82,7 +82,8 @@ def handleFuncCall(p, ifAssign = False):
     elif p[1]['place'] == symTab.currScope + '_WRITELN':
         for argument in p[3]:
             # argument is a dict
-            emitTac('PRINT','',argument['place'],'')
+            emitTac('PRINT','',argument['place'],'') # This was when we were using ExprList in the Fac rule
+            # emitTac('PRINT','',symTab.Lookup(symTab.currScope + '_' + argument,'Ident'),'') # When we are using IdentList
             
     elif name != None:
         if name.cat == 'function':
@@ -96,18 +97,20 @@ def handleFuncCall(p, ifAssign = False):
                     p[3] = p[3][::-1]
 		    for argument in p[3]:
                         # argument is a dict
+                        # print "[PARSER] Arg: ",argument
                         emitTac('PARAM','',argument['place'],'' )
+                        # emitTac('PARAM','',symTab.Lookup(symTab.currScope + '_' + argument,'Ident'),'') # when p[3] was coming for ExprList
 
                 if ifAssign:
                     lhs = symTab.getTemp()
                     emitTac('CALL', lhs, p[1]['place'], '')
                     # Below statement needs to be refined, in case different bytes than 4
-                    emitTac('+', '%esp','%esp',str(arg_count*4))
+                    # emitTac('+', '%esp','%esp',str(arg_count*4))
                     p[0]['place'] = lhs
                 else:
                     emitTac('CALL','', p[1]['place'], '')
                     # Below statement needs to be refined, in case different bytes than 4
-                    emitTac('+', '%esp','%esp',str(arg_count*4))
+                    # emitTac('+', '%esp','%esp',str(arg_count*4))
             else:
                 print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
                 print "Compilation Terminated"
@@ -130,30 +133,36 @@ def resolveRHSArray(factor):
         
     if entry != None and entry.cat == 'array':
 
-        # this is temporary for array index calculation
-        indexTemp = symTab.getTemp()
-        # this is temporary for additional calculations
-        temp = symTab.getTemp()
-        lhs = symTab.getTemp()
+        # When the array is being called in a function
+        if 'ArrayIndices' not in factor.keys():
+            emitTac('A','B','C','D')
+            return
 
-        emitTac('+',indexTemp,'0','0')
+        else:
+            # this is temporary for array index calculation
+            indexTemp = symTab.getTemp()
+            # this is temporary for additional calculations
+            temp = symTab.getTemp()
+            lhs = symTab.getTemp()
 
-        for i in range(len(entry.params)-1):
+            emitTac('+',indexTemp,'0','0')
 
-            currIndex = factor['ArrayIndices'][i]['place']
-            Range = entry.params[i]
-            emitTac('-',temp,currIndex,str(Range['start']))
+            for i in range(len(entry.params)-1):
+
+                currIndex = factor['ArrayIndices'][i]['place']
+                Range = entry.params[i]
+                emitTac('-',temp,currIndex,str(Range['start']))
+                emitTac('+',indexTemp,indexTemp,temp)
+                nextRange = entry.params[i+1]
+                # Look at (https://stackoverflow.com/questions/789913/array-offset-calculations-in-multi-dimensional-array-column-vs-row-major?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa) for this calculation
+                emitTac('-',temp,str(nextRange['end']+1),str(nextRange['start']))
+                emitTac('*',indexTemp,indexTemp,temp)
+
+            emitTac('-',temp,factor['ArrayIndices'][-1]['place'],str(entry.params[-1]['start']))
             emitTac('+',indexTemp,indexTemp,temp)
-            nextRange = entry.params[i+1]
-            # Look at (https://stackoverflow.com/questions/789913/array-offset-calculations-in-multi-dimensional-array-column-vs-row-major?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa) for this calculation
-            emitTac('-',temp,str(nextRange['end']+1),str(nextRange['start']))
-            emitTac('*',indexTemp,indexTemp,temp)
+            emitTac('LOADREF', lhs, factor['place'], indexTemp)
 
-        emitTac('-',temp,factor['ArrayIndices'][-1]['place'],str(entry.params[-1]['start']))
-        emitTac('+',indexTemp,indexTemp,temp)
-        emitTac('LOADREF', lhs, factor['place'], indexTemp)
-
-        factor['place'] = lhs
+            factor['place'] = lhs
 
 def getType(p):
 
@@ -1106,11 +1115,14 @@ def p_VarDecl(p):
             params.append([elem, p[3]['type'], 'VAR', objectOffset])
             objectOffset += symTab.width(p[3]['type'])
         p[0]['params'] = params
+
     elif typeEntry != None:
         # print typeEntry.params
+
         if typeEntry.cat == 'array':
             for elem in p[1]:
                 symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'ARRAY', typeEntry.params)
+
         elif typeEntry.cat == 'object':
             for elem in p[1]:
                 symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'OBJECT', typeEntry.params)
@@ -1191,7 +1203,7 @@ def p_FuncHeading(p):
 
     offset = 8
     for item in param_list:
-        # print "Offset checking ",offset
+        # print "[PARSER] Offset checking ",offset
         idents = item[0]
         id_type = item[1]
         for ids in idents:
@@ -1203,11 +1215,12 @@ def p_FuncHeading(p):
             typeEntry =  symTab.Lookup(id_type,'Ident')
             if typeEntry != None:
                 symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params, offset,True)
+                offset +=  4 # Since this is the pointer to the base of the array
             else:
                 # print "defining param in symbolTable: ",symTab.currScope + "_" + ids
                 symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR','',offset,True)
+                offset += symTab.getWidth(symTab.currScope + "_" + ids)
 
-            offset = offset + symTab.getWidth(symTab.currScope + "_" + ids)
 
     save_scope = symTab.currScope # Save to revert back
     symTab.endScope() # Go to the parent, and define this function as an entry in Func
@@ -1492,5 +1505,5 @@ def printpretty(filename):
 def parse(inputfile):
   
     parser = yacc.yacc()
-    yacc.parse(inputfile, debug = 0)
+    yacc.parse(inputfile, debug = 1)
     return [symTab,tac]
