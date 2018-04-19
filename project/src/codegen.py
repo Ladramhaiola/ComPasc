@@ -56,7 +56,6 @@ class CodeGenerator():
         
     def getRegister(self, symbol):
 
-        
         if isinstance(symbol, SymTableEntry):
             return self.symbolToRegister[symbol.name]
         else:
