@@ -50,24 +50,22 @@ class varAllocateRegister:
     # Need to add temporaries to the symbols list for calculation of max next use
     def addSymbols(self):
 
-        for codeLine in self.code:
-
-            lhs = codeLine[2]
-            op1 = codeLine[3]
-            op2 = codeLine[4]
-
-            self.addToSymbols(lhs)
-            self.addToSymbols(op1)
-            self.addToSymbols(op2)
+        for scope in self.SymTable.table.keys():
+            scope_entry = self.SymTable.table[scope]
+            func_name = scope_entry['Name']
+            for var in scope_entry['Ident'].keys():
+                varEntry = self.SymTable.Lookup(var, 'Ident')
+                typeEntry = self.SymTable.Lookup(varEntry.typ, 'Ident')
+                self.symbols.append(var)
+                if varEntry.cat == 'object' and typeEntry != None:
+                    var = var.split('_')[1]
+                    for param in varEntry.params:
+                        self.symbols.append(var + "_" + param[0])
+            
+            self.symbols += self.SymTable.localVals[scope]
 
         self.symbols = list(set(self.symbols))
-        
-    def addToSymbols(self, symbol):
-
-        if type(symbol) == type("") and symbol != "" and symbol[0] == "t" and self.RepresentsInt(symbol[1:]):
-            self.symbols.append(symbol)
-        elif isinstance(symbol, SymTableEntry):
-            self.symbols.append(symbol.name)
+        #print self.symbols        
         
     def labelToLine(self,labelName):
         '''

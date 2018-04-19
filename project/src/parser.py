@@ -770,17 +770,17 @@ def p_TypeDecl(p):
     if p[3]['type'] == 'ARRAY':
         symTab.Define(p[1], p[3]['dataType'], 'ARRAY', p[3]['ranges'])
         p[3]['type'] = p[1]
-    elif p[3]['type'] in ['OBJECT','CLASS']:
+    elif p[3]['type'] in ['OBJECT']:
         #print p[3]['params']
         symTab.Define(p[1], 'OBJECT','OBJECT', p[3]['params'])
         #print symTab.table
     if symTab.currScope == 'main':
-        symTab.types.append('main_'+p[1])
+        symTab.types.append(p[1])
+        
     reverse_output.append(p.slice)
 
 def p_RestrictedType(p):
-    ''' RestrictedType : ObjectType
-    | ClassType '''
+    ''' RestrictedType : ObjectType '''
 
     p[0] = {}
     p[0]['type'] = p[1]['type']
@@ -1113,7 +1113,7 @@ def p_VarDecl(p):
         params = []
         for elem in p[1]:
             params.append([elem, p[3]['type'], 'VAR', objectOffset])
-            objectOffset += symTab.width(p[3]['type'])
+            objectOffset += (symTab.width(p[3]['type']))/4
         p[0]['params'] = params
 
     elif typeEntry != None:
@@ -1126,12 +1126,11 @@ def p_VarDecl(p):
         elif typeEntry.cat == 'object':
             for elem in p[1]:
                 symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'OBJECT', typeEntry.params)
-                for var in typeEntry.params:
-                    funcName = symTab.table[symTab.currScope]['Name']
-                    if funcName not in symTab.localVals.keys():
-                        symTab.localVals[funcName] = []
-                    symTab.localVals[funcName].append(elem + "_" + var[0])
-                #print symTab.localVals
+                # for var in typeEntry.params:
+                #     funcName = symTab.table[symTab.currScope]['Name']
+                #     if funcName not in symTab.localVals.keys():
+                #         symTab.localVals[funcName] = []
+                #     #symTab.localVals[funcName].append(elem + "_" + var[0])
     else:
         for elem in p[1]:
             symTab.Define(symTab.currScope + "_" + elem,p[3]['type'],'VAR')
@@ -1402,57 +1401,6 @@ def p_ObjectMethodHeading(p):
     | FuncHeadingSemicolon 
     | ConstrucHeadingSemicolon '''
     reverse_output.append(p.slice)
-
-### ------------------------------------------- ###
-
-### --------------------- CLASS DEFS ------------ ###
-
-def p_ClassType(p):
-    ''' ClassType : CLASS ClassHeritage ClassVis ClassBody END'''
-    reverse_output.append(p.slice)
-
-def p_ClassHeritage(p):
-    ''' ClassHeritage : LPAREN IdentList RPAREN
-    | '''
-    reverse_output.append(p.slice)
-
-def p_ClassBody(p):
-    ''' ClassBody : ClassBody ClassTypeSection ClassConstSection ClassVarSection ClassMethodList
-    | '''
-    reverse_output.append(p.slice)
-    
-def p_ClassVis(p):
-    ''' ClassVis : PUBLIC
-    | '''
-    reverse_output.append(p.slice)
-
-def p_ClassTypeSection(p):
-    ''' ClassTypeSection : ColonTypeDecl %prec IDTOK
-    | %prec ENDTOK '''
-    reverse_output.append(p.slice)
-
-def p_ClassConstSection(p):
-    ''' ClassConstSection : ColonConstDecl %prec IDTOK
-    | '''
-    reverse_output.append(p.slice)
-
-def p_ClassVarSection(p):
-    ''' ClassVarSection : ColonVarDecl %prec IDTOK
-    | '''
-    reverse_output.append(p.slice)
-
-def p_ClassMethodList(p):
-    ''' ClassMethodList : ClassMethodHeading 
-    | %prec TOK '''
-    reverse_output.append(p.slice)
-
-def p_ClassMethodHeading(p):
-    ''' ClassMethodHeading : ProcedureHeadingSemicolon
-    | FuncHeadingSemicolon 
-    | ConstrucHeadingSemicolon '''
-    reverse_output.append(p.slice)
-
-### ---------------------------------------- ###
 
 
 # def p_Input(p):
