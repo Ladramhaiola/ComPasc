@@ -1,4 +1,5 @@
 from SymTable import SymTableEntry
+
 class CodeGenerator():
     '''
         Args:
@@ -29,6 +30,8 @@ class CodeGenerator():
         # Memory descriptor
         self.symbolToRegister = self.varAllocate.symbolToRegister # dict with key value pairs.
         # For a given register, we get a list, whos first element is the register, and second is the memory location
+
+        self.paramWidth = 0
 
 
         # self.operator_list = ["unary","jmp","jtrue","jfalse","loadref","storeref","label","param","call","return","returnval"]
@@ -226,10 +229,10 @@ class CodeGenerator():
         '''
             
         '''
-        #print lineno
+        # print lineno
         #print self.registerToSymbol
         #print self.symbolToRegister
-        #print lineno, operation, lhs, op1, op2, const1, const2
+        # print "Printing in Handle_Binary: ",lineno, operation, lhs, op1, op2, const1, const2
         
         op = self.op32_dict[operation] # add/sub/idiv
         # lineno, operator, lhs, op1, op2 = line
@@ -247,8 +250,8 @@ class CodeGenerator():
 
         loc_op1, Loc_op1 = self.getLoc(op1)
         loc_op2, Loc_op2 = self.getLoc(op2)
-        # print "# Loc_op1: ",str(lineno),Loc_op1
-        # print "# Loc_op2: ",str(lineno),Loc_op2
+        # print "# IN HB, Loc_op1: ",str(lineno),Loc_op1
+        # print "# IN HB, Loc_op2: ",str(lineno),Loc_op2
 
         # handle cases a = a + b  (cases like a = a + 1 will be handled in BA_1CR)
         if (op1 == lhs and self.checkVariable(op2)):
@@ -285,6 +288,9 @@ class CodeGenerator():
             Loc = "%" + loc
         else:
             Loc = loc
+
+        ## WAIT ON THIS:
+        # if LHS is a register, we don't look it up, we directly assign it
 
         oldRegLhs = self.symbolToRegister[self.getName(lhs)]
         loc, Loc = self.newLocHandling(loc, Loc, lhs)
@@ -587,10 +593,20 @@ class CodeGenerator():
             lhs maybe empty depending on the call is for procedure or function
         '''
         self.deallocRegs()
-        self.asm_code[self.curr_func].append('\t\tcall ' + self.getName(op1))
+        self.asm_code[self.curr_func].append('\n\t\tcall ' + self.getName(op1))
+
+        # first find the scope of function being called, to find its width.
+        for scope in self.symTab.table.keys():
+            if self.symTab.table[scope]['Name'] == self.getName(op1):
+                break
+        self.asm_code[self.curr_func].append('\t\taddl $' + str(self.paramWidth) + ',%esp')
+
+        # Since we have utilized the width, reset paramWidth
+        self.paramWidth = 0
 
         # if lhs is not empty, we'll have to move the value in %eax to the mapping of lhs
-        self.asm_code[self.curr_func].append('\t\tmovl ' + '%eax,' + self.getLoc(lhs)[1])
+        if lhs != '':
+            self.asm_code[self.curr_func].append('\t\tmovl ' + '%eax,' + self.getLoc(lhs)[1] + '\n')
         
         self.symbolToRegister[self.getName(lhs)] = 'eax'
         self.registerToSymbol['eax'] = self.getName(lhs)
@@ -604,7 +620,14 @@ class CodeGenerator():
         '''
         if op1 == None:
             return 
-        self.asm_code[self.curr_func].append('\t\tpush ' + self.getName(op1))
+
+        self.asm_code[self.curr_func].append('\t\tpush ' + self.getLoc(op1)[1])
+
+        # Would have to check if it is an array or not
+        if self.symTab.Lookup(self.getName(op1),'Ident').cat == 'array':
+            self.paramWidth += 4
+        else:
+            self.paramWidth += self.symTab.getWidth(self.getName(op1))
 
 
     def handle_return(self,op1):
@@ -782,9 +805,9 @@ class CodeGenerator():
             # i is the index into self.code
 
             #print(self.registerToSymbol)
-            #print(self.code[i])
+            # print(self.code[i])
             lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
-            #print "code[i]: ",self.code[i]
+            # print "In setup_text code[i]: ",self.code[i]
             # print lhs.name
             ln = int(lineno)
 
@@ -873,7 +896,7 @@ class CodeGenerator():
         self.asm_code['data'] = []
         self.asm_code['data'].append('.extern printf \n')
         self.asm_code['data'].append('.data \n')
-        self.asm_code['data'].append('.formatINT : \n .string \"%d\\n\\0\" \n')
+        self.asm_code['data'].append('.formatINT : \n .string \"%d\\n\" \n')
         self.asm_code['data'].append('.formatINT_INP : \n .string \"%d\" \n')
         for scope in ['main']:
             for var in self.symTab.table[scope]['Ident']:

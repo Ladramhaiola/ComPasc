@@ -100,7 +100,7 @@ class ThreeAddrCode:
         
         for i, code in enumerate(self.code):
 
-            #print (code)
+            # print "In 3ADR, display: ",code
             LineNumber, op, lhs, op1, op2 = code
 
             if type(lhs) != type(""):
