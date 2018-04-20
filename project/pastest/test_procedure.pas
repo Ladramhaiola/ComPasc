@@ -10,18 +10,14 @@ TYPE
 
 VAR 
 a	      : INTEGER; 
-height, width : INTEGER; 
-c	      : CHAR;
-   a2	      : a1;
 
 PROCEDURE MyFunc(size: INTEGER;);
 BEGIN
     size := size + 1;
+    WRITELN(size);
 END;
 
 
 BEGIN
-
    MyFunc(x);
-
 END;

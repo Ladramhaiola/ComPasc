@@ -1206,8 +1206,8 @@ def p_FuncHeading(p):
         idents = item[0]
         id_type = item[1]
         for ids in idents:
-            print "[PARSER] ID is: ",ids
-            print "[PARSER] Type is: ",id_type
+            # print "[PARSER] ID is: ",ids
+            # print "[PARSER] Type is: ",id_type
             # params.append([symTab.currScope + "_" + ids,id_type])
             params.append(id_type)
 
@@ -1268,7 +1268,7 @@ def p_PMark1(p):
 def p_PMark2(p):
     ''' PMark2 : '''
     symTab.endScope()
-    emitTac('RETURN','','',p[-4]['place'])
+    emitTac('RETURN','','',p[-3]['place'])
 
 #replaced ID by designator for dealing with Object.Function
 def p_ProcedureHeading(p):
@@ -1280,20 +1280,32 @@ def p_ProcedureHeading(p):
 
     # Add the variables into symbol Table
     param_list = p[4]
+    param_list = param_list[::-1] # GEtting the list in incremental order
     params = []
+    temp_code = []
+
+    offset = 8
     for item in param_list:
         idents = item[0]
         id_type = item[1]
         for ids in idents:
-            # print "ID is: ",ids
-            # print "Type is: ",id_type
+            # print "[PARSER] ID is: ",ids
+            # print "[PARSER] Type is: ",id_type
+            # params.append([symTab.currScope + "_" + ids,id_type])
             params.append(id_type)
 
             typeEntry =  symTab.Lookup(id_type,'Ident')
             if typeEntry != None:
-                symTab.Define(symTab.currScope + "_" + ids,id_type,'ARRAY',typeEntry.params)
+                # print "[PARSER]: ",typeEntry.cat
+                if typeEntry.cat.upper() != 'OBJECT':
+                    symTab.Define(symTab.currScope + "_" + ids,id_type,typeEntry.cat.upper(),typeEntry.params,offset,True)
+                    offset +=  4 # Since this is the pointer to the base of the array
+                else:
+                    symTab.Define(symTab.currScope + "_" + ids,id_type,typeEntry.cat.upper(),typeEntry.params,offset,True)
+                    offset +=  4 # Since this is the pointer to the base of the array
             else:
-                symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR')
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR','',offset,True)
+                offset += symTab.getWidth(symTab.currScope + "_" + ids)
 
     save_scope = symTab.currScope # Save to revert back
     symTab.endScope() # Go to the parent, and define this function as an entry in Func

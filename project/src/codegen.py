@@ -637,12 +637,13 @@ class CodeGenerator():
         self.asm_code[self.curr_func].append('\t\tcall ' + self.getName(op1))
 
         # if lhs is not empty, we'll have to move the value in %eax to the mapping of lhs
-        self.asm_code[self.curr_func].append('\t\tmovl ' + '%eax,' + self.getLoc(lhs)[1])
+        if lhs != '':
+            self.asm_code[self.curr_func].append('\t\tmovl ' + '%eax,' + self.getLoc(lhs)[1])
         
-        self.symbolToRegister[self.getName(lhs)] = 'eax'
-        self.registerToSymbol['eax'] = self.getName(lhs)
-        self.varAllocate.usedRegisters.append('eax')
-        self.varAllocate.unusedRegisters.remove('eax')
+            self.symbolToRegister[self.getName(lhs)] = 'eax'
+            self.registerToSymbol['eax'] = self.getName(lhs)
+            self.varAllocate.usedRegisters.append('eax')
+            self.varAllocate.unusedRegisters.remove('eax')
 
     def handle_param(self,op1):
         '''
