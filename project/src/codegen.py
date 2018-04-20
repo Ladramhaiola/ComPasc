@@ -140,7 +140,7 @@ class CodeGenerator():
             # for objects
             elif len(symbolSplit) == 2 and self.symTab.Lookup(scope + '_' + symbolSplit[0],'Ident') != None:
                 objectEntry = self.symTab.Lookup(scope + '_' + symbolSplit[0],'Ident')
-                print "[CODEGEN]: ",objectEntry.name
+                # print "[CODEGEN]: ",objectEntry.name
                 for param in objectEntry.params:
                     if param[0] == symbolSplit[1]:
                         break

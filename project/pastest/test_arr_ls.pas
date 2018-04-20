@@ -14,6 +14,6 @@ c : INTEGER;
 BEGIN
    c := x+y;
    a2[7,8] := c;
-   c := a2[7,8];
+   c := x + a2[7,8] + y;
    WRITELN(c);
 END;
