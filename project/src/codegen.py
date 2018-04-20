@@ -93,9 +93,11 @@ class CodeGenerator():
             if scope != 'main':
                 self.asm_code[self.curr_func].append("\t\tmovl (" + objectEntry.name + "), %esi")
                 self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %edi")
+                # self.asm_code[self.curr_func].append("\t\tneg %edi")
                 return "(%esi,%edi,4)"
             else:   
                 self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %edi")
+                # self.asm_code[self.curr_func].append("\t\tneg %edi")
                 return objectEntry.name + "(,%edi,4)"
                 
         elif symbolEntry != None and symbolEntry.offset != '' :
@@ -146,9 +148,11 @@ class CodeGenerator():
                 if scope != 'main':
                     self.asm_code[self.curr_func].append("\t\tmovl (" + objectEntry.name + "), %esi")
                     self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %edi")
+                    # self.asm_code[self.curr_func].append("\t\tneg %edi")
                     return [loc_op,"(%esi,%edi,4)"]
                 else:   
                     self.asm_code[self.curr_func].append("\t\tmovl $" + str(objectOffset) + ", %edi")
+                    # self.asm_code[self.curr_func].append("\t\tneg %edi")
                     return [loc_op,objectEntry.name + "(,%edi,4)"]
 
             elif symbolEntry != None and symbolEntry.offset != '' :
@@ -371,8 +375,12 @@ class CodeGenerator():
                 ascode += "\n\t\t" + op + " $" + const2 + "," + Loc
             else:
                 # The first instruction won't be allowed if both are memories, we should check for that
-                ascode += "\t\tmovl " + Loc_op1 + "," + Loc + "\n\t\t" + op + " $" + const2 + "," + Loc
-                
+
+                # in case when Loc is a reg
+                if Loc[0] == '%': 
+                    ascode += "\t\tmovl " + Loc_op1 + "," + Loc + "\n\t\t" + op + " $" + const2 + "," + Loc
+                else:
+                    ascode += "\t\tmovl " + Loc_op1 + ",%esi"  + "\n\t\t" + op + " $" + const2 + ",%esi" + "\n\t\tmovl %esi," + Loc
         else:
 
             # This should remove a lot of redundancies
@@ -614,8 +622,8 @@ class CodeGenerator():
             ascode = "\t\tcmpl $" + const2 + ", " + Loc_op1
         else:
             if loc_op1 not in self.Registers and loc_op2 not in self.Registers:
-                loc, msg = self.varAllocate.getReg(self.varAllocate.line2Block(lineno), lineno, True)
-                ascode = "\t\tmovl " + Loc_op1 + ", %" + loc + "\n\t\tcmpl %" + loc + ", " + Loc_op2
+                # loc, msg = self.varAllocate.getReg(self.varAllocate.line2Block(lineno), lineno, True)
+                ascode = "\t\tmovl " + Loc_op1 + ", %esi"  + "\n\t\tcmpl %esi" + ", " + Loc_op2
             else:
                 ascode = "\t\tcmpl " + Loc_op1 + ", " + Loc_op2
 
@@ -748,7 +756,6 @@ class CodeGenerator():
         #print "loc, Loc, loc_op2, Loc_op2 in storeref : ", loc, Loc, loc_op2, Loc_op2 
 
         arrayBase = self.getLoc(op1)[1]
-
         if arrayBase == "%esi":
             ascode += '\n\t\tmovl ( %esi,' + Loc_op2 + ",4), " + Loc
         elif arrayBase[-1] == ')':
@@ -766,6 +773,9 @@ class CodeGenerator():
     def handle_storeref (self, lineno, lhs, op1, op2, const1, const2):
 
         blockIndex = self.varAllocate.line2Block(lineno)
+
+        # print "register: ",self.registerToSymbol
+        # print "symbol: ",self.symbolToRegister
         
         loc_op2 = ''
         oldRegOp1 = ''
@@ -806,7 +816,14 @@ class CodeGenerator():
                 loc_op2, msg = self.varAllocate.getReg(blockIndex, lineno, True)
                 Loc_op2 = "%" + loc_op2
                 oldRegOp2 = self.symbolToRegister[self.getName(op2)]
-                loc_op2 , Loc_op2 = self.newLocHandling(loc_op2, Loc_op2, op2)
+
+                # when loc_op1 and loc_op2 are same, we need to fetch a different register
+                if loc_op2 == loc_op1:
+                    loc_op2 = "edi"
+                    Loc_op2 = "%" + loc_op2
+                else:
+                    loc_op2 , Loc_op2 = self.newLocHandling(loc_op2, Loc_op2, op2)
+
         else:
             loc_op2 = loc_op1
             Loc_op2 = Loc_op1
@@ -837,7 +854,6 @@ class CodeGenerator():
         
         self.updateRegEntry(op1, loc_op1, oldRegOp1)
         self.updateRegEntry(op2, loc_op2, oldRegOp2)
-
         self.asm_code[self.curr_func].append(ascode)
 
 
