@@ -21,10 +21,8 @@ BEGIN
     WHILE i < 10 DO
         BEGIN
             a2[i] := c;
+            j := a2[i];
+            WRITELN(a2[i]);
             i := i + 1;
         END;
-    WRITELN(a2[1]);
-    {i := a2[1];}
-    i := i*6;
-    WRITELN(i);
 END;
