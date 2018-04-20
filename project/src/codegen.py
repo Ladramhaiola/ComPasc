@@ -166,14 +166,17 @@ class CodeGenerator():
         return [loc_op,Loc_op]
         
     def deallocRegs (self):
+        # print "[IN DEALLOC] before: ",self.registerToSymbol
+        # print "[IN DEALLOC] before: ",self.symbolToRegister
         for reg in self.Registers:
             if self.registerToSymbol[reg] != '':
                 v = self.registerToSymbol[reg]
-                #print "reg, v :", reg, v
+                # print "reg, v :", reg, v
                 self.movToMem(reg,v)
                 self.varAllocate.usedRegisters.remove(reg)
                 self.varAllocate.unusedRegisters.append(reg)
-       # print(self.registerToSymbol)
+        # print "[IN DEALLOC] after: ",self.registerToSymbol
+        # print "[IN DEALLOC] after: ",self.symbolToRegister
         
 
     def RepresentsInt(self,s):
@@ -228,7 +231,7 @@ class CodeGenerator():
         if self.checkVariable(symbol):
             if symbol_reg == '':
                 symbol_reg = self.symbolToRegister[symbolName]
-            #print symbol_reg
+                # print "symbol_reg: ",symbol_reg
             if (symbol_reg != "" and loc != symbol_reg):
                 self.varAllocate.unusedRegisters.append(symbol_reg)
                 self.varAllocate.usedRegisters.remove(symbol_reg)
@@ -236,21 +239,23 @@ class CodeGenerator():
             self.registerToSymbol[loc] = symbolName
             self.symbolToRegister[symbolName] = loc
 
-        #print self.symbolToRegister
-        #print self.registerToSymbol
+        # print "",self.symbolToRegister
+        # print "",self.registerToSymbol
+        # print "AFTER updateReg UNUSED: ",self.varAllocate.unusedRegisters
+        # print "AFTER updateReg USED: ",self.varAllocate.usedRegisters
     
     def movToMem (self, reg, v):
         '''
             move to memory, and update the descriptors
         '''
         # print (v)
-        self.asm_code[self.curr_func].append('#movToMem starts here')
-        v = self.checkOffset(v)
-        ascode = "\t\tmovl " + "%" + reg + "," + v
+        self.asm_code[self.curr_func].append('\n#movToMem starts here\n')
+        place = self.checkOffset(v)
+        ascode = "\t\tmovl " + "%" + reg + "," + place
         self.symbolToRegister[v] = ''
         self.registerToSymbol[reg] = ''
         self.asm_code[self.curr_func].append(ascode)
-        self.asm_code[self.curr_func].append('#movToMem ends here')
+        self.asm_code[self.curr_func].append('\n#movToMem ends here\n')
 
     def optOP (self, x, a, b):
         if (x == '+'): 
@@ -285,6 +290,10 @@ class CodeGenerator():
         # print (statTyp)
 
         blockIndex = self.varAllocate.line2Block(lineno)
+        # print "BEGINNING UNUSED: ",self.varAllocate.unusedRegisters
+        # print "BEGINNNIG USED: ",self.varAllocate.usedRegisters
+        # print "IN HB, beginning: ",self.registerToSymbol
+        # print "IN HB, beginning: ",self.symbolToRegister
         
         # #For debugging
         # self.asm_code[self.curr_func].append("#This is for line number %d"%(lineno))
@@ -302,6 +311,7 @@ class CodeGenerator():
 
             #print "linenumber, Loc_op1, Loc_op2 : ", lineno,  Loc_op1, Loc_op2
             if (Loc_op1[0] == "%"): # a in register
+                # print "Entering special case 1"
 
                 ascode = "\t\t" + op + " " + Loc_op2 + ", " +  Loc_op1 
                 self.asm_code[self.curr_func].append(ascode)
@@ -311,6 +321,7 @@ class CodeGenerator():
                 '''
                 This is for 'a' in memory and 'b' in register (the case for both being in memory is handled below (with a redundant movl))
                 '''
+                # print "Entering special case 2"
                 ascode = "\t\t" + op + " " + Loc_op1 + "," + Loc_op2
                 self.symbolToRegister[self.getName(op1)] = Loc_op2[1:]
                 self.symbolToRegister[self.getName(op2)] = ''
@@ -332,6 +343,9 @@ class CodeGenerator():
             Loc = "%" + loc
         else:
             Loc = loc
+
+        # print "IN HB, before oldRegLHS: ",self.registerToSymbol
+        # print "IN HB, before oldRegLHS: ",self.symbolToRegister
 
         oldRegLhs = self.symbolToRegister[self.getName(lhs)]
         loc, Loc = self.newLocHandling(loc, Loc, lhs)
@@ -410,8 +424,10 @@ class CodeGenerator():
         ### ------------ Update descriptors for L and LHS ------------ ###
 
         #print "yoooooooooooooooooo", Loc
+        # print "IN HB: ",self.registerToSymbol
+        # print "IN HB: ",self.symbolToRegister
         if Loc[1:] in self.Registers:
-            #print "lineno, into updateRegEntry", lineno
+            # print "# before call to updateRegEntry: lhs, loc, oldRegLhs: ", lhs,loc,oldRegLhs
             self.updateRegEntry(lhs, loc, oldRegLhs)
 
         #print self.registerToSymbol
@@ -875,7 +891,6 @@ class CodeGenerator():
             # i is the index into self.code
 
             #print(self.registerToSymbol)
-            #print(self.code[i])
             lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
             # print "code[i]: ",self.code[i]
             # print lhs.name
@@ -903,6 +918,7 @@ class CodeGenerator():
             # DONE HOPEFULLY
             elif op in self.jump_list:
                 self.check_dealloc(ln,blockIndex)
+                # print "After dealloc and before handle_jump"
                 self.handle_jump (op, const1)
 
             # DONE HOPEFULLY
