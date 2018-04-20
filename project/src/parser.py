@@ -86,7 +86,6 @@ def handleFuncCall(p, ifAssign = False):
         for argument in p[3]:
             # argument is a dict
             emitTac('PRINT','',argument['place'],'') # This was when we were using ExprList in the Fac rule
-            # emitTac('PRINT','',symTab.Lookup(symTab.currScope + '_' + argument,'Ident'),'') # When we are using IdentList
             
     elif name != None:
         if name.cat == 'function':
@@ -102,25 +101,21 @@ def handleFuncCall(p, ifAssign = False):
                         # argument is a dict
                         # print "[PARSER] Arg: ",argument
                         emitTac('PARAM','',argument['place'],'' )
-                        # emitTac('PARAM','',symTab.Lookup(symTab.currScope + '_' + argument,'Ident'),'') # when p[3] was coming for ExprList
 
                 if ifAssign:
                     lhs = symTab.getTemp()
+                    # when we are not in main, we'll fetch the label as main
                     if symTab.currScope == 'main':
                         emitTac('CALL', lhs, p[1]['place'], '')
                     else:
                         emitTac('CALL', lhs, 'main_' + p[1]['place'].split('_')[1], '')
-                    # Below statement needs to be refined, in case different bytes than 4
-                    # emitTac('+', '%esp','%esp',str(arg_count*4))
                     p[0]['place'] = lhs
                 else:
-
+                    # when we are not in main, we'll fetch the label as main
                     if symTab.currScope == 'main':
                         emitTac('CALL','', p[1]['place'], '')
                     else:
                         emitTac('CALL','', 'main_' + p[1]['place'].split('_')[1], '')
-                    # Below statement needs to be refined, in case different bytes than 4
-                    # emitTac('+', '%esp','%esp',str(arg_count*4))
             else:
                 print "ERROR: Function", p[1]['place'], "needs exactly - ", name.num_params, "parameters, given: ", arg_count
                 print "Compilation Terminated"
@@ -139,7 +134,7 @@ def resolveRHSArray(factor):
 
     entry = symTab.Lookup(factor['place'],'Ident')
     
-    if entry != None and entry.cat == 'variable' and entry.assigned == False:
+    if entry != None and entry.cat == 'variable' and entry.assigned == False and entry.parameter != True:
         print "Warning : Variable " + factor['place'] + " used before assignment"
         
     if entry != None and entry.cat == 'array':
@@ -191,8 +186,12 @@ def updateStar(p):
     resolveRHSArray(p[2])
     
     if p[3]!={}:
-        # if getType(p[2]) != getType(p[3]):
-            # sys.exit("Mismatch in types " + getType(p[2]) + " and " + getType(p[3]))
+        type1 = getType(p[2])
+        type2 = getType(p[3])
+        typeList = ["ARRAY","OBJECT"]
+        if type1 not in typeList and type2 not in typeList:
+            if type1 != type2:
+                sys.exit("[updateStar] Mismatch in types " + getType(p[2]) + " and " + getType(p[3]))
         p[0]['ExprList'] = p[3]['ExprList']
         p[0]['ExprList'].append([p[3]['previousOp'],p[2]['place'],p[3]['place']])
 
@@ -203,10 +202,14 @@ def handleTerm(p, termIndex=1, starIndex=2, whetherRelational=False):
     p[0]={}
     p[0]['ExprList'] = p[starIndex]['ExprList']
 
-    # if getType(p[termIndex]) != getType(p[starIndex]):
-        # sys.exit( "mismatch in types " + getType(p[starIndex]) + " and " + getType(p[termIndex]))
+    type1 = getType(p[termIndex])
+    type2 = getType(p[starIndex])
+    typeList = ["ARRAY","OBJECT"]
+    if type1 not in typeList and type2 not in typeList:
+        if type1 != type2:
+            sys.exit( "[handleTerm] Mismatch in types " + type2 + " and " + type1)
         
-    p[0]['type'] = getType(p[termIndex])
+    p[0]['type'] = type1
         
     p[0]['ExprList'].append([p[starIndex]['previousOp'],p[termIndex]['place'],p[starIndex]['place']])
     #reversing the list for left associativity 
