@@ -853,7 +853,8 @@ class CodeGenerator():
             ascode += '\n\t\tmovl ' + Loc_op2 + ',' + arrayBase + '(,' + Loc_op1 + ',4)'
         
         self.updateRegEntry(op1, loc_op1, oldRegOp1)
-        self.updateRegEntry(op2, loc_op2, oldRegOp2)
+        if loc_op2 != 'edi':
+            self.updateRegEntry(op2, loc_op2, oldRegOp2)
         self.asm_code[self.curr_func].append(ascode)
 
 
@@ -906,7 +907,7 @@ class CodeGenerator():
         for i in range(start-1,end):
             # i is the index into self.code
 
-            #print(self.registerToSymbol)
+            # print self.registerToSymbol
             lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
             # print "code[i]: ",self.code[i]
             # print lhs.name
