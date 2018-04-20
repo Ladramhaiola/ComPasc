@@ -1171,6 +1171,7 @@ def p_VarDecl(p):
             for elem in p[1]:
                 symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'OBJECT', typeEntry.params)
                 for var in typeEntry.params:
+                    print "[PARSER] var in VarDecl: ",var
                     if var[2] in ['CONSTRUCTOR']:
                         params = []
                         for elem in var[3]:
@@ -1493,7 +1494,9 @@ def p_ObjectBody(p):
     else:
         p[0] = {}
         p[0]['params'] = p[1]['params']
-        p[0]['params'] = p[2]['params'] + p[3]['params'] + p[4]['params'] + [p[5]]
+        p[0]['params'] = p[2]['params'] + p[3]['params'] + p[4]['params']
+        if p[5] != []:
+            p[0]['params'] += [p[5]]
 
     reverse_output.append(p.slice)
     
