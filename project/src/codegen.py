@@ -455,12 +455,14 @@ class CodeGenerator():
 
         for reg in changedRegisters:
             if self.registerToSymbol[reg] != "":
-                s_code = "\t\tmovl %" + reg + "," + self.registerToSymbol[reg]
+                s_code = "\t\tmovl %" + reg + "," + self.checkOffset(self.registerToSymbol[reg])
+                self.symbolToRegister[self.registerToSymbol[reg]] = ''
                 self.asm_code[self.curr_func].append(s_code)
             
         loc_op1, Loc_op1 = self.getLoc(op1)
         loc_op2, Loc_op2 = self.getLoc(op2)
  
+        # oldRegLhs = self.symbolToRegister[self.getName(lhs)]
         # This is for storing the value in lhs finally
         loc, msg = self.varAllocate.getReg(blockIndex, lineno)
 
@@ -471,9 +473,9 @@ class CodeGenerator():
             Loc = loc
 
         # Done this after getting loc_op1 and loc_op2 for preventing redundant movl operations  
-        if (loc in self.Registers and self.registerToSymbol[loc] != "" and lhs.name != self.registerToSymbol[loc] and loc not in changedRegisters):
+        if (loc in self.Registers and self.registerToSymbol[loc] != "" and self.getName(lhs) != self.registerToSymbol[loc] and loc not in changedRegisters):
 
-            s_code = '\t\tmovl ' + Loc + "," + self.registerToSymbol[loc]
+            s_code = '\t\tmovl ' + Loc + "," + self.checkOffset(self.registerToSymbol[loc])
             self.symbolToRegister[self.registerToSymbol[loc]] = ""
             self.asm_code[self.curr_func].append(s_code)
 
@@ -530,7 +532,7 @@ class CodeGenerator():
         # Reload the values in eax and edx according to the mapping (only if loc is not one of them)
         for reg in changedRegisters:
             if self.registerToSymbol[reg] != "" and reg!= loc:
-                s_code = "\t\tmovl " + self.registerToSymbol[reg] + ",%" + reg
+                s_code = "\t\tmovl " + self.checkOffset(self.registerToSymbol[reg]) + ",%" + reg
                 self.asm_code[self.curr_func].append(s_code)
         
         # We can change the mapping for Loc and lhs

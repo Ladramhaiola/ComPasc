@@ -12,7 +12,6 @@ One major assumption in Assignment2 : SymbolTable contains entries for temporari
 ## Few things to keep in mind for demo
 - Statements in IF-ELSE are always in BEGIN END blocks
 - Repeat statement not working, the IR is not correct
-- Test the jumps?
 - Testing division
 - We need to ensure that whilw writing multiplicative expression, we'll write a = b*6; that is constant should be on right.
 - Can't send complex expressions(maybe)
