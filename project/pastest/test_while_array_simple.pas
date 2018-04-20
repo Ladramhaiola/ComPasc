@@ -22,7 +22,7 @@ BEGIN
         BEGIN
             a2[i] := c;
             j := a2[i];
-            WRITELN(j);
             i := i + 1;
+	   WRITELN(a2[i]);
         END;
 END;

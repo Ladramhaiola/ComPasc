@@ -1007,20 +1007,31 @@ class CodeGenerator():
                     if varEntry.typ in type_to_asm.keys():
                         conv = varEntry.typ
                     elif varEntry.cat == 'array':
+                        continue
+                    elif varEntry.cat == 'object':
+                        conv = 'INTEGER'
+                    memsize = self.symTab.getWidth(var)/4 # for arrays
+                    self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " " + "0,"*(memsize-1)+"0")
+
+        for scope in ['main']:
+            for var in self.symTab.table[scope]['Ident']:
+                if var not in self.symTab.types: 
+                    varEntry = self.symTab.Lookup(var,'Ident')
+                    if varEntry.cat != 'array':
+                        continue
+                    else:
                         arrayType = varEntry.typ
                         arrayEntry = self.symTab.Lookup(arrayType,'Ident')
                         conv = arrayEntry.typ
-                    elif varEntry.cat == 'object':
-                        conv = 'INTEGER'
-                    memsize = self.symTab.getWidth(var) # for arrays
-                    self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " " + str(memsize))
-
+                    memsize = self.symTab.getWidth(var)/4 # for arrays
+                    self.asm_code['data'].append(".globl " + var + "\n" + var + ": " + type_to_asm[conv] + " " + "0,"*(memsize-1)+"0")
+        
         for scope in self.symTab.table.keys():
             if scope != 'main':
                 for var in self.symTab.table[scope]['Ident']:
                     varEntry = self.symTab.Lookup(var,'Ident')
                     if varEntry.cat in ['array','object']:
-                        self.asm_code['data'].append(".globl " + var + "\n" + var + ": .long " + str(4))
+                        self.asm_code['data'].append(".globl " + var + "\n" + var + ": .long " + str(0))
 
     def setup_all(self):
         '''
