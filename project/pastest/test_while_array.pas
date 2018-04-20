@@ -16,16 +16,16 @@ j : INTEGER;
 c : INTEGER;
 
 BEGIN
-    i := 0;
-    j := 0;
+    i := 1;
+    j := 1;
     c := x+y;
     WHILE i < 10 DO
         BEGIN
             WHILE j < 10 DO
                 BEGIN
                     a2[i,j] := c;
-                    j := j + 1;
                     WRITELN(a2[i,j]);
+                    j := j + 1;
                 END;
             i := i + 1;
         END;
