@@ -73,8 +73,11 @@ def getValue(Id):
 
 def handleFuncCall(p, ifAssign = False):
 
-    name = symTab.Lookup(p[1]['place'],'FuncParFinder')
+    if symTab.currScope == 'main':
+        name = symTab.Lookup(p[1]['place'],'FuncParFinder')
         # Name is a symbolTableEntry and thus should have attributes accessible via a DOT.
+    else:
+        name = symTab.Lookup('main_' + p[1]['place'].split('_')[1],'FuncParFinder')
 
     if ifAssign and p[1]['place'] == symTab.currScope + '_WRITELN':
             sys.exit("Wrong use of WRITELN")
@@ -103,27 +106,35 @@ def handleFuncCall(p, ifAssign = False):
 
                 if ifAssign:
                     lhs = symTab.getTemp()
-                    emitTac('CALL', lhs, p[1]['place'], '')
+                    if symTab.currScope == 'main':
+                        emitTac('CALL', lhs, p[1]['place'], '')
+                    else:
+                        emitTac('CALL', lhs, 'main_' + p[1]['place'].split('_')[1], '')
                     # Below statement needs to be refined, in case different bytes than 4
                     # emitTac('+', '%esp','%esp',str(arg_count*4))
                     p[0]['place'] = lhs
                 else:
-                    emitTac('CALL','', p[1]['place'], '')
+
+                    if symTab.currScope == 'main':
+                        emitTac('CALL','', p[1]['place'], '')
+                    else:
+                        emitTac('CALL','', 'main_' + p[1]['place'].split('_')[1], '')
                     # Below statement needs to be refined, in case different bytes than 4
                     # emitTac('+', '%esp','%esp',str(arg_count*4))
             else:
-                print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "needs exactly", name.num_params, "parameters, given", arg_count
+                print "ERROR: Function", p[1]['place'], "needs exactly - ", name.num_params, "parameters, given: ", arg_count
                 print "Compilation Terminated"
                 exit()
         else:
-            print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined as a function"
+            print "ERROR: Function", p[1]['place'], "not defined as a function"
             print "Compilation Terminated"
             exit()
     else:
-        print "ERROR: Line", p.lineno(1), "Function", p[1]['place'], "not defined"
+        print "ERROR: Function", p[1]['place'], "not defined"
         print "Compilation Terminated"
         exit()
     
+
 def resolveRHSArray(factor):
 
     entry = symTab.Lookup(factor['place'],'Ident')
@@ -671,7 +682,8 @@ def p_Factor(p):
     p[0] = {}
 
     if len(p) == 5 and type(p[1]) is dict:
-        # print p[1]
+        # print "[FACTOR]: ",p[1]
+        # print "[FACTOR]: ",symTab.PrintSymTable()
         handleFuncCall(p, True)
         p[0]['isArray'] = False
         p[0]['type'] = getType(p[1])
@@ -870,6 +882,7 @@ def p_Designator(p):
         p[0]['place'] = p[1] + "_" + p[2]['var']
 
     flag = 0
+    # print "currScope + p[1] in Designator: ",symTab.currScope + p[1]
     if symTab.Lookup(symTab.currScope + "_" + p[1],'Ident') != None:
         # We are only concerned about identifiers at the moment
         p[0]['type'] = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident').typ 
@@ -1189,6 +1202,7 @@ def p_FuncHeading(p):
     # emitTac('PARAM','','%ebp','')
     # emitTac('+','%ebp','%esp','0')
     
+    # print "[FUNCHEADING]: ",p[2]
     # Declare new scope here
     symTab.AddScope(p[2]['place'],'function')
     symTab.table[symTab.currScope]['ReturnType'] = p[6]['type']
@@ -1214,7 +1228,7 @@ def p_FuncHeading(p):
             # For assigning params of an array as the array type
             typeEntry =  symTab.Lookup(id_type,'Ident')
             if typeEntry != None:
-                print "[PARSER]: ",typeEntry.cat
+                # print "[PARSER]: ",typeEntry.cat
                 if typeEntry.cat.upper() != 'OBJECT':
                     symTab.Define(symTab.currScope + "_" + ids,id_type,typeEntry.cat.upper(),typeEntry.params,offset,True)
                     offset +=  4 # Since this is the pointer to the base of the array
