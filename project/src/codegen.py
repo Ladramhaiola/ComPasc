@@ -75,12 +75,12 @@ class CodeGenerator():
     def checkOffset(self, symbol):
 
         symbolName = self.getName(symbol)
-        # print "[CODEGEN]: S Name",symbolName
         symbolEntry = self.symTab.Lookup(symbolName,'Ident')
+        #print symbolEntry
         symbolOffsets = self.threeAC.tempToOffset[self.curr_func]
         symbolSplit = symbolName.split('_')
         scope = self.symTab.getScope(self.curr_func, 'Func')
-
+        
         if symbolEntry!= None and symbolEntry.cat == 'array' and self.curr_func != 'main':
             return "%esi"
         if len(symbolSplit) == 2 and self.symTab.Lookup(scope + '_' + symbolSplit[0],'Ident') != None:
@@ -674,6 +674,7 @@ class CodeGenerator():
         args:
             op1 is the symbol table entry for the object to push
         '''
+        #print op1
         if op1 == None:
             return 
 

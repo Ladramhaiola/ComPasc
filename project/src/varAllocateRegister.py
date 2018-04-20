@@ -61,7 +61,10 @@ class varAllocateRegister:
                     var = var.split('_')[1]
                     for param in varEntry.params:
                         self.symbols.append(var + "_" + param[0])
+                        self.symbols.append('self_' + param[0])
             
+            if func_name not in self.SymTable.localVals.keys():
+                self.SymTable.localVals[func_name] = []
             self.symbols += self.SymTable.localVals[func_name]
 
         self.symbols = list(set(self.symbols))

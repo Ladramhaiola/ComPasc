@@ -32,6 +32,14 @@ loopEnd = []
 symTab = SymTable()
 tac = ThreeAddrCode(symTab)
 
+def mangledName(place, params):
+    name = "A2yZ"+place.split('_')[1]
+    for param in params:
+        for elem in param[0]:
+            name += elem[0]
+        name += param[1][0]
+    return name
+
 def RepresentsInt(s):
     try: 
         int(s)
@@ -96,12 +104,15 @@ def handleFuncCall(p, ifAssign = False):
                 
             if name.num_params == arg_count:
                 if arg_count > 0:
+                    #print p[3]
                     p[3] = p[3][::-1]
 		    for argument in p[3]:
                         # argument is a dict
                         # print "[PARSER] Arg: ",argument
                         emitTac('PARAM','',argument['place'],'' )
-
+                if 'object' in p[1].keys():
+                    emitTac('PARAM','', symTab.currScope + "_" + p[1]['object'],'')
+                    
                 if ifAssign:
                     lhs = symTab.getTemp()
                     # when we are not in main, we'll fetch the label as main
@@ -864,12 +875,21 @@ def p_ExprList(p):
 
 def p_Designator(p):
     ''' Designator : ID DesSubEleStar'''
-    
+
     p[0] = p[2]
     p[0]['place'] = symTab.currScope + "_" + p[1]
     # print "currscope in designator: ",symTab.currScope
     # print "p[1] in designator: ",p[1]
 
+    if construcName != '':
+        objName = construcName.split('_')[0]
+        varName = p[1]
+        objEntry = symTab.Lookup(objName, 'Ident')
+        if objEntry != None:
+            for param in objEntry.params:
+                if param[0] == varName:
+                    p[0]['place'] = 'self_' + p[1]
+    
     if p[2]['isArray']:
 
         entry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
@@ -883,11 +903,19 @@ def p_Designator(p):
     # This is for handling object.variable
     elif 'var' in p[2].keys() :
         p[0]['place'] = p[1] + "_" + p[2]['var']
+        objEntry = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident')
+        if objEntry == None:
+            return
+        for param in objEntry.params:
+            if param[0][0:4] == 'A2yZ' and param[0][4:].find(p[2]['var']) == 0:
+                p[0]['place'] = param[0]
+        p[0]['object'] = p[1]
 
     flag = 0
     # print "currScope + p[1] in Designator: ",symTab.currScope + p[1]
     if symTab.Lookup(symTab.currScope + "_" + p[1],'Ident') != None:
         # We are only concerned about identifiers at the moment
+            
         p[0]['type'] = symTab.Lookup(symTab.currScope + "_" + p[1],'Ident').typ 
         flag = 1
 
@@ -1142,6 +1170,14 @@ def p_VarDecl(p):
         elif typeEntry.cat == 'object':
             for elem in p[1]:
                 symTab.Define(symTab.currScope + "_" + elem, p[3]['type'], 'OBJECT', typeEntry.params)
+                for var in typeEntry.params:
+                    if var[2] in ['CONSTRUCTOR']:
+                        params = []
+                        for elem in var[3]:
+                            for i in range(len(elem[0])):
+                                params += [elem[1]]
+                        symTab.Define(var[0], '', 'FUNC', params)
+                        
                 # for var in typeEntry.params:
                 #     funcName = symTab.table[symTab.currScope]['Name']
                 #     if funcName not in symTab.localVals.keys():
@@ -1161,15 +1197,87 @@ def p_ProcedureDeclSection(p):
 
 # Don't need to add SEMICOLON after Block
 def p_ConstrucDecl(p):
-    ''' ConstrucDecl : ConstrucHeading SEMICOLON Block '''
+    ''' ConstrucDecl : ConstrucHeading SEMICOLON Block CMark2'''
     reverse_output.append(p.slice)
 
 def p_ConstrucHeading(p):
-    ''' ConstrucHeading : CONSTRUCTOR Designator FormalParams '''
+    ''' ConstrucHeading : CONSTRUCTOR Designator CMark1 FormalParams '''
+
+    global construcName
+    construcName = p[2]['place']
+    name = construcName.split('_')
+    objEntry = symTab.Lookup(name[0],'Ident')
+    for param in objEntry.params:
+        if param[0][0:4] == 'A2yZ' and param[0][4:].find(name[1]) == 0:
+            label = param[0]
+
+    symTab.AddScope(label,'function')
+    symTab.table[symTab.currScope]['ReturnType'] = None
+
+    # Add the variables into symbol Table
+    param_list = p[4]
+    param_list = param_list[::-1] # GEtting the list in incremental order
+    params = []
+    temp_code = []
+
+    offset = 12
+    for item in param_list:
+        idents = item[0]
+        id_type = item[1]
+        for ids in idents:
+            # print "[PARSER] ID is: ",ids
+            # print "[PARSER] Type is: ",id_type
+            # params.append([symTab.currScope + "_" + ids,id_type])
+            params.append(id_type)
+
+            typeEntry =  symTab.Lookup(id_type,'Ident')
+            if typeEntry != None:
+                # print "[PARSER]: ",typeEntry.cat
+                if typeEntry.cat.upper() != 'OBJECT':
+                    symTab.Define(symTab.currScope + "_" + ids,id_type,typeEntry.cat.upper(),typeEntry.params,offset,True)
+                    offset +=  4 # Since this is the pointer to the base of the array
+                else:
+                    symTab.Define(symTab.currScope + "_" + ids,id_type,typeEntry.cat.upper(),typeEntry.params,offset,True)
+                    offset +=  4 # Since this is the pointer to the base of the array
+            else:
+                symTab.Define(symTab.currScope + "_" + ids,id_type,'VAR','',offset,True)
+                offset += symTab.getWidth(symTab.currScope + "_" + ids)
+
+    symTab.Define(symTab.currScope + '_self', p[1].split('_')[0],'OBJECT',objEntry.params,8,True) 
+    #print symTab.table
+    save_scope = symTab.currScope # Save to revert back
+    symTab.endScope() # Go to the parent, and define this function as an entry in Func
+    to_insert = symTab.Define(p[2]['place'],'void','FUNC', params)
+    symTab.currScope = save_scope # Load back the current scope
+
+    p[0] = p[2] # Giving the designator to Procedure Heading
+    
     reverse_output.append(p.slice)
 
+def p_CMark1(p):
+    ''' CMark1 : '''
+
+    name = p[-1]['place'].split('_')
+    objEntry = symTab.Lookup(name[0],'Ident')
+    for param in objEntry.params:
+        if param[0][0:4] == 'A2yZ' and param[0][4:].find(name[1]) == 0:
+            label = param[0]    
+    emitTac('LABEL','FUNC', label,'')
+    global inObjectFunc
+    inObjectFunc = True
+    
+def p_CMark2(p):
+    ''' CMark2 : '''
+    symTab.endScope()
+    emitTac('RETURN','','',p[-3]['place'])
+    global inObjectFunc
+    construcName = ''
+    inObjectFunc = False
+    
 def p_ConstrucHeadingSemicolon(p):
     ''' ConstrucHeadingSemicolon : CONSTRUCTOR Designator FormalParams SEMICOLON '''
+    p[0] = [mangledName(p[2]['place'],p[3]),'','CONSTRUCTOR',p[3]]
+    
     reverse_output.append(p.slice)
 
 def p_FuncDecl(p):
@@ -1231,7 +1339,7 @@ def p_FuncHeading(p):
             # For assigning params of an array as the array type
             typeEntry =  symTab.Lookup(id_type,'Ident')
             if typeEntry != None:
-                # print "[PARSER]: ",typeEntry.cat
+                #print "[PARSER]: ",typeEntry.cat
                 if typeEntry.cat.upper() != 'OBJECT':
                     symTab.Define(symTab.currScope + "_" + ids,id_type,typeEntry.cat.upper(),typeEntry.params,offset,True)
                     offset +=  4 # Since this is the pointer to the base of the array
@@ -1251,13 +1359,13 @@ def p_FuncHeading(p):
 
     p[0] = p[2] # Giving the designator to Procedure Heading
 
-
-
-
     reverse_output.append(p.slice)
 
 def p_FuncHeadingSemicolon(p):
     ''' FuncHeadingSemicolon : FUNCTION Designator FormalParams COLON Type SEMICOLON '''
+
+    p[0] = [mangledName(p[2]['place'],p[3]), p[5]['type'],'FUNC',p[3]]
+
     reverse_output.append(p.slice)
 
 #Included LPAREN and RPAREN in the definition of FORMALPARAMS
@@ -1335,6 +1443,8 @@ def p_ProcedureHeading(p):
 
 def p_ProcedureHeadingSemicolon(p):
     ''' ProcedureHeadingSemicolon : PROCEDURE Designator FormalParams SEMICOLON '''
+
+    p[0] = [mangledName(p[2]['place'], p[3]),'','PROCEDURE',p[3]]
     reverse_output.append(p.slice)
 
 ### ---------------- LAMBDA DEFS -------------- ###
@@ -1347,6 +1457,8 @@ def p_LambFunc(p):
 # This will denote that we are within an object declaration
 inObject = False;
 objectOffset = 0;
+inObjectFunc = False;
+construcName = '';
 
 ### ---------------- OBJECT DEFS -------------- ###
 
@@ -1357,6 +1469,7 @@ def p_ObjectType(p):
     p[0] = {}
     p[0]['type'] = 'OBJECT'
     p[0]['params'] = p[4]['params']
+    #print p[0]['params']
     inObject = False;
 
     reverse_output.append(p.slice)
@@ -1380,7 +1493,7 @@ def p_ObjectBody(p):
     else:
         p[0] = {}
         p[0]['params'] = p[1]['params']
-        p[0]['params'] = p[2]['params'] + p[3]['params'] + p[4]['params']
+        p[0]['params'] = p[2]['params'] + p[3]['params'] + p[4]['params'] + [p[5]]
 
     reverse_output.append(p.slice)
     
@@ -1427,12 +1540,21 @@ def p_ObjectConstSection(p):
 def p_ObjectMethodList(p):
     ''' ObjectMethodList : ObjectMethodHeading 
     | %prec TOK '''
+
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = []
+        
     reverse_output.append(p.slice)
 
 def p_ObjectMethodHeading(p):
     ''' ObjectMethodHeading : ProcedureHeadingSemicolon
     | FuncHeadingSemicolon 
     | ConstrucHeadingSemicolon '''
+
+    p[0] = p[1]
+    
     reverse_output.append(p.slice)
 
 
