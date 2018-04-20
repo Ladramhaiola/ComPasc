@@ -24,6 +24,7 @@ BEGIN
             i := i + 1;
         END;
     WRITELN(a2[1]);
-    i := 6*a2[1];
+    {i := a2[1];}
+    i := i*6;
     WRITELN(i);
 END;
