@@ -1,12 +1,10 @@
 PROGRAM Greeting;
 
 VAR 
-x, y, z, a: INTEGER; 
-height, width : INTEGER; 
-c: CHAR;
+y, z, a: INTEGER; 
 
 CONSTANT
-x = 1;
+x = 4;
    
 BEGIN
 

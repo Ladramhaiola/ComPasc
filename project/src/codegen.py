@@ -683,7 +683,7 @@ class CodeGenerator():
             self.asm_code[self.curr_func].append('\t\tpush %esi')
             return
         
-        self.asm_code[self.curr_func].append('\t\tpush ' + self.getName(op1))
+        self.asm_code[self.curr_func].append('\t\tpush ' + self.getLoc(op1)[1])
 
 
     def handle_return(self,op1):
@@ -910,7 +910,7 @@ class CodeGenerator():
 
             # print self.registerToSymbol
             lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
-            # print "code[i]: ",self.code[i]
+            # print "#code[i]: ",self.code[i]
             # print lhs.name
             ln = int(lineno)
 
@@ -1000,7 +1000,7 @@ class CodeGenerator():
         self.asm_code['data'] = []
         self.asm_code['data'].append('.extern printf \n')
         self.asm_code['data'].append('.data \n')
-        self.asm_code['data'].append('.formatINT : \n .string \"%d\\n\\0\" \n')
+        self.asm_code['data'].append('.formatINT : \n .string \"%d\\n\" \n')
         self.asm_code['data'].append('.formatINT_INP : \n .string \"%d\" \n')
         for scope in ['main']:
             for var in self.symTab.table[scope]['Ident']:

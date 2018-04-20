@@ -22,6 +22,6 @@ END;
 
 BEGIN
    a := x + y; //a = 11
-   b := MyFunc(a,y); //b should be 33 here
+   b := MyFunc(a,y); //b should be 75 here
    WRITELN(b);
 END;
