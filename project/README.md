@@ -81,3 +81,4 @@ The first line(moving ebp to esp) ensures that stack pointer points to the top o
 - Repeat statement not working, the IR is not correct
 - Test the jumps?
 - Testing division
+- We need to ensure that whilw writing multiplicative expression, we'll write a = b*6; that is constant should be on right.

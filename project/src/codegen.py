@@ -325,7 +325,7 @@ class CodeGenerator():
                 '''
                 This is for 'a' in memory and 'b' in register (the case for both being in memory is handled below (with a redundant movl))
                 '''
-                # print "Entering special case 2"
+                print "# [CODEGEN] Entering special case 2"
                 ascode = "\t\t" + op + " " + Loc_op1 + "," + Loc_op2
                 self.symbolToRegister[self.getName(op1)] = Loc_op2[1:]
                 self.symbolToRegister[self.getName(op2)] = ''
@@ -399,7 +399,7 @@ class CodeGenerator():
 
                 # When loc is a register, loc and loc_op1 cannot be equal since op1 is definitely in memory. Hence we keep the initial movl
                 if loc in self.Registers:
-                    ascode += "\n\t\tmovl " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc
+                    ascode += "\n\t\tmovl " + Loc_op1 + "," + Loc + "\n\t\t" + op + " " + Loc_op2 + "," + Loc + "# Do what"
                 else:
                     # We will be moving op1 to the register in this part
                     # Haven't changed printing of ascode in this block according to Loc (would have leaded to added trouble)
@@ -853,7 +853,8 @@ class CodeGenerator():
             ascode += '\n\t\tmovl ' + Loc_op2 + ',' + arrayBase + '(,' + Loc_op1 + ',4)'
         
         self.updateRegEntry(op1, loc_op1, oldRegOp1)
-        self.updateRegEntry(op2, loc_op2, oldRegOp2)
+        if loc_op2 != 'edi':
+            self.updateRegEntry(op2, loc_op2, oldRegOp2)
         self.asm_code[self.curr_func].append(ascode)
 
 
@@ -906,7 +907,7 @@ class CodeGenerator():
         for i in range(start-1,end):
             # i is the index into self.code
 
-            #print(self.registerToSymbol)
+            # print self.registerToSymbol
             lineno, op, lhs, op1, op2, const1, const2 = self.code[i]
             # print "code[i]: ",self.code[i]
             # print lhs.name
